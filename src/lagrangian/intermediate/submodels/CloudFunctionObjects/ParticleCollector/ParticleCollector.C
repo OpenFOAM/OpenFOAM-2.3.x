@@ -106,11 +106,13 @@ void Foam::ParticleCollector<CloudType>::makeLogFile
 
 
 template<class CloudType>
-void Foam::ParticleCollector<CloudType>::initPolygons()
+void Foam::ParticleCollector<CloudType>::initPolygons
+(
+    const List<Field<point> >& polygons
+)
 {
     mode_ = mtPolygon;
 
-    List<Field<point> > polygons(this->coeffDict().lookup("polygons"));
     label nPoints = 0;
     forAll(polygons, polyI)
     {
@@ -168,7 +170,7 @@ void Foam::ParticleCollector<CloudType>::initConcentricCircles()
     if (nSector_ > 1)
     {
         refDir = this->coeffDict().lookup("refDir");
-        refDir -= normal_*(normal_ & refDir);
+        refDir -= normal_[0]*(normal_[0] & refDir);
         refDir /= mag(refDir);
     }
     else
@@ -184,7 +186,7 @@ void Foam::ParticleCollector<CloudType>::initConcentricCircles()
         {
             vector v = rnd.vector01();
 
-            tangent = v - (v & normal_)*normal_;
+            tangent = v - (v & normal_[0])*normal_[0];
             magTangent = mag(tangent);
         }
 
@@ -209,7 +211,7 @@ void Foam::ParticleCollector<CloudType>::initConcentricCircles()
     faces_.setSize(nFace);
     area_.setSize(nFace);
 
-    coordSys_ = cylindricalCS("coordSys", origin, normal_, refDir, false);
+    coordSys_ = cylindricalCS("coordSys", origin, normal_[0], refDir, false);
 
     List<label> ptIDs(identity(nPointPerRadius));
 
@@ -301,8 +303,8 @@ void Foam::ParticleCollector<CloudType>::collectParcelPolygon
 
         const point& pf = points_[facePoint0];
 
-        const scalar d1 = normal_ & (p1 - pf);
-        const scalar d2 = normal_ & (p2 - pf);
+        const scalar d1 = normal_[faceI] & (p1 - pf);
+        const scalar d2 = normal_[faceI] & (p2 - pf);
 
         if (sign(d1) == sign(d2))
         {
@@ -344,8 +346,8 @@ void Foam::ParticleCollector<CloudType>::collectParcelConcentricCircles
 {
     label secI = -1;
 
-    const scalar d1 = normal_ & (p1 - coordSys_.origin());
-    const scalar d2 = normal_ & (p2 - coordSys_.origin());
+    const scalar d1 = normal_[0] & (p1 - coordSys_.origin());
+    const scalar d2 = normal_[0] & (p2 - coordSys_.origin());
 
     if (sign(d1) == sign(d2))
     {
@@ -526,7 +528,7 @@ Foam::ParticleCollector<CloudType>::ParticleCollector
     nSector_(0),
     radius_(),
     coordSys_(false),
-    normal_(this->coeffDict().lookup("normal")),
+    normal_(),
     negateParcelsOppositeNormal_
     (
         readBool(this->coeffDict().lookup("negateParcelsOppositeNormal"))
@@ -547,10 +549,37 @@ Foam::ParticleCollector<CloudType>::ParticleCollector
     word mode(this->coeffDict().lookup("mode"));
     if (mode == "polygon")
     {
-        initPolygons();
+        List<Field<point> > polygons(this->coeffDict().lookup("polygons"));
+
+        initPolygons(polygons);
+
+        vector n0(this->coeffDict().lookup("normal"));
+        normal_ = vectorField(faces_.size(), n0);
+    }
+    else if (mode == "polygonWithNormal")
+    {
+        List<Tuple2<Field<point>, vector> > polygonAndNormal
+        (
+            this->coeffDict().lookup("polygons")
+        );
+
+        List<Field<point> > polygons(polygonAndNormal.size());
+        normal_.setSize(polygonAndNormal.size());
+
+        forAll(polygons, polyI)
+        {
+            polygons[polyI] = polygonAndNormal[polyI].first();
+            normal_[polyI] = polygonAndNormal[polyI].second();
+            normal_[polyI] /= mag(normal_[polyI]) + ROOTVSMALL;
+        }
+
+        initPolygons(polygons);
     }
     else if (mode == "concentricCircle")
     {
+        vector n0(this->coeffDict().lookup("normal"));
+        normal_ = vectorField(1, n0);
+
         initConcentricCircles();
     }
     else
@@ -560,12 +589,14 @@ Foam::ParticleCollector<CloudType>::ParticleCollector
             "Foam::ParticleCollector<CloudType>::ParticleCollector"
             "("
                 "const dictionary&,"
-                "CloudType&"
+                "CloudType&, "
+                "const word&"
             ")",
             this->coeffDict()
         )
             << "Unknown mode " << mode << ".  Available options are "
-            << "polygon and concentricCircle" << exit(FatalIOError);
+            << "polygon, polygonWithNormal and concentricCircle"
+            << exit(FatalIOError);
     }
 
     mass_.setSize(faces_.size(), 0.0);
@@ -663,7 +694,7 @@ void Foam::ParticleCollector<CloudType>::postMove
         {
             vector Uhat = p.U();
             Uhat /= mag(Uhat) + ROOTVSMALL;
-            if ((Uhat & normal_) < 0)
+            if ((Uhat & normal_[faceI]) < 0)
             {
                 m *= -1.0;
             }

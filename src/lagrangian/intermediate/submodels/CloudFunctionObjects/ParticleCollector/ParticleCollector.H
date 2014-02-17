@@ -164,8 +164,8 @@ private:
         //- Face areas
         Field<scalar> area_;
 
-        //- Polygon normal vector
-        vector normal_;
+        //- Polygon normal vector per face
+        Field<vector> normal_;
 
         //- Remove mass of parcel travelling in opposite direction to normal_
         bool negateParcelsOppositeNormal_;
@@ -212,7 +212,7 @@ private:
         );
 
         //- Initialise polygon collectors
-        void initPolygons();
+        void initPolygons(const List<Field<point> >& polygons);
 
         //- Initialise concentric circle collectors
         void initConcentricCircles();
