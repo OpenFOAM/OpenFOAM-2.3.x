@@ -42,6 +42,7 @@ Description
 #include "surfaceFields.H"
 #include "pointFields.H"
 #include "ReadFields.H"
+#include "fvIOoptionList.H"
 
 #include "incompressible/singlePhaseTransportModel/singlePhaseTransportModel.H"
 
@@ -166,6 +167,8 @@ void calc
             ),
             mesh
         );
+
+        #include "createFvOptions.H"
 
         if (phi.dimensions() == dimVolume/dimTime)
         {
