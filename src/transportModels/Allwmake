@@ -1,0 +1,11 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # run from this directory
+makeType=${1:-libso}
+set -x
+
+wmake $makeType twoPhaseMixture
+wmake $makeType interfaceProperties
+wmake $makeType twoPhaseProperties
+wmake $makeType incompressible
+
+# ----------------------------------------------------------------- end-of-file

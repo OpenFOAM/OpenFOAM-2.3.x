@@ -1,0 +1,80 @@
+#!/bin/sh
+#------------------------------------------------------------------------------
+# =========                 |
+# \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+#  \\    /   O peration     |
+#   \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+#    \\/     M anipulation  |
+#-------------------------------------------------------------------------------
+# License
+#     This file is part of OpenFOAM.
+#
+#     OpenFOAM is free software: you can redistribute it and/or modify it
+#     under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+#     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#     for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Script
+#     wcleanMachine
+#
+# Description
+#     Searches the directories below the current directory for the object
+#     file directories of the specified machine type(s) and deletes them
+#
+#     Usage: wcleanMachine <machineType> [ .. <machineTypeN> ]
+#
+#------------------------------------------------------------------------------
+usage() {
+    exec 1>&2
+    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
+    cat<<USAGE
+usage: ${0##*/} machineType [... machineTypeN]
+
+  Searches the directories below the current directory for the object file
+  directories of the specified machine type(s) and deletes them
+
+Note:
+can also use '-current' for the current value of \$WM_OPTIONS
+
+USAGE
+    exit 1
+}
+
+
+# needs some machine types ... or provide immediate help
+if [ "$#" -lt 1 -o "$1" = "-h" -o "$1" = "-help" ]
+then
+    usage
+fi
+
+[ -d bin -a -d src ] || usage "not in the project top level directory"
+
+for machType
+do
+    if [ "$machType" = "-current" ]
+    then
+        machType="$WM_OPTIONS"
+        echo "Using current = $machType"
+        [ -n "$machType" ] || continue
+    fi
+
+    echo "Cleaning machine type: $machType"
+
+    find . -depth \( -name Make -o -name "Make.[A-Za-z]*" \) -type d -print | \
+        xargs -i find '{}' -mindepth 1 -maxdepth 1 \
+           \( -type d -name "*$machType" -o -name "*$machType$WM_MPLIB" \) -print |
+        xargs rm -rf
+
+    rm -rf platforms/$machType
+
+done
+
+#------------------------------------------------------------------------------
