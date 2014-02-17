@@ -26,6 +26,7 @@ License
 #include "fvMesh.H"
 #include "volFields.H"
 #include "directFvPatchFieldMapper.H"
+#include "calculatedFvPatchField.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -381,30 +382,21 @@ Foam::meshToMesh::mapSrcToTgt
 
     const fvMesh& tgtMesh = static_cast<const fvMesh&>(tgtRegion_);
 
-    const typename fieldType::GeometricBoundaryField& bfld =
+    const fvBoundaryMesh& tgtBm = tgtMesh.boundary();
+    const typename fieldType::GeometricBoundaryField& srcBfld =
         field.boundaryField();
 
-    PtrList<fvPatchField<Type> > patchFields(bfld.size());
+    wordList patchTypes(tgtBm.size(), calculatedFvPatchField<Type>::typeName);
 
-    // constuct tgt boundary patch types as copy of field boundary types
+    // constuct tgt boundary patch types as copy of 'field' boundary types
     // note: this will provide place holders for fields with additional
     // entries, but these values will need to be reset
-    forAll(bfld, patchI)
+    forAll(tgtPatchID_, i)
     {
-        patchFields.set
-        (
-            patchI,
-            fvPatchField<Type>::New
-            (
-                bfld[patchI],
-                tgtMesh.boundary()[patchI],
-                DimensionedField<Type, volMesh>::null(),
-                directFvPatchFieldMapper
-                (
-                    labelList(tgtMesh.boundary()[patchI].size(), -1)
-                )
-            )
-        );
+        label srcPatchI = srcPatchID_[i];
+        label tgtPatchI = tgtPatchID_[i];
+
+        patchTypes[tgtPatchI] = srcBfld[srcPatchI].type();
     }
 
     tmp<fieldType> tresult
@@ -420,9 +412,8 @@ Foam::meshToMesh::mapSrcToTgt
                 IOobject::NO_WRITE
             ),
             tgtMesh,
-            field.dimensions(),
-            Field<Type>(tgtMesh.nCells(), pTraits<Type>::zero),
-            patchFields
+            dimensioned<Type>("0", field.dimensions(), pTraits<Type>::zero),
+            patchTypes
         )
     );
 
@@ -517,30 +508,21 @@ Foam::meshToMesh::mapTgtToSrc
 
     const fvMesh& srcMesh = static_cast<const fvMesh&>(srcRegion_);
 
-    const typename fieldType::GeometricBoundaryField& bfld =
+    const fvBoundaryMesh& srcBm = srcMesh.boundary();
+    const typename fieldType::GeometricBoundaryField& tgtBfld =
         field.boundaryField();
 
-    PtrList<fvPatchField<Type> > patchFields(bfld.size());
+    wordList patchTypes(srcBm.size(), calculatedFvPatchField<Type>::typeName);
 
-    // constuct src boundary patch types as copy of field boundary types
+    // constuct src boundary patch types as copy of 'field' boundary types
     // note: this will provide place holders for fields with additional
     // entries, but these values will need to be reset
-    forAll(bfld, patchI)
+    forAll(srcPatchID_, i)
     {
-        patchFields.set
-        (
-            patchI,
-            fvPatchField<Type>::New
-            (
-                bfld[patchI],
-                srcMesh.boundary()[patchI],
-                DimensionedField<Type, volMesh>::null(),
-                directFvPatchFieldMapper
-                (
-                    labelList(srcMesh.boundary()[patchI].size(), -1)
-                )
-            )
-        );
+        label srcPatchI = srcPatchID_[i];
+        label tgtPatchI = tgtPatchID_[i];
+
+        patchTypes[srcPatchI] = tgtBfld[tgtPatchI].type();
     }
 
     tmp<fieldType> tresult
@@ -556,9 +538,8 @@ Foam::meshToMesh::mapTgtToSrc
                 IOobject::NO_WRITE
             ),
             srcMesh,
-            field.dimensions(),
-            Field<Type>(srcMesh.nCells(), pTraits<Type>::zero),
-            patchFields
+            dimensioned<Type>("0", field.dimensions(), pTraits<Type>::zero),
+            patchTypes
         )
     );
 
