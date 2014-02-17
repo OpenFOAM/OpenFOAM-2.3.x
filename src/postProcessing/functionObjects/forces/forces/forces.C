@@ -912,6 +912,14 @@ void Foam::forces::calcForcesMoment()
         const HashTable<const porosityModel*> models =
             obr_.lookupClass<porosityModel>();
 
+        if (models.empty())
+        {
+            WarningIn("void Foam::forces::calcForcesMoment()")
+                << "Porosity effects requested, but no porosity models found "
+                << "in the database"
+                << endl;
+        }
+
         forAllConstIter(HashTable<const porosityModel*>, models, iter)
         {
             const porosityModel& pm = *iter();
