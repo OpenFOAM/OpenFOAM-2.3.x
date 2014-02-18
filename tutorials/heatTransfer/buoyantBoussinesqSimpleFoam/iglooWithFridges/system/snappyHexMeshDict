@@ -275,7 +275,7 @@ addLayersControls
         {
             nSurfaceLayers 3;
         }
-        "igloo_.*"
+        igloo
         {
             nSurfaceLayers 1;
         }
