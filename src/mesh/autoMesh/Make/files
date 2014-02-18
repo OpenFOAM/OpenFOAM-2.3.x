@@ -30,7 +30,7 @@ meshMover = $(autoHexMesh)/externalDisplacementMeshMover
 $(meshMover)/displacementMeshMoverMotionSolver.C
 $(meshMover)/externalDisplacementMeshMover.C
 $(meshMover)/medialAxisMeshMover.C
-
+$(meshMover)/zeroFixedValue/zeroFixedValuePointPatchFields.C
 
 LIB = $(FOAM_LIBBIN)/libautoMesh
 
