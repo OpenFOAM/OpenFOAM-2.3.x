@@ -1972,7 +1972,7 @@ void Foam::meshRefinement::calculateEdgeWeights
         const edge& e = edges[edgeI];
         scalar eMag = max
         (
-            VSMALL,
+            SMALL,
             mag
             (
                 pts[meshPoints[e[1]]]

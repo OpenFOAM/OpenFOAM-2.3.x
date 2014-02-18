@@ -33,6 +33,7 @@ License
 #include "PatchTools.H"
 #include "OBJstream.H"
 #include "pointData.H"
+#include "zeroFixedValuePointPatchFields.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -64,7 +65,15 @@ Foam::labelList Foam::medialAxisMeshMover::getFixedValueBCs
 
         if (isA<valuePointPatchField<vector> >(patchFld))
         {
-            adaptPatchIDs.append(patchI);
+            if (isA<zeroFixedValuePointPatchField<vector> >(patchFld))
+            {
+                // Special condition of fixed boundary condition. Does not
+                // get adapted
+            }
+            else
+            {
+                adaptPatchIDs.append(patchI);
+            }
         }
     }
     return adaptPatchIDs;

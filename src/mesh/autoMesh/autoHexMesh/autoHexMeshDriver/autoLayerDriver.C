@@ -50,6 +50,7 @@ Description
 #include "PatchTools.H"
 #include "slipPointPatchFields.H"
 #include "fixedValuePointPatchFields.H"
+#include "zeroFixedValuePointPatchFields.H"
 #include "calculatedPointPatchFields.H"
 #include "cyclicSlipPointPatchFields.H"
 #include "fixedValueFvPatchFields.H"
@@ -826,7 +827,12 @@ Foam::autoLayerDriver::makeLayerDisplacementField
     {
         //  0 layers: do not allow slip so fixedValue 0
         // >0 layers: fixedValue which gets adapted
-        if (numLayers[patchI] >= 0)
+        if (numLayers[patchI] == 0)
+        {
+            patchFieldTypes[patchI] =
+                zeroFixedValuePointPatchVectorField::typeName;
+        }
+        else if (numLayers[patchI] > 0)
         {
             patchFieldTypes[patchI] = fixedValuePointPatchVectorField::typeName;
         }
