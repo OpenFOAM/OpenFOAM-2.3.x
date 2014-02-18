@@ -650,7 +650,7 @@ Foam::ParticleCollector<CloudType>::~ParticleCollector()
 template<class CloudType>
 void Foam::ParticleCollector<CloudType>::postMove
 (
-    const parcelType& p,
+    parcelType& p,
     const label cellI,
     const scalar dt,
     const point& position0,

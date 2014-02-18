@@ -124,9 +124,10 @@ void Foam::VoidFraction<CloudType>::postEvolve()
 template<class CloudType>
 void Foam::VoidFraction<CloudType>::postMove
 (
-    const parcelType& p,
+    parcelType& p,
     const label cellI,
     const scalar dt,
+    const point&,
     bool&
 )
 {
