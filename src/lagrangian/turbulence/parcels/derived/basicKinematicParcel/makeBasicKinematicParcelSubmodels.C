@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,24 +24,13 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "basicKinematicCloud.H"
-
-#include "makeParcelCloudFunctionObjects.H"
-
-#include "GradientDispersionRAS.H"
-#include "StochasticDispersionRAS.H"
+#include "makeParcelTurbulenceDispersionModels.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-    typedef basicKinematicCloud::kinematicCloudType kinematicCloudType_K;
-    defineNamedTemplateTypeNameAndDebug
-    (
-        DispersionRASModel<kinematicCloudType_K>,
-        0
-    );
-    makeDispersionModelType(GradientDispersionRAS, basicKinematicCloud);
-    makeDispersionModelType(StochasticDispersionRAS, basicKinematicCloud);
+    makeParcelTurbulenceDispersionModels(basicKinematicCloud);
 }
 
 

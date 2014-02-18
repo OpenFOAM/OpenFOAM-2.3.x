@@ -24,33 +24,13 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "basicKinematicCollidingCloud.H"
-
-#include "makeParcelCloudFunctionObjects.H"
-
-#include "GradientDispersionRAS.H"
-#include "StochasticDispersionRAS.H"
+#include "makeParcelTurbulenceDispersionModels.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-    typedef basicKinematicCollidingCloud::kinematicCloudType
-        kinematicCloudType_K;
-    defineNamedTemplateTypeNameAndDebug
-    (
-        DispersionRASModel<kinematicCloudType_K>,
-        0
-    );
-    makeDispersionModelType
-    (
-        GradientDispersionRAS,
-        basicKinematicCollidingCloud
-    );
-    makeDispersionModelType
-    (
-        StochasticDispersionRAS,
-        basicKinematicCollidingCloud
-    );
+    makeParcelTurbulenceDispersionModels(basicKinematicCollidingCloud);
 }
 
 
