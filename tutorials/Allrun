@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+#   \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
 #    \\/     M anipulation  |
 #------------------------------------------------------------------------------
 # License
@@ -80,7 +80,10 @@ do
 (
     [ -d $appDir ] && cd $appDir || exit
 
-    for log in `find . -name "log.*" | xargs ls -rt`
+    logs=`find . -name "log.*"`
+    [ -n "$logs" ] || exit
+
+    for log in `echo $logs | xargs ls -rt`
     do
         logReport $log >> ../testLoopReport
     done
