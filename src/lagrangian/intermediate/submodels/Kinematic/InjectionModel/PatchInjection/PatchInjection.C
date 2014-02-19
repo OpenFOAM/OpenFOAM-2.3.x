@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -68,8 +68,7 @@ Foam::PatchInjection<CloudType>::PatchInjection
     patchInjectionBase::updateMesh(owner.mesh());
 
     // Set total volume/mass to inject
-    this->volumeTotal_ = fraction_*flowRateProfile_.integrate(0.0, duration_);
-    this->massTotal_ *= fraction_;
+    this->volumeTotal_ = flowRateProfile_.integrate(0.0, duration_);
 }
 
 
@@ -121,7 +120,7 @@ Foam::label Foam::PatchInjection<CloudType>::parcelsToInject
 {
     if ((time0 >= 0.0) && (time0 < duration_))
     {
-        scalar nParcels = this->fraction_*(time1 - time0)*parcelsPerSecond_;
+        scalar nParcels = (time1 - time0)*parcelsPerSecond_;
 
         cachedRandom& rnd = this->owner().rndGen();
 
@@ -159,7 +158,7 @@ Foam::scalar Foam::PatchInjection<CloudType>::volumeToInject
 {
     if ((time0 >= 0.0) && (time0 < duration_))
     {
-        return this->fraction_*flowRateProfile_.integrate(time0, time1);
+        return flowRateProfile_.integrate(time0, time1);
     }
     else
     {
