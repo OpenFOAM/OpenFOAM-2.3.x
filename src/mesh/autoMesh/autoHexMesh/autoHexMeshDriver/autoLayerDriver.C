@@ -2463,8 +2463,14 @@ void Foam::autoLayerDriver::getLayerCellsFaces
         if (layer.size())
         {
             // Layer contains both original boundary face and new boundary
-            // face so is nLayers+1
-            forAll(layer, i)
+            // face so is nLayers+1. Leave out old internal face.
+            if (!mesh.isInternalFace(layer[0]))
+            {
+                FatalErrorIn("autoLayerDriver::getLayerCellsFaces()")
+                    << "problem." << layer[0] << exit(FatalError);
+            }
+
+            for (label i = 1; i < layer.size(); i++)
             {
                 faceRealThickness[layer[i]] = realThickness;
             }
@@ -2608,7 +2614,7 @@ bool Foam::autoLayerDriver::writeLayerData
         }
         {
             label nAdded = 0;
-            forAll(faceRealThickness, faceI)
+            for (label faceI = 0; faceI < mesh.nInternalFaces(); faceI++)
             {
                 if (faceRealThickness[faceI] > 0)
                 {
@@ -2617,7 +2623,7 @@ bool Foam::autoLayerDriver::writeLayerData
             }
 
             faceSet layerFacesSet(mesh, "layerFaces", nAdded);
-            forAll(faceRealThickness, faceI)
+            for (label faceI = 0; faceI < mesh.nInternalFaces(); faceI++)
             {
                 if (faceRealThickness[faceI] > 0)
                 {
@@ -3405,7 +3411,7 @@ void Foam::autoLayerDriver::addLayers
             addedCellSet.write();
 
             faceSet layerFacesSet(newMesh, "layerFaces", newMesh.nFaces()/100);
-            forAll(faceRealThickness, faceI)
+            for (label faceI = 0; faceI < newMesh.nInternalFaces(); faceI++)
             {
                 if (faceRealThickness[faceI] > 0)
                 {
