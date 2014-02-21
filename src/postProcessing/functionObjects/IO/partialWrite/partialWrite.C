@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -70,15 +70,12 @@ void Foam::partialWrite::read(const dictionary& dict)
     writeInstance_ = 0;
 
     Info<< type() << " " << name() << ":" << nl
-        << "    dumping every outputTime :";
+        << "    dumping every " << writeInterval_
+        << " th outputTime : " << nl << endl ;
     forAllConstIter(HashSet<word>, objectNames_, iter)
     {
         Info<< ' ' << iter.key();
     }
-    Info<< nl
-        << "    dumping all other fields every "
-        << writeInterval_ << "th outputTime" << nl
-        << endl;
 
     if (writeInterval_ < 1)
     {
