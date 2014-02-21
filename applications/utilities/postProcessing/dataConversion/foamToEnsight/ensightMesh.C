@@ -195,41 +195,44 @@ void Foam::ensightMesh::correct()
     {
         forAll(mesh_.boundary(), patchi)
         {
-            const polyPatch& p = mesh_.boundaryMesh()[patchi];
-
-            labelList& tris = boundaryFaceSets_[patchi].tris;
-            labelList& quads = boundaryFaceSets_[patchi].quads;
-            labelList& polys = boundaryFaceSets_[patchi].polys;
-
-            tris.setSize(p.size());
-            quads.setSize(p.size());
-            polys.setSize(p.size());
-
-            label nTris = 0;
-            label nQuads = 0;
-            label nPolys = 0;
-
-            forAll(p, faceI)
+            if (mesh_.boundary()[patchi].size())
             {
-                const face& f = p[faceI];
+                const polyPatch& p = mesh_.boundaryMesh()[patchi];
 
-                if (f.size() == 3)
+                labelList& tris = boundaryFaceSets_[patchi].tris;
+                labelList& quads = boundaryFaceSets_[patchi].quads;
+                labelList& polys = boundaryFaceSets_[patchi].polys;
+
+                tris.setSize(p.size());
+                quads.setSize(p.size());
+                polys.setSize(p.size());
+
+                label nTris = 0;
+                label nQuads = 0;
+                label nPolys = 0;
+
+                forAll(p, faceI)
                 {
-                    tris[nTris++] = faceI;
+                    const face& f = p[faceI];
+
+                    if (f.size() == 3)
+                    {
+                        tris[nTris++] = faceI;
+                    }
+                    else if (f.size() == 4)
+                    {
+                        quads[nQuads++] = faceI;
+                    }
+                    else
+                    {
+                        polys[nPolys++] = faceI;
+                    }
                 }
-                else if (f.size() == 4)
-                {
-                    quads[nQuads++] = faceI;
-                }
-                else
-                {
-                    polys[nPolys++] = faceI;
-                }
+
+                tris.setSize(nTris);
+                quads.setSize(nQuads);
+                polys.setSize(nPolys);
             }
-
-            tris.setSize(nTris);
-            quads.setSize(nQuads);
-            polys.setSize(nPolys);
         }
     }
 
@@ -240,9 +243,12 @@ void Foam::ensightMesh::correct()
 
         if (patchNames_.empty() || patchNames_.found(patchName))
         {
-            nfp.nTris   = boundaryFaceSets_[patchi].tris.size();
-            nfp.nQuads  = boundaryFaceSets_[patchi].quads.size();
-            nfp.nPolys  = boundaryFaceSets_[patchi].polys.size();
+            if (mesh_.boundary()[patchi].size())
+            {
+                nfp.nTris   = boundaryFaceSets_[patchi].tris.size();
+                nfp.nQuads  = boundaryFaceSets_[patchi].quads.size();
+                nfp.nPolys  = boundaryFaceSets_[patchi].polys.size();
+            }
         }
 
         reduce(nfp.nTris, sumOp<label>());
