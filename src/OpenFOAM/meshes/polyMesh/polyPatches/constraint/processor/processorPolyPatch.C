@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -56,10 +56,11 @@ Foam::processorPolyPatch::processorPolyPatch
     const polyBoundaryMesh& bm,
     const int myProcNo,
     const int neighbProcNo,
-    const transformType transform
+    const transformType transform,
+    const word& patchType
 )
 :
-    coupledPolyPatch(name, size, start, index, bm, typeName, transform),
+    coupledPolyPatch(name, size, start, index, bm, patchType, transform),
     myProcNo_(myProcNo),
     neighbProcNo_(neighbProcNo),
     neighbFaceCentres_(),
