@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -130,7 +130,7 @@ class domainDecomposition
         //- Append single element to list
         static void append(labelList&, const label);
 
-        //- Add face to interProcessor patch.
+        //- Add face to inter-processor patch
         void addInterProcFace
         (
             const label facei,
@@ -139,6 +139,19 @@ class domainDecomposition
 
             List<Map<label> >&,
             List<DynamicList<DynamicList<label> > >&
+        ) const;
+
+        //- Generate sub patch info for processor cyclics
+        template <class BinaryOp>
+        void processInterCyclics
+        (
+            const polyBoundaryMesh& patches,
+            List<DynamicList<DynamicList<label> > >& interPatchFaces,
+            List<Map<label> >& procNbrToInterPatch,
+            List<labelListList>& subPatchIDs,
+            List<labelListList>& subPatchStarts,
+            bool owner,
+            BinaryOp bop
         ) const;
 
 
@@ -186,6 +199,12 @@ public:
 
 } // End namespace Foam
 
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#ifdef NoRepository
+    #include "domainDecompositionTemplates.C"
+#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

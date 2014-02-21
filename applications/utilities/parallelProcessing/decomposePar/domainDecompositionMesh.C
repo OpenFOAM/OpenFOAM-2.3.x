@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,9 +32,7 @@ Description
 
 #include "domainDecomposition.H"
 #include "IOstreams.H"
-#include "SLPtrList.H"
 #include "boolList.H"
-#include "primitiveMesh.H"
 #include "cyclicPolyPatch.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -209,10 +207,11 @@ void Foam::domainDecomposition::decomposeMesh()
     // Done internal bits of the new mesh and the ordinary patches.
 
 
-    // Per processor, from neighbour processor to the interprocessorpatch that
-    // communicates with that neighbour.
+    // Per processor, from neighbour processor to the inter-processor patch
+    // that communicates with that neighbour
     List<Map<label> > procNbrToInterPatch(nProcs_);
-    // Per processor the faces per interprocessorpatch.
+
+    // Per processor the faces per inter-processor patch
     List<DynamicList<DynamicList<label> > > interPatchFaces(nProcs_);
 
     // Processor boundaries from internal faces
@@ -248,95 +247,73 @@ void Foam::domainDecomposition::decomposeMesh()
         subPatchStarts[procI].setSize(nInterfaces, labelList(1, label(0)));
     }
 
-    // Processor boundaries from split cyclics
-    forAll(patches, patchi)
-    {
-        if (isA<cyclicPolyPatch>(patches[patchi]))
-        {
-            const cyclicPolyPatch& pp = refCast<const cyclicPolyPatch>
-            (
-                patches[patchi]
-            );
 
-            // cyclic: check opposite side on this processor
-            const labelUList& patchFaceCells = pp.faceCells();
-            const labelUList& nbrPatchFaceCells =
-                pp.neighbPatch().faceCells();
+    // Special handling needed for the case that multiple processor cyclic
+    // patches are created on each local processor domain, e.g. if a 3x3 case
+    // is decomposed using the decomposition:
+    //
+    //              | 1 | 0 | 2 |
+    //  cyclic left | 2 | 0 | 1 | cyclic right
+    //              | 2 | 0 | 1 |
+    //
+    // - processors 1 and 2 will both have pieces of both cyclic left- and
+    //   right sub-patches present
+    // - the interface patch faces are stored in a single list, where each
+    //   sub-patch is referenced into the list using a patch start index and
+    //   size
+    // - if the patches are in order (in the boundary file) of left, right
+    //   - processor 1 will send: left, right
+    //   - processor 1 will need to receive in reverse order: right, left
+    //   - similarly for processor 2
+    // - the sub-patches are therefore generated in 4 passes of the patch lists
+    //   1. add faces from owner patch where local proc i < nbr proc i
+    //   2. add faces from nbr patch where local proc i < nbr proc i
+    //   3. add faces from owner patch where local proc i > nbr proc i
+    //   4. add faces from nbr patch where local proc i > nbr proc i
 
-            // Store old sizes. Used to detect which inter-proc patches
-            // have been added to.
-            labelListList oldInterfaceSizes(nProcs_);
-            forAll(oldInterfaceSizes, procI)
-            {
-                labelList& curOldSizes = oldInterfaceSizes[procI];
+    processInterCyclics
+    (
+        patches,
+        interPatchFaces,
+        procNbrToInterPatch,
+        subPatchIDs,
+        subPatchStarts,
+        true,
+        lessOp<label>()
+    );
 
-                curOldSizes.setSize(interPatchFaces[procI].size());
-                forAll(curOldSizes, interI)
-                {
-                    curOldSizes[interI] =
-                        interPatchFaces[procI][interI].size();
-                }
-            }
+    processInterCyclics
+    (
+        patches,
+        interPatchFaces,
+        procNbrToInterPatch,
+        subPatchIDs,
+        subPatchStarts,
+        false,
+        lessOp<label>()
+    );
 
-            // Add faces with different owner and neighbour processors
-            forAll(patchFaceCells, facei)
-            {
-                const label ownerProc = cellToProc_[patchFaceCells[facei]];
-                const label nbrProc = cellToProc_[nbrPatchFaceCells[facei]];
-                if (ownerProc != nbrProc)
-                {
-                    // inter - processor patch face found.
-                    addInterProcFace
-                    (
-                        pp.start()+facei,
-                        ownerProc,
-                        nbrProc,
-                        procNbrToInterPatch,
-                        interPatchFaces
-                    );
-                }
-            }
+    processInterCyclics
+    (
+        patches,
+        interPatchFaces,
+        procNbrToInterPatch,
+        subPatchIDs,
+        subPatchStarts,
+        false,
+        greaterOp<label>()
+    );
 
-            // 1. Check if any faces added to existing interfaces
-            forAll(oldInterfaceSizes, procI)
-            {
-                const labelList& curOldSizes = oldInterfaceSizes[procI];
-
-                forAll(curOldSizes, interI)
-                {
-                    label oldSz = curOldSizes[interI];
-                    if (interPatchFaces[procI][interI].size() > oldSz)
-                    {
-                        // Added faces to this interface. Add an entry
-                        append(subPatchIDs[procI][interI], patchi);
-                        append(subPatchStarts[procI][interI], oldSz);
-                    }
-                }
-            }
-
-            // 2. Any new interfaces
-            forAll(subPatchIDs, procI)
-            {
-                label nIntfcs = interPatchFaces[procI].size();
-                subPatchIDs[procI].setSize(nIntfcs, labelList(1, patchi));
-                subPatchStarts[procI].setSize(nIntfcs, labelList(1, label(0)));
-            }
-        }
-    }
-
-
-    // Shrink processor patch face addressing
-    forAll(interPatchFaces, procI)
-    {
-        DynamicList<DynamicList<label> >& curInterPatchFaces =
-            interPatchFaces[procI];
-
-        forAll(curInterPatchFaces, i)
-        {
-            curInterPatchFaces[i].shrink();
-        }
-        curInterPatchFaces.shrink();
-    }
+    processInterCyclics
+    (
+        patches,
+        interPatchFaces,
+        procNbrToInterPatch,
+        subPatchIDs,
+        subPatchStarts,
+        true,
+        greaterOp<label>()
+    );
 
 
     // Sort inter-proc patch by neighbour
@@ -356,18 +333,18 @@ void Foam::domainDecomposition::decomposeMesh()
         // Get sorted neighbour processors
         const Map<label>& curNbrToInterPatch = procNbrToInterPatch[procI];
         labelList nbrs = curNbrToInterPatch.toc();
+
         sortedOrder(nbrs, order);
 
         DynamicList<DynamicList<label> >& curInterPatchFaces =
             interPatchFaces[procI];
 
-        forAll(order, i)
+        forAll(nbrs, i)
         {
             const label nbrProc = nbrs[i];
             const label interPatch = curNbrToInterPatch[nbrProc];
 
-            procNeighbourProcessors_[procI][i] =
-                nbrProc;
+            procNeighbourProcessors_[procI][i] = nbrProc;
             procProcessorPatchSize_[procI][i] =
                 curInterPatchFaces[interPatch].size();
             procProcessorPatchStartIndex_[procI][i] =
