@@ -1,0 +1,3 @@
+driftFluxFoam.C
+
+EXE = $(FOAM_APPBIN)/driftFluxFoam

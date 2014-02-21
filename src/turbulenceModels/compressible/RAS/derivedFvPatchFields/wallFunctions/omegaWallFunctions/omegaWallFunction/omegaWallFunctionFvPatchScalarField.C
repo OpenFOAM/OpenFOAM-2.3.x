@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -580,7 +580,6 @@ void omegaWallFunctionFvPatchScalarField::write(Ostream& os) const
 {
     fixedValueFvPatchField<scalar>::write(os);
     writeLocalEntries(os);
-    writeEntry("value", os);
 }
 
 

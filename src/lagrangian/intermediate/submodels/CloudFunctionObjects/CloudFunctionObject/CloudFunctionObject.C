@@ -113,7 +113,7 @@ void Foam::CloudFunctionObject<CloudType>::postEvolve()
 template<class CloudType>
 void Foam::CloudFunctionObject<CloudType>::postMove
 (
-    const typename CloudType::parcelType&,
+    typename CloudType::parcelType&,
     const label,
     const scalar,
     const point&,

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -95,11 +95,15 @@ bool Foam::MPPICParcel<ParcelType>::move
 
             scalar f = p.stepFraction();
 
+            scalar a = p.age();
+
             p.U() = (1.0 - f)*p.UCorrect();
 
             ParcelType::move(td, trackTime);
 
             p.U() = U + (p.stepFraction() - f)*p.UCorrect();
+
+            p.age() = a;
 
             break;
         }

@@ -50,6 +50,7 @@ Description
 #include "PatchTools.H"
 #include "slipPointPatchFields.H"
 #include "fixedValuePointPatchFields.H"
+#include "zeroFixedValuePointPatchFields.H"
 #include "calculatedPointPatchFields.H"
 #include "cyclicSlipPointPatchFields.H"
 #include "fixedValueFvPatchFields.H"
@@ -826,7 +827,12 @@ Foam::autoLayerDriver::makeLayerDisplacementField
     {
         //  0 layers: do not allow slip so fixedValue 0
         // >0 layers: fixedValue which gets adapted
-        if (numLayers[patchI] >= 0)
+        if (numLayers[patchI] == 0)
+        {
+            patchFieldTypes[patchI] =
+                zeroFixedValuePointPatchVectorField::typeName;
+        }
+        else if (numLayers[patchI] > 0)
         {
             patchFieldTypes[patchI] = fixedValuePointPatchVectorField::typeName;
         }
@@ -2457,8 +2463,8 @@ void Foam::autoLayerDriver::getLayerCellsFaces
         if (layer.size())
         {
             // Layer contains both original boundary face and new boundary
-            // face so is nLayers+1
-            forAll(layer, i)
+            // face so is nLayers+1. Leave out old internal face.
+            for (label i = 1; i < layer.size(); i++)
             {
                 faceRealThickness[layer[i]] = realThickness;
             }
@@ -2602,7 +2608,7 @@ bool Foam::autoLayerDriver::writeLayerData
         }
         {
             label nAdded = 0;
-            forAll(faceRealThickness, faceI)
+            for (label faceI = 0; faceI < mesh.nInternalFaces(); faceI++)
             {
                 if (faceRealThickness[faceI] > 0)
                 {
@@ -2611,7 +2617,7 @@ bool Foam::autoLayerDriver::writeLayerData
             }
 
             faceSet layerFacesSet(mesh, "layerFaces", nAdded);
-            forAll(faceRealThickness, faceI)
+            for (label faceI = 0; faceI < mesh.nInternalFaces(); faceI++)
             {
                 if (faceRealThickness[faceI] > 0)
                 {
@@ -3399,7 +3405,7 @@ void Foam::autoLayerDriver::addLayers
             addedCellSet.write();
 
             faceSet layerFacesSet(newMesh, "layerFaces", newMesh.nFaces()/100);
-            forAll(faceRealThickness, faceI)
+            for (label faceI = 0; faceI < newMesh.nInternalFaces(); faceI++)
             {
                 if (faceRealThickness[faceI] > 0)
                 {

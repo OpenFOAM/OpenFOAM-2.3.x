@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -160,7 +160,7 @@ Foam::label Foam::PatchFlowRateInjection<CloudType>::parcelsToInject
 
         scalar c = concentration_.value(0.5*(time0 + time1));
 
-        scalar nParcels = fraction_*parcelConcentration_*c*flowRate()*dt;
+        scalar nParcels = parcelConcentration_*c*flowRate()*dt;
         label nParcelsToInject = floor(nParcels);
 
         // Inject an additional parcel with a probability based on the
@@ -205,7 +205,7 @@ Foam::scalar Foam::PatchFlowRateInjection<CloudType>::volumeToInject
     this->volumeTotal_ = volume;
     this->massTotal_ = volume*this->owner().constProps().rho0();
 
-    return fraction_*volume;
+    return volume;
 }
 
 

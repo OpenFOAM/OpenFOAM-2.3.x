@@ -135,7 +135,7 @@ for xi in $(seq 1 1 $nx); do
            z2=`echo $z $l $tol | awk '{print $1 + $2 + $3}'`
            addToFaceSet cube${pad}${n}_side${side} $x1 $x2 $y1 $y2 $z1 $z2
 
-           let n+=1
+           n=$((n+1))
 
            z=`echo $z $offset | awk '{print $1 + $2}'`
        done

@@ -106,6 +106,7 @@ void Foam::ParticleTrap<CloudType>::postMove
     parcelType& p,
     const label cellI,
     const scalar,
+    const point&,
     bool&
 )
 {

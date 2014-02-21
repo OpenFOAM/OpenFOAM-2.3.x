@@ -32,6 +32,8 @@ License
 #include "rhoConst.H"
 #include "perfectFluid.H"
 #include "PengRobinsonGas.H"
+#include "adiabaticPerfectFluid.H"
+
 #include "hConstThermo.H"
 #include "janafThermo.H"
 #include "sensibleEnthalpy.H"
@@ -112,6 +114,18 @@ makeThermo
     sensibleEnthalpy,
     hConstThermo,
     perfectFluid,
+    specie
+);
+
+makeThermo
+(
+    rhoThermo,
+    heRhoThermo,
+    pureMixture,
+    constTransport,
+    sensibleEnthalpy,
+    hConstThermo,
+    adiabaticPerfectFluid,
     specie
 );
 
@@ -258,6 +272,18 @@ makeThermo
     sensibleInternalEnergy,
     hConstThermo,
     perfectFluid,
+    specie
+);
+
+makeThermo
+(
+    rhoThermo,
+    heRhoThermo,
+    pureMixture,
+    constTransport,
+    sensibleInternalEnergy,
+    hConstThermo,
+    adiabaticPerfectFluid,
     specie
 );
 

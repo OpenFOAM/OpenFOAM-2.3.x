@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,31 +23,21 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef makeParcelDispersionModels_h
-#define makeParcelDispersionModels_h
+#include "zeroFixedValuePointPatchFields.H"
+#include "pointPatchFields.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "GradientDispersionRAS.H"
-#include "StochasticDispersionRAS.H"
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+makePointPatchFields(zeroFixedValue);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define makeParcelDispersionModels(CloudType)                                 \
-                                                                              \
-    typedef CloudType::kinematicCloudType kinematicCloudType;                 \
-    defineNamedTemplateTypeNameAndDebug                                       \
-    (                                                                         \
-        DispersionRASModel<kinematicCloudType>,                               \
-        0                                                                     \
-    );                                                                        \
-                                                                              \
-    makeDispersionModelType(GradientDispersionRAS, CloudType);                \
-    makeDispersionModelType(StochasticDispersionRAS, CloudType);              \
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#endif
+} // End namespace Foam
 
 // ************************************************************************* //
