@@ -32,7 +32,7 @@ divSchemes
     div(rhoPhi,U)       Gauss linearUpwind grad(U);
     div(phiVdj,Vdj)     Gauss linear;
     div(phi,alpha)      Gauss vanLeer;
-    div(phirb,alpha)    Gauss vanLeer;
+    div(phirb,alpha)    Gauss linear;
     div(rhoPhi,k)       Gauss limitedLinear 1;
     div(rhoPhi,epsilon) Gauss limitedLinear 1;
 
@@ -58,7 +58,7 @@ fluxRequired
 {
     default         no;
     p_rgh;
-    alpha;
+    alpha1;
 }
 
 

@@ -31,9 +31,8 @@ yieldStressOffset yieldStressOffset [ 0 0 0 0 0 0 0 ] 0;
 
 muMax           muMax [ 1 -1 -1 0 0 0 0 ] 10.0;
 
-rhoc            rhoc [ 1 -3 0 0 0 0 0 ] 996;
-
-rhod            rhod [ 1 -3 0 0 0 0 0 ] 1996;
+rho1            rho1 [ 1 -3 0 0 0 0 0 ] 1996;
+rho2            rho2 [ 1 -3 0 0 0 0 0 ] 996;
 
 VdjModel        simple;
 

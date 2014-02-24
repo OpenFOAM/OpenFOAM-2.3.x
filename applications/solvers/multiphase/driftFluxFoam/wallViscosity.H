@@ -3,7 +3,7 @@
     const scalar kappa_ = kappa.value();
     const scalar E_ = E.value();
     const scalar muc_ = muc.value();
-    const scalar nuc_ = muc_/rhoc.value();
+    const scalar nuc_ = muc_/rho2.value();
 
     const fvPatchList& patches = mesh.boundary();
 

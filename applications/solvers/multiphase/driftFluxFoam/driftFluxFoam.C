@@ -45,6 +45,8 @@ Description
 #include "pimpleControl.H"
 #include "fvIOoptionList.H"
 #include "fixedFluxPressureFvPatchScalarField.H"
+#include "gaussLaplacianScheme.H"
+#include "uncorrectedSnGrad.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
