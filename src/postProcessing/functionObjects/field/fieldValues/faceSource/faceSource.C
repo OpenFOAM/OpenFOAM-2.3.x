@@ -188,11 +188,7 @@ void Foam::fieldValues::faceSource::setPatchFaces()
     const polyPatch& pp = mesh().boundaryMesh()[patchId];
 
     label nFaces = pp.size();
-    if (isA<cyclicPolyPatch>(pp))
-    {
-        nFaces /= 2;
-    }
-    else if (isA<emptyPolyPatch>(pp))
+    if (isA<emptyPolyPatch>(pp))
     {
         nFaces = 0;
     }

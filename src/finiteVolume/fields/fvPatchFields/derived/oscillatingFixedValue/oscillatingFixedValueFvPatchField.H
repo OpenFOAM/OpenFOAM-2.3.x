@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,7 +32,7 @@ Description
     amplitude and frequency.
 
         \f[
-            x_p = (1 + a sin(\pi f t))x_{ref} + x_o
+            x_p = (1 + a sin(2 \pi f t))x_{ref} + x_o
         \f]
 
     where

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -79,9 +79,6 @@ protected:
 
         //- List of cell labels corresponding to injector positions
         labelList cellOwners_;
-
-        //- Fraction of injection controlled by this processor
-        scalar fraction_;
 
         //- Decomposed patch faces as a list of triangles
         faceList triFace_;

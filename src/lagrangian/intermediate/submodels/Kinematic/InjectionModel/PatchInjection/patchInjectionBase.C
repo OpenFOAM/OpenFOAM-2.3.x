@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,7 +42,6 @@ Foam::patchInjectionBase::patchInjectionBase
     patchArea_(0.0),
     patchNormal_(),
     cellOwners_(),
-    fraction_(1.0),
     triFace_(),
     triToFace_(),
     triCumulativeMagSf_(),
@@ -73,7 +72,6 @@ Foam::patchInjectionBase::patchInjectionBase(const patchInjectionBase& pib)
     patchArea_(pib.patchArea_),
     patchNormal_(pib.patchNormal_),
     cellOwners_(pib.cellOwners_),
-    fraction_(pib.fraction_),
     triFace_(pib.triFace_),
     triToFace_(pib.triToFace_),
     triCumulativeMagSf_(pib.triCumulativeMagSf_),
@@ -102,6 +100,9 @@ void Foam::patchInjectionBase::updateMesh(const polyMesh& mesh)
     DynamicList<scalar> triMagSf(2*patch.size());
     DynamicList<face> triFace(2*patch.size());
     DynamicList<face> tris(5);
+
+    // set zero value at the start of the tri area list
+    triMagSf.append(0.0);
 
     forAll(patch, faceI)
     {
@@ -138,13 +139,10 @@ void Foam::patchInjectionBase::updateMesh(const polyMesh& mesh)
     triToFace_.transfer(triToFace);
     triCumulativeMagSf_.transfer(triMagSf);
 
-    // fraction of injection volume to be injected by this patch
-    fraction_ = sumTriMagSf_[Pstream::myProcNo() + 1]/sum(sumTriMagSf_);
-
     // convert sumTriMagSf_ into cumulative sum of areas per proc
     for (label i = 1; i < sumTriMagSf_.size(); i++)
     {
-        sumTriMagSf_[i] += sumTriMagSf_[i - 1];
+        sumTriMagSf_[i] += sumTriMagSf_[i-1];
     }
 
     const scalarField magSf(mag(patch.faceAreas()));

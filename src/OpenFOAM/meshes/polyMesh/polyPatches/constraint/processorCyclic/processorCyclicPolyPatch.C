@@ -49,7 +49,8 @@ Foam::processorCyclicPolyPatch::processorCyclicPolyPatch
     const int myProcNo,
     const int neighbProcNo,
     const word& referPatchName,
-    const transformType transform
+    const transformType transform,
+    const word& patchType
 )
 :
     processorPolyPatch
@@ -61,7 +62,8 @@ Foam::processorCyclicPolyPatch::processorCyclicPolyPatch
         bm,
         myProcNo,
         neighbProcNo,
-        transform
+        transform,
+        patchType
     ),
     referPatchName_(referPatchName),
     tag_(-1),
