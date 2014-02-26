@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  dev                                   |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -17,7 +17,7 @@ FoamFile
 
 solvers
 {
-    "alpha1.*"
+    "alpha.*"
     {
         nAlphaCorr      2;
         nAlphaSubCycles 1;
@@ -33,7 +33,7 @@ solvers
         minIter         1;
     }
 
-    alpha1Diffusion
+    "alpha.*Diffusion"
     {
         solver          PCG;
         preconditioner  DIC;

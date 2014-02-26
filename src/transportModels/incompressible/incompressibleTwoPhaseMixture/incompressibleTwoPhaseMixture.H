@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -80,6 +80,9 @@ protected:
 
 public:
 
+    TypeName("incompressibleTwoPhaseMixture");
+
+
     // Constructors
 
         //- Construct from components
@@ -120,6 +123,12 @@ public:
         {
             return rho2_;
         };
+
+        //- Return const-access to the mixture velocity
+        const volVectorField& U() const
+        {
+            return U_;
+        }
 
         //- Return the dynamic laminar viscosity
         tmp<volScalarField> mu() const;

@@ -21,6 +21,8 @@ if (turbulence)
         Cmu*k/sigmak*(g & fvc::grad(rho))/(epsilon + epsilonMin)
     );
 
+    volScalarField muc(twoPhaseProperties.nuModel2().nu()*rho2);
+
     #include "wallFunctions.H"
 
     // Dissipation equation
@@ -75,4 +77,4 @@ if (turbulence)
     #include "wallViscosity.H"
 }
 
-muEff = mut + mul;
+muEff = mut + twoPhaseProperties.mu();
