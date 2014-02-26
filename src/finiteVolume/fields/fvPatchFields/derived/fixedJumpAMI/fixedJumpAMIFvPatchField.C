@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -123,7 +123,18 @@ Foam::tmp<Foam::Field<Type> > Foam::fixedJumpAMIFvPatchField<Type>::jump() const
                 this->neighbourPatchField()
             );
 
-        return this->cyclicAMIPatch().interpolate(nbrPatch.jump());
+        if (this->cyclicAMIPatch().applyLowWeightCorrection())
+        {
+            return this->cyclicAMIPatch().interpolate
+            (
+                nbrPatch.jump(),
+                Field<Type>(this->size(), pTraits<Type>::zero)
+            );
+        }
+        else
+        {
+            return this->cyclicAMIPatch().interpolate(nbrPatch.jump());
+        }
     }
 }
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -746,7 +746,20 @@ void Foam::FaceCellWave<Type, TrackingData>::handleAMICyclicPatches()
 
                 // Transfer sendInfo to cycPatch
                 combine<Type, TrackingData> cmb(*this, cycPatch);
-                cycPatch.interpolate(sendInfo, cmb, receiveInfo);
+
+                if (cycPatch.applyLowWeightCorrection())
+                {
+                    List<Type> defVals
+                    (
+                        cycPatch.patchInternalList(allCellInfo_)
+                    );
+
+                    cycPatch.interpolate(sendInfo, cmb, receiveInfo, defVals);
+                }
+                else
+                {
+                    cycPatch.interpolate(sendInfo, cmb, receiveInfo);
+                }
             }
 
             // Apply transform to received data for non-parallel planes
