@@ -47,6 +47,7 @@ void Foam::DESModelRegions::writeFileHeader(const label i)
     writeCommented(file(), "Time");
     writeTabbed(file(), "LES");
     writeTabbed(file(), "RAS");
+    file() << endl;
 }
 
 
