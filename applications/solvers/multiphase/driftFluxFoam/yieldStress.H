@@ -3,7 +3,7 @@ volScalarField yieldStress
     const dimensionedScalar& yieldStressCoeff,
     const dimensionedScalar& yieldStressExponent,
     const dimensionedScalar& yieldStressOffset,
-    const volScalarField& alpha
+    const volScalarField& alpha1
 )
 {
     tmp<volScalarField> tfld
@@ -13,7 +13,7 @@ volScalarField yieldStress
             pow
             (
                 10.0,
-                yieldStressExponent*(max(alpha, scalar(0)) + yieldStressOffset)
+                yieldStressExponent*(max(alpha1, scalar(0)) + yieldStressOffset)
             )
           - pow
             (

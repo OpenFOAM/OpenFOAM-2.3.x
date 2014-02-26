@@ -17,13 +17,26 @@ FoamFile
 
 solvers
 {
-    "alpha.*"
+    "alpha1.*"
     {
-        nAlphaCorr      1;
-        nAlphaSubCycles 4;
+        nAlphaCorr      2;
+        nAlphaSubCycles 1;
+
+        MULESCorr       yes;
+        nLimiterIter    3;
+        alphaApplyPrevCorr  yes;
 
         solver          smoothSolver;
         smoother        symGaussSeidel;
+        tolerance       1e-6;
+        relTol          0;
+        minIter         1;
+    }
+
+    alpha1Diffusion
+    {
+        solver          PCG;
+        preconditioner  DIC;
         tolerance       1e-6;
         relTol          0;
         minIter         1;
@@ -65,15 +78,13 @@ solvers
 
 PIMPLE
 {
-    nCorrectors     2;
+    momentumPredictor no;
+    nCorrectors     3;
     nNonOrthogonalCorrectors 0;
 }
 
 relaxationFactors
 {
-    fields
-    {
-    }
     equations
     {
         ".*"       1;

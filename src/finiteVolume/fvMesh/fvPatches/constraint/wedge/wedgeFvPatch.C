@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,12 +39,20 @@ addToRunTimeSelectionTable(fvPatch, wedgeFvPatch, polyPatch);
 
 // * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * * * * * //
 
-//- Construct from polyPatch
 wedgeFvPatch::wedgeFvPatch(const polyPatch& patch, const fvBoundaryMesh& bm)
 :
     fvPatch(patch, bm),
     wedgePolyPatch_(refCast<const wedgePolyPatch>(patch))
 {}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+Foam::tmp<Foam::vectorField> Foam::wedgeFvPatch::delta() const
+{
+    const vectorField nHat(nf());
+    return nHat*(nHat & (Cf() - Cn()));
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

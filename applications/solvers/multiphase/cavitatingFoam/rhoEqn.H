@@ -2,12 +2,12 @@
     fvScalarMatrix rhoEqn
     (
         fvm::ddt(rho)
-      + fvm::div(phiv, rho)
+      + fvm::div(phi, rho)
     );
 
     rhoEqn.solve();
 
-    phi = rhoEqn.flux();
+    rhoPhi = rhoEqn.flux();
 
     Info<< "max-min rho: " << max(rho).value()
         << " " << min(rho).value() << endl;

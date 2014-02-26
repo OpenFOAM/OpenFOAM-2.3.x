@@ -4,7 +4,7 @@
         (
             plasticViscosityCoeff,
             plasticViscosityExponent,
-            alpha
+            alpha1
         );
 
     if (BinghamPlastic)
@@ -14,7 +14,7 @@
             yieldStressCoeff,
             yieldStressExponent,
             yieldStressOffset,
-            alpha
+            alpha1
         );
 
         mul =

@@ -14,7 +14,7 @@ if (mesh.changing())
         {
             U.boundaryField()[patchI].evaluate();
 
-            phiv.boundaryField()[patchI] =
+            phi.boundaryField()[patchI] =
                 U.boundaryField()[patchI]
               & mesh.Sf().boundaryField()[patchI];
         }
@@ -37,21 +37,21 @@ if (mesh.changing())
         pcorrTypes
     );
 
-    surfaceScalarField rhof(fvc::interpolate(rho, "div(phiv,rho)"));
+    surfaceScalarField rhof(fvc::interpolate(rho, "div(phi,rho)"));
     dimensionedScalar rAUf("rAUf", dimTime, 1.0);
 
     while (pimple.correctNonOrthogonal())
     {
         fvScalarMatrix pcorrEqn
         (
-            fvm::laplacian(rAUf, pcorr) == fvc::ddt(rho) + fvc::div(phiv*rhof)
+            fvm::laplacian(rAUf, pcorr) == fvc::ddt(rho) + fvc::div(phi*rhof)
         );
 
         pcorrEqn.solve();
 
         if (pimple.finalNonOrthogonalIter())
         {
-            phiv -= pcorrEqn.flux()/rhof;
+            phi -= pcorrEqn.flux()/rhof;
         }
     }
 }

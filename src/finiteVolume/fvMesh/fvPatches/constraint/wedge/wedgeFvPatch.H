@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -83,6 +83,9 @@ public:
             {
                 return wedgePolyPatch_.cellT();
             }
+
+            //- Return cell-centre to face normal vector
+            virtual tmp<vectorField> delta() const;
 };
 
 

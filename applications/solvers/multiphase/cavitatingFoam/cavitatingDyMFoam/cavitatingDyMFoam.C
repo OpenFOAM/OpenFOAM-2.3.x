@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     #include "createFields.H"
     #include "createUf.H"
     #include "createPcorrTypes.H"
-    #include "compressibleCourantNo.H"
+    #include "CourantNo.H"
     #include "setInitialDeltaT.H"
 
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -86,12 +86,12 @@ int main(int argc, char *argv[])
             if (correctPhi)
             {
                 // Calculate absolute flux from the mapped surface velocity
-                phiv = mesh.Sf() & Uf;
+                phi = mesh.Sf() & Uf;
 
                 #include "correctPhi.H"
 
                 // Make the flux relative to the mesh motion
-                fvc::makeRelative(phiv, U);
+                fvc::makeRelative(phi, U);
             }
         }
 
