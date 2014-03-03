@@ -50,6 +50,7 @@ void Foam::yPlusLES::writeFileHeader(const label i)
     writeTabbed(file(), "min");
     writeTabbed(file(), "max");
     writeTabbed(file(), "average");
+    file() << endl;
 }
 
 

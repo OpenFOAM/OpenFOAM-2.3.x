@@ -120,6 +120,13 @@ public:
                 return cyclicAMIPolyPatch_.AMI();
             }
 
+            //- Return true if applying the low weight correction
+            virtual bool applyLowWeightCorrection() const
+            {
+                return cyclicAMIPolyPatch_.applyLowWeightCorrection();
+            }
+
+
             //- Are the cyclic planes parallel
             virtual bool parallel() const
             {
@@ -153,11 +160,6 @@ public:
 
             //- Return delta (P to N) vectors across coupled patch
             virtual tmp<vectorField> delta() const;
-
-            bool applyLowWeightCorrection() const
-            {
-                return cyclicAMIPolyPatch_.applyLowWeightCorrection();
-            }
 
             template<class Type>
             tmp<Field<Type> > interpolate

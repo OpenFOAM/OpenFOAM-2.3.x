@@ -53,14 +53,22 @@ void Foam::cyclicAMIFvPatch::makeWeights(scalarField& w) const
 
         const scalarField deltas(nf() & fvPatch::delta());
 
-        const scalarField nbrDeltas
-        (
-            interpolate
-            (
-                nbrPatch.nf() & nbrPatch.fvPatch::delta(),
-                scalarField(this->size(), 1.0)
-            )
-        );
+        tmp<scalarField> tnbrDeltas;
+        if (applyLowWeightCorrection())
+        {
+            tnbrDeltas =
+                interpolate
+                (
+                    nbrPatch.nf() & nbrPatch.fvPatch::delta(),
+                    scalarField(this->size(), 1.0)
+                );
+        }
+        else
+        {
+            tnbrDeltas = interpolate(nbrPatch.nf() & nbrPatch.fvPatch::delta());
+        }
+
+        const scalarField& nbrDeltas = tnbrDeltas();
 
         forAll(deltas, faceI)
         {
@@ -86,14 +94,22 @@ Foam::tmp<Foam::vectorField> Foam::cyclicAMIFvPatch::delta() const
     {
         const vectorField patchD(fvPatch::delta());
 
-        const vectorField nbrPatchD
-        (
-            interpolate
-            (
-                nbrPatch.fvPatch::delta(),
-                vectorField(this->size(), vector::zero)
-            )
-        );
+        tmp<vectorField> tnbrPatchD;
+        if (applyLowWeightCorrection())
+        {
+            tnbrPatchD =
+                interpolate
+                (
+                    nbrPatch.fvPatch::delta(),
+                    vectorField(this->size(), vector::zero)
+                );
+        }
+        else
+        {
+            tnbrPatchD = interpolate(nbrPatch.fvPatch::delta());
+        }
+
+        const vectorField& nbrPatchD = tnbrPatchD();
 
         tmp<vectorField> tpdv(new vectorField(patchD.size()));
         vectorField& pdv = tpdv();

@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  dev                                   |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -30,9 +30,9 @@ divSchemes
     default         none;
 
     div(rhoPhi,U)       Gauss linearUpwind grad(U);
-    div(phiVdj,Vdj)     Gauss linear;
-    div(phi,alpha)      Gauss vanLeer;
-    div(phirb,alpha)    Gauss linear;
+    div(phiUkm,Ukm)     Gauss linear;
+    "div\(phi,alpha.*\)" Gauss vanLeer;
+    "div\(phirb,alpha.*\)" Gauss linear;
     div(rhoPhi,k)       Gauss limitedLinear 1;
     div(rhoPhi,epsilon) Gauss limitedLinear 1;
 
@@ -58,7 +58,7 @@ fluxRequired
 {
     default         no;
     p_rgh;
-    alpha1;
+    "alpha.*";
 }
 
 

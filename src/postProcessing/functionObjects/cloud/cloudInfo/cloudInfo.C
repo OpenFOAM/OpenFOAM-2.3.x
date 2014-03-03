@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -43,6 +43,7 @@ void Foam::cloudInfo::writeFileHeader(const label i)
     writeCommented(file(), "Time");
     writeTabbed(file(), "nParcels");
     writeTabbed(file(), "mass");
+    file() << endl;
 }
 
 
