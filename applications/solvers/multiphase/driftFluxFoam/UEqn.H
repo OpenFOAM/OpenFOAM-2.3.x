@@ -4,11 +4,7 @@
     (
         fvm::ddt(rho, U)
       + fvm::div(rhoPhi, U)
-      + fvc::div
-        (
-            (alpha/(scalar(1.001) - alpha))*((rhoc*rhod)/rho)*Vdj*Vdj,
-            "div(phiVdj,Vdj)"
-        )
+      + fvc::div(uRelModel.tau(), "div(phiUkm,Ukm)")
       - fvm::laplacian(muEff, U)
       - fvc::div(muEff*dev2(T(fvc::grad(U))))
      ==

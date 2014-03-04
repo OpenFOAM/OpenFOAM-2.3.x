@@ -22,68 +22,81 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::heatTransferModels::noHeatTransfer
+    Foam::general
 
 Description
+    General relative velocity model
 
 SourceFiles
-    noHeatTransfer.C
+    general.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef noHeatTransfer_H
-#define noHeatTransfer_H
+#ifndef general_H
+#define general_H
 
-#include "heatTransferModel.H"
+#include "relativeVelocityModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-class phasePair;
-
-namespace heatTransferModels
+namespace relativeVelocityModels
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class noHeatTransfer Declaration
+                         Class general Declaration
 \*---------------------------------------------------------------------------*/
 
-class noHeatTransfer
+class general
 :
-    public heatTransferModel
+    public relativeVelocityModel
 {
+    // Private data
+
+        //- a coefficient
+        dimensionedScalar a_;
+
+        //- a1 coefficient
+        dimensionedScalar a1_;
+
+        //- Drift velocity
+        dimensionedVector V0_;
+
+        //- Residual phase fraction
+        dimensionedScalar residualAlpha_;
+
+
 public:
 
     //- Runtime type information
-    TypeName("none");
+    TypeName("general");
 
 
     // Constructors
 
-        //- Construct from a dictionary and a phase pair
-        noHeatTransfer
+        //- Construct from components
+        general
         (
             const dictionary& dict,
-            const phasePair& pair
+            const incompressibleTwoPhaseMixture& mixture
         );
 
 
     //- Destructor
-    virtual ~noHeatTransfer();
+    ~general();
 
 
     // Member Functions
 
-        //- The heat transfer function K used in the enthalpy equation
-        tmp<volScalarField> K() const;
+        //- Relative velocity
+        virtual tmp<volVectorField> Ur() const;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace heatTransferModels
+} // End namespace relativeVelocityModels
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

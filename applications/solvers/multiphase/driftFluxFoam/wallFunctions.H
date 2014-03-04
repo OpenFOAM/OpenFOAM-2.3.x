@@ -4,7 +4,6 @@
     const scalar Cmu25 = ::pow(Cmu.value(), 0.25);
     const scalar Cmu75 = ::pow(Cmu.value(), 0.75);
     const scalar kappa_ = kappa.value();
-    const scalar muc_ = muc.value();
 
     const fvPatchList& patches = mesh.boundary();
 
@@ -34,6 +33,7 @@
         if (isA<wallFvPatch>(curPatch))
         {
             const scalarField& mutw = mut.boundaryField()[patchi];
+            const scalarField& mucw = muc.boundaryField()[patchi];
 
             scalarField magFaceGradU
             (
@@ -55,7 +55,7 @@
                    /(kappa_*y[patchi][facei]);
 
                 G[faceCelli] +=
-                    (mutw[facei] + muc_)
+                    (mutw[facei] + mucw[facei])
                    *magFaceGradU[facei]
                    *Cmu25*::sqrt(k[faceCelli])
                    /(kappa_*y[patchi][facei]);

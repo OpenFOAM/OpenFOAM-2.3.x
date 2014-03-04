@@ -23,64 +23,51 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "noHeatTransfer.H"
-#include "phasePair.H"
+#include "simple.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace heatTransferModels
+namespace relativeVelocityModels
 {
-    defineTypeNameAndDebug(noHeatTransfer, 0);
-    addToRunTimeSelectionTable(heatTransferModel, noHeatTransfer, dictionary);
+    defineTypeNameAndDebug(simple, 0);
+    addToRunTimeSelectionTable(relativeVelocityModel, simple, dictionary);
 }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::noHeatTransfer::noHeatTransfer
+Foam::relativeVelocityModels::simple::simple
 (
     const dictionary& dict,
-    const phasePair& pair
+    const incompressibleTwoPhaseMixture& mixture
 )
 :
-    heatTransferModel(dict, pair)
+    relativeVelocityModel(dict, mixture),
+    a_(dict.lookup("a")),
+    V0_(dict.lookup("V0")),
+    residualAlpha_(dict.lookup("residualAlpha"))
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::noHeatTransfer::~noHeatTransfer()
+Foam::relativeVelocityModels::simple::~simple()
 {}
 
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-Foam::tmp<Foam::volScalarField>
-Foam::heatTransferModels::noHeatTransfer::K() const
+Foam::tmp<Foam::volVectorField>
+Foam::relativeVelocityModels::simple::Ur() const
 {
-    const fvMesh& mesh(this->pair_.phase1().mesh());
-
     return
-        tmp<volScalarField>
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    "zero",
-                    mesh.time().timeName(),
-                    mesh,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
-                mesh,
-                dimensionedScalar("zero", dimensionSet(1, -1, -3, -1, 0), 0)
-            )
-        );
+        V0_
+       *pow(scalar(10), -a_*max(alphaD_, scalar(0)))
+       /max(alphaC_, residualAlpha_);
 }
 
 

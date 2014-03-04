@@ -48,6 +48,7 @@ void Foam::wallShearStress::writeFileHeader(const label i)
     writeTabbed(file(), "patch");
     writeTabbed(file(), "min");
     writeTabbed(file(), "max");
+    file() << endl;
 }
 
 

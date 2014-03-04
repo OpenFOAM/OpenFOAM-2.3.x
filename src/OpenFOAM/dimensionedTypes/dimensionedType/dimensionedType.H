@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -159,20 +159,24 @@ public:
         //- Return transpose.
         dimensioned<Type> T() const;
 
+        //- Update the value of dimensioned<Type>
+        void read(const dictionary&);
+
         //- Update the value of dimensioned<Type> if found in the dictionary.
         bool readIfPresent(const dictionary&);
 
 
     // I/O
 
-        //- Read using provided units. Only used during startup.
+        //- Read value from stream and units from dictionary
         Istream& read(Istream& is, const dictionary&);
 
-        //- Read using provided units
+        //- Read value from stream and units from table
         Istream& read(Istream& is, const HashTable<dimensionedScalar>&);
 
-        //- Read using system units
+        //- Read value from stream and units from system table
         Istream& read(Istream& is);
+
 
     // Member operators
 

@@ -12,20 +12,6 @@
         mesh
     );
 
-    Info<< "Reading field alpha\n" << endl;
-    volScalarField alpha
-    (
-        IOobject
-        (
-            "alpha",
-            runTime.timeName(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh
-    );
-
     Info<< "Reading field U\n" << endl;
     volVectorField U
     (
@@ -43,7 +29,17 @@
     #include "createPhi.H"
 
 
+    // Transport
+    // ~~~~~~~~~
+
     Info<< "Reading transportProperties\n" << endl;
+    incompressibleTwoPhaseMixture twoPhaseProperties(U, phi);
+
+    volScalarField& alpha1(twoPhaseProperties.alpha1());
+    volScalarField& alpha2(twoPhaseProperties.alpha2());
+
+    const dimensionedScalar& rho1 = twoPhaseProperties.rho1();
+    const dimensionedScalar& rho2 = twoPhaseProperties.rho2();
 
     IOdictionary transportProperties
     (
@@ -57,41 +53,7 @@
         )
     );
 
-
-    dimensionedScalar rhoc(transportProperties.lookup("rhoc"));
-
-    dimensionedScalar rhod(transportProperties.lookup("rhod"));
-
-    dimensionedScalar muc(transportProperties.lookup("muc"));
-    dimensionedScalar muMax(transportProperties.lookup("muMax"));
-
-    dimensionedScalar plasticViscosityCoeff
-    (
-        transportProperties.lookup("plasticViscosityCoeff")
-    );
-
-    dimensionedScalar plasticViscosityExponent
-    (
-        transportProperties.lookup("plasticViscosityExponent")
-    );
-
-    dimensionedScalar yieldStressCoeff
-    (
-        transportProperties.lookup("yieldStressCoeff")
-    );
-
-    dimensionedScalar yieldStressExponent
-    (
-        transportProperties.lookup("yieldStressExponent")
-    );
-
-    dimensionedScalar yieldStressOffset
-    (
-        transportProperties.lookup("yieldStressOffset")
-    );
-
-    Switch BinghamPlastic(transportProperties.lookup("BinghamPlastic"));
-
+    // Mixture density
     volScalarField rho
     (
         IOobject
@@ -102,7 +64,7 @@
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        alpha*rhod + (scalar(1) - alpha)*rhoc
+        alpha1*rho1 + alpha2*rho2
     );
     rho.oldTime();
 
@@ -120,63 +82,24 @@
         fvc::interpolate(rho)*phi
     );
 
-    Info<< "Calculating field mul\n" << endl;
-    volScalarField mul
+
+    // Relative Velocity
+    // ~~~~~~~~~~~~~~~~~
+
+    autoPtr<relativeVelocityModel> uRelModelPtr
     (
-        IOobject
+        relativeVelocityModel::New
         (
-            "mul",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        muc
-      + plasticViscosity
-        (
-            plasticViscosityCoeff,
-            plasticViscosityExponent,
-            alpha
+            transportProperties,
+            twoPhaseProperties
         )
     );
 
-
-    Info<< "Initialising field Vdj\n" << endl;
-    volVectorField Vdj
-    (
-        IOobject
-        (
-            "Vdj",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh,
-        dimensionedVector("0.0", U.dimensions(), vector::zero),
-        U.boundaryField().types()
-    );
+    relativeVelocityModel& uRelModel(uRelModelPtr());
 
 
-    Info<< "Selecting Drift-Flux model " << endl;
-
-    const word VdjModel(transportProperties.lookup("VdjModel"));
-
-    Info<< tab << VdjModel << " selected\n" << endl;
-
-    const dictionary& VdjModelCoeffs
-    (
-        transportProperties.subDict(VdjModel + "Coeffs")
-    );
-
-    dimensionedVector V0(VdjModelCoeffs.lookup("V0"));
-
-    dimensionedScalar a(VdjModelCoeffs.lookup("a"));
-
-    dimensionedScalar a1(VdjModelCoeffs.lookup("a1"));
-
-    dimensionedScalar alphaMin(VdjModelCoeffs.lookup("alphaMin"));
-
+    // Turbulence
+    // ~~~~~~~~~~
 
     IOdictionary RASProperties
     (
@@ -283,7 +206,6 @@
             << "wallFunctionCoeffs" << wallFunctionDict << endl;
     }
 
-
     nearWallDist y(mesh);
 
     Info<< "Reading field k\n" << endl;
@@ -328,7 +250,6 @@
         Cmu*rho*sqr(k)/epsilon
     );
 
-
     Info<< "Calculating field muEff\n" << endl;
     volScalarField muEff
     (
@@ -340,9 +261,12 @@
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        mut + mul
+        mut + twoPhaseProperties.mu()
     );
 
+
+    // Pressure
+    // ~~~~~~~~
 
     Info<< "Calculating field (g.h)f\n" << endl;
     volScalarField gh("gh", g & mesh.C());
@@ -382,3 +306,9 @@
         );
         p_rgh = p - rho*gh;
     }
+
+
+    // MULES Correction
+    // ~~~~~~~~~~~~~~~~
+
+    tmp<surfaceScalarField> tphiAlphaCorr0;

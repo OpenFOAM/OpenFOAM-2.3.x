@@ -51,6 +51,7 @@ void Foam::yPlusRAS::writeFileHeader(const label i)
     writeTabbed(file(), "min");
     writeTabbed(file(), "max");
     writeTabbed(file(), "average");
+    file() << endl;
 }
 
 

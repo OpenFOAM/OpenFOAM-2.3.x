@@ -22,72 +22,97 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::dragModels::noDrag
+    Foam::viscosityModels::BinghamPlastic
 
 Description
+     Viscosity correction model for Bingham plastics.
 
 SourceFiles
-    noDrag.C
+    BinghamPlastic.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef noDrag_H
-#define noDrag_H
+#ifndef BinghamPlastic_H
+#define BinghamPlastic_H
 
-#include "dragModel.H"
+#include "plastic.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-class phasePair;
-
-namespace dragModels
+namespace viscosityModels
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class noDrag Declaration
+                           Class BinghamPlastic Declaration
 \*---------------------------------------------------------------------------*/
 
-class noDrag
+class BinghamPlastic
 :
-    public dragModel
+    public plastic
 {
+protected:
+
+    // Protected data
+
+        //- Yield stress coefficient
+        dimensionedScalar yieldStressCoeff_;
+
+        //- Yield stress exponent
+        dimensionedScalar yieldStressExponent_;
+
+        //- Yield stress offset
+        dimensionedScalar yieldStressOffset_;
+
+        //- Velocity
+        const volVectorField& U_;
+
+
+    // Protected Member Functions
+
+        //- Calculate and return the laminar viscosity correction
+        virtual tmp<volScalarField> correctionNu
+        (
+            const dimensionedScalar& rhoc,
+            const dimensionedScalar& rhop,
+            const volScalarField& nuc
+        ) const;
+
+
 public:
 
     //- Runtime type information
-    TypeName("none");
+    TypeName("BinghamPlastic");
 
 
     // Constructors
 
-        //- Construct from a dictionary and a phase pair
-        noDrag
+        //- Construct from components
+        BinghamPlastic
         (
-            const dictionary& dict,
-            const phasePair& pair,
-            const bool registerObject
+            const word& name,
+            const dictionary& viscosityProperties,
+            const volVectorField& U,
+            const surfaceScalarField& phi
         );
 
 
     //- Destructor
-    virtual ~noDrag();
+    ~BinghamPlastic()
+    {}
 
 
     // Member Functions
 
-        //- Drag coefficient
-        virtual tmp<volScalarField> CdRe() const;
-
-        //- The drag function used in the momentum equation
-        virtual tmp<volScalarField> K() const;
+        //- Read transportProperties dictionary
+        bool read(const dictionary& viscosityProperties);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace dragModels
+} // End namespace viscosityModels
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

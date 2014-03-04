@@ -39,12 +39,25 @@
         mesh
     );
 
-    #include "createPhiv.H"
-    #include "compressibleCreatePhi.H"
+    #include "createPhi.H"
+
+    // Mass flux (corrected by rhoEqn.H)
+    surfaceScalarField rhoPhi
+    (
+        IOobject
+        (
+            "rhoPhi",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        fvc::interpolate(rho)*phi
+    );
 
     Info<< "Reading transportProperties\n" << endl;
 
-    incompressibleTwoPhaseMixture twoPhaseProperties(U, phiv);
+    incompressibleTwoPhaseMixture twoPhaseProperties(U, phi);
 
     volScalarField& alphav(twoPhaseProperties.alpha1());
     alphav.oldTime();
@@ -72,5 +85,5 @@
     // Create incompressible turbulence model
     autoPtr<incompressible::turbulenceModel> turbulence
     (
-        incompressible::turbulenceModel::New(U, phiv, twoPhaseProperties)
+        incompressible::turbulenceModel::New(U, phi, twoPhaseProperties)
     );

@@ -17,13 +17,13 @@
     volVectorField HbyA("HbyA", U);
     HbyA = rAU*UEqn.H();
 
-    phiv = (fvc::interpolate(HbyA) & mesh.Sf())
+    phi = (fvc::interpolate(HbyA) & mesh.Sf())
          + rhorAUf*fvc::ddtCorr(U, Uf);
-    fvc::makeRelative(phiv, U);
+    fvc::makeRelative(phi, U);
 
     surfaceScalarField phiGradp(rhorAUf*mesh.magSf()*fvc::snGrad(p));
 
-    phiv -= phiGradp/rhof;
+    phi -= phiGradp/rhof;
 
     volScalarField rho0(rho - psi*p);
 
@@ -33,7 +33,7 @@
         (
             fvc::ddt(rho)
           + psi*correction(fvm::ddt(p))
-          + fvc::div(phiv, rho)
+          + fvc::div(phi, rho)
           + fvc::div(phiGradp)
           - fvm::laplacian(rhorAUf, p)
         );
@@ -42,7 +42,7 @@
 
         if (pimple.finalNonOrthogonalIter())
         {
-            phiv += (phiGradp + pEqn.flux())/rhof;
+            phi += (phiGradp + pEqn.flux())/rhof;
         }
     }
 
@@ -85,6 +85,6 @@
     {
         Uf = fvc::interpolate(U);
         surfaceVectorField n(mesh.Sf()/mesh.magSf());
-        Uf += n*(phiv/mesh.magSf() - (n & Uf));
+        Uf += n*(phi/mesh.magSf() - (n & Uf));
     }
 }

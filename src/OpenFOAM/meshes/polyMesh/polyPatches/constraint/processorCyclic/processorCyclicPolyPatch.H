@@ -122,7 +122,8 @@ public:
             const int myProcNo,
             const int neighbProcNo,
             const word& referPatchName,
-            const transformType transform = UNKNOWN
+            const transformType transform = UNKNOWN,
+            const word& patchType = typeName
         );
 
         //- Construct from dictionary

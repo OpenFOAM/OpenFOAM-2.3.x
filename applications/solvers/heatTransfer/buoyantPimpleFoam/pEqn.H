@@ -17,7 +17,7 @@
     (
         "phiHbyA",
         (
-            (fvc::interpolate(rho*U) & mesh.Sf())
+            (fvc::interpolate(rho*HbyA) & mesh.Sf())
           + rAUf*fvc::ddtCorr(rho, U, phi)
         )
       + phig
