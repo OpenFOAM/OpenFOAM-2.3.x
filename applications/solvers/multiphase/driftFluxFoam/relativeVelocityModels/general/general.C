@@ -62,11 +62,11 @@ Foam::relativeVelocityModels::general::~general()
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-Foam::tmp<Foam::volVectorField>
-Foam::relativeVelocityModels::general::Ur() const
+void Foam::relativeVelocityModels::general::correct()
 {
-    return
-        V0_
+    Udm_ =
+        (rhoC_/rho())
+       *V0_
        *(
             exp(-a_*max(alphaD_ - residualAlpha_, scalar(0)))
           - exp(-a1_*max(alphaD_ - residualAlpha_, scalar(0)))

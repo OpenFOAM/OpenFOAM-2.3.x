@@ -30,7 +30,7 @@ divSchemes
     default             none;
 
     div(rhoPhi,U)       Gauss linearUpwind grad(U);
-    div(phiUkm,Ukm)     Gauss linear;
+    div(tauDm)          Gauss linear;
     "div\(phi,alpha.*\)" Gauss vanLeer;
     "div\(phirb,alpha.*\)" Gauss linear;
     div(rhoPhi,k)       Gauss limitedLinear 1;

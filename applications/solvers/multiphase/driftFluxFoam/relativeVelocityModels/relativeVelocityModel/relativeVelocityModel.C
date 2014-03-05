@@ -85,23 +85,6 @@ Foam::relativeVelocityModel::relativeVelocityModel
         alphaC_.mesh(),
         dimensionedVector("Udm", dimVelocity, vector::zero),
         mixture.U().boundaryField().types()
-    ),
-
-    tau_
-    (
-        IOobject
-        (
-            "Udm",
-            alphaC_.time().timeName(),
-            alphaC_.mesh()
-        ),
-        alphaC_.mesh(),
-        dimensionedSymmTensor
-        (
-            "Udm",
-            sqr(dimVelocity)*dimDensity,
-            symmTensor::zero
-        )
     )
 {}
 
@@ -156,19 +139,28 @@ Foam::relativeVelocityModel::~relativeVelocityModel()
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-void Foam::relativeVelocityModel::update()
+tmp<volScalarField> Foam::relativeVelocityModel::rho() const
 {
-    tmp<volVectorField> URel(Ur());
+    return alphaC_*rhoC_ + alphaD_*rhoD_;
+}
 
-    tmp<volScalarField> betaC(alphaC_*rhoC_);
-    tmp<volScalarField> betaD(alphaD_*rhoD_);
-    tmp<volScalarField> rhoM(betaC() + betaD());
 
-    tmp<volVectorField> Udm = URel()*betaC()/rhoM;
-    tmp<volVectorField> Ucm = Udm() - URel;
+tmp<volSymmTensorField> Foam::relativeVelocityModel::tauDm() const
+{
+    volScalarField betaC(alphaC_*rhoC_);
+    volScalarField betaD(alphaD_*rhoD_);
 
-    Udm_ = Udm();
-    tau_ = betaD*sqr(Udm) + betaC*sqr(Ucm);
+    // Calculate the relative velocity of the continuous phase w.r.t the mean
+    volVectorField Ucm(betaD*Udm_/betaC);
+
+    return tmp<volSymmTensorField>
+    (
+        new volSymmTensorField
+        (
+            "tauDm",
+            betaD*sqr(Udm_) + betaC*sqr(Ucm)
+        )
+    );
 }
 
 

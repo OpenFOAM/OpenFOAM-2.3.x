@@ -81,10 +81,7 @@ protected:
         const dimensionedScalar& rhoD_;
 
         //- Dispersed diffusion velocity
-        volVectorField Udm_;
-
-        //- Stress
-        volSymmTensorField tau_;
+        mutable volVectorField Udm_;
 
 
 public:
@@ -127,8 +124,8 @@ public:
 
     // Member Functions
 
-        //- Calculate the relative velocity of the dispersed phase
-        virtual tmp<volVectorField> Ur() const = 0;
+        //- Return the mixture mean density
+        tmp<volScalarField> rho() const;
 
         //- Return the diffusion velocity of the dispersed phase
         const volVectorField& Udm() const
@@ -137,13 +134,10 @@ public:
         }
 
         //- Return the stress tensor due to the phase transport
-        const volSymmTensorField& tau() const
-        {
-            return tau_;
-        }
+        tmp<volSymmTensorField> tauDm() const;
 
-        //- Update the stored diffusion velocity and stress
-        void update();
+        //- Update the diffusion velocity
+        virtual void correct() = 0;
 };
 
 

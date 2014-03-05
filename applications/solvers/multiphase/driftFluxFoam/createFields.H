@@ -86,7 +86,7 @@
     // Relative Velocity
     // ~~~~~~~~~~~~~~~~~
 
-    autoPtr<relativeVelocityModel> uRelModelPtr
+    autoPtr<relativeVelocityModel> UdmModelPtr
     (
         relativeVelocityModel::New
         (
@@ -95,7 +95,7 @@
         )
     );
 
-    relativeVelocityModel& uRelModel(uRelModelPtr());
+    relativeVelocityModel& UdmModel(UdmModelPtr());
 
 
     // Turbulence

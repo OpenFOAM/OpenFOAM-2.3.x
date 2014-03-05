@@ -89,8 +89,8 @@ public:
 
     // Member Functions
 
-        //- Relative velocity
-        virtual tmp<volVectorField> Ur() const;
+        //- Update the diffusion velocity
+        virtual void correct();
 };
 
 

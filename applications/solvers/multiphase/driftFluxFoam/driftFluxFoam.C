@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
         {
             #include "alphaControls.H"
 
-            uRelModel.update();
+            UdmModel.correct();
 
             #include "alphaEqnSubCycle.H"
 
