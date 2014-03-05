@@ -53,6 +53,16 @@ Foam::PengRobinsonGas<Specie>::PengRobinsonGas
 {}
 
 
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+
+template<class Specie>
+void Foam::PengRobinsonGas<Specie>::write(Ostream& os) const
+{
+    Specie::write(os);
+}
+
+
 // * * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * //
 
 template<class Specie>

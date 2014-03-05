@@ -218,6 +218,7 @@ inline void Foam::PengRobinsonGas<Specie>::operator+=
     omega_ = molr1*omega_ + molr2*pg.omega_;
 }
 
+
 template<class Specie>
 inline void Foam::PengRobinsonGas<Specie>::operator-=
 (
@@ -235,6 +236,7 @@ inline void Foam::PengRobinsonGas<Specie>::operator-=
     Pc_ = molr1*Pc_ - molr2*pg.Pc_;
     omega_ = molr1*omega_ - molr2*pg.omega_;
 }
+
 
 template<class Specie>
 inline void Foam::PengRobinsonGas<Specie>::operator*=(const scalar s)
