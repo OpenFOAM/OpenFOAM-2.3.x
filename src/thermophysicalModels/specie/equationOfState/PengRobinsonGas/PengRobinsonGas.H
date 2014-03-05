@@ -93,10 +93,9 @@ class PengRobinsonGas
 :
     public Specie
 {
-private:
     // Private data
 
-         //- Critical Temperature [K]
+        //- Critical Temperature [K]
         scalar Tc_;
 
         //- Critical Pressure [Pa]
@@ -220,10 +219,6 @@ public:
         );
 };
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

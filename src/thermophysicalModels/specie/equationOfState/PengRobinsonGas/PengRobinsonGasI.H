@@ -27,13 +27,10 @@ License
 #include "PengRobinsonGas.H"
 #include "mathematicalConstants.H"
 
-namespace Foam
-{
-
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 template<class Specie>
-inline PengRobinsonGas<Specie>::PengRobinsonGas
+inline Foam::PengRobinsonGas<Specie>::PengRobinsonGas
 (
     const Specie& sp,
     const scalar& Tc,
@@ -51,7 +48,7 @@ inline PengRobinsonGas<Specie>::PengRobinsonGas
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Specie>
-inline PengRobinsonGas<Specie>::PengRobinsonGas
+inline Foam::PengRobinsonGas<Specie>::PengRobinsonGas
 (
     const word& name,
     const PengRobinsonGas& pg
@@ -65,7 +62,8 @@ inline PengRobinsonGas<Specie>::PengRobinsonGas
 
 
 template<class Specie>
-inline autoPtr<PengRobinsonGas <Specie> > PengRobinsonGas<Specie>::clone() const
+inline Foam::autoPtr<Foam::PengRobinsonGas <Specie> >
+Foam::PengRobinsonGas<Specie>::clone() const
 {
     return autoPtr<PengRobinsonGas<Specie> >
     (
@@ -75,7 +73,8 @@ inline autoPtr<PengRobinsonGas <Specie> > PengRobinsonGas<Specie>::clone() const
 
 
 template<class Specie>
-inline autoPtr<PengRobinsonGas<Specie> > PengRobinsonGas<Specie>::New
+inline Foam::autoPtr<Foam::PengRobinsonGas<Specie> >
+Foam::PengRobinsonGas<Specie>::New
 (
     Istream& is
 )
@@ -100,7 +99,11 @@ Foam::PengRobinsonGas<Specie>::New
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Specie>
-inline scalar PengRobinsonGas<Specie>::rho(scalar p, scalar T) const
+inline Foam::scalar Foam::PengRobinsonGas<Specie>::rho
+(
+    scalar p,
+    scalar T
+) const
 {
     scalar z = Z(p, T);
     return p/(z*this->R()*T);
@@ -108,7 +111,11 @@ inline scalar PengRobinsonGas<Specie>::rho(scalar p, scalar T) const
 
 
 template<class Specie>
-inline scalar PengRobinsonGas<Specie>::psi(scalar p, scalar T) const
+inline Foam::scalar Foam::PengRobinsonGas<Specie>::psi
+(
+    scalar p,
+    scalar T
+) const
 {
     scalar z = Z(p, T);
     return 1.0/(z*this->R()*T);
@@ -116,7 +123,11 @@ inline scalar PengRobinsonGas<Specie>::psi(scalar p, scalar T) const
 
 
 template<class Specie>
-inline scalar PengRobinsonGas<Specie>::Z(scalar p, scalar T) const
+inline Foam::scalar Foam::PengRobinsonGas<Specie>::Z
+(
+    scalar p,
+    scalar T
+) const
 {
     scalar a = 0.45724*sqr(this->R())*sqr(Tc_)/Pc_;
     scalar b = 0.07780*this->R()*Tc_/Pc_;
@@ -191,7 +202,7 @@ inline Foam::scalar Foam::PengRobinsonGas<Specie>::cpMcv
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 template<class Specie>
-inline void PengRobinsonGas<Specie>::operator+=
+inline void Foam::PengRobinsonGas<Specie>::operator+=
 (
     const PengRobinsonGas<Specie>& pg
 )
@@ -208,7 +219,7 @@ inline void PengRobinsonGas<Specie>::operator+=
 }
 
 template<class Specie>
-inline void PengRobinsonGas<Specie>::operator-=
+inline void Foam::PengRobinsonGas<Specie>::operator-=
 (
     const PengRobinsonGas<Specie>& pg
 )
@@ -226,14 +237,85 @@ inline void PengRobinsonGas<Specie>::operator-=
 }
 
 template<class Specie>
-inline void PengRobinsonGas<Specie>::operator*=(const scalar s)
+inline void Foam::PengRobinsonGas<Specie>::operator*=(const scalar s)
 {
      Specie::operator*=(s);
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
 
-} // End namespace Foam
+
+template<class Specie>
+Foam::PengRobinsonGas<Specie> Foam::operator+
+(
+    const PengRobinsonGas<Specie>& pg1,
+    const PengRobinsonGas<Specie>& pg2
+)
+{
+    scalar nMoles = pg1.nMoles() + pg2.nMoles();
+    scalar molr1 = pg1.nMoles()/nMoles;
+    scalar molr2 = pg2.nMoles()/nMoles;
+
+    return PengRobinsonGas<Specie>
+    (
+        static_cast<const Specie&>(pg1)
+      + static_cast<const Specie&>(pg2),
+        molr1*pg1.Tc_ + molr2*pg2.Tc_,
+        molr1*pg1.Pc_ + molr2*pg2.Pc_,
+        molr1*pg1.omega_ + molr2*pg2.omega_
+    );
+}
+
+
+template<class Specie>
+Foam::PengRobinsonGas<Specie> Foam::operator-
+(
+    const PengRobinsonGas<Specie>& pg1,
+    const PengRobinsonGas<Specie>& pg2
+)
+{
+    scalar nMoles = pg1.nMoles() + pg2.nMoles();
+    scalar molr1 = pg1.nMoles()/nMoles;
+    scalar molr2 = pg2.nMoles()/nMoles;
+
+    return PengRobinsonGas<Specie>
+    (
+        static_cast<const Specie&>(pg1)
+      - static_cast<const Specie&>(pg2),
+        molr1*pg1.Tc_ - molr2*pg2.Tc_,
+        molr1*pg1.Pc_ - molr2*pg2.Pc_,
+        molr1*pg1.omega_ - molr2*pg2.omega_
+    );
+}
+
+
+template<class Specie>
+Foam::PengRobinsonGas<Specie> Foam::operator*
+(
+    const scalar s,
+    const PengRobinsonGas<Specie>& pg
+)
+{
+    return PengRobinsonGas<Specie>
+    (
+        s*static_cast<const Specie&>(pg),
+        pg.Tc_,
+        pg.Pc_,
+        pg.omega_
+    );
+}
+
+
+template<class Specie>
+Foam::PengRobinsonGas<Specie> Foam::operator==
+(
+    const PengRobinsonGas<Specie>& pg1,
+    const PengRobinsonGas<Specie>& pg2
+)
+{
+    return pg2 - pg1;
+}
+
 
 // ************************************************************************* //

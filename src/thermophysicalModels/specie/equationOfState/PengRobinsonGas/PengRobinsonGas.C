@@ -30,15 +30,10 @@ Description
 #include "PengRobinsonGas.H"
 #include "IOstreams.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Specie>
-PengRobinsonGas<Specie>::PengRobinsonGas(Istream& is)
+Foam::PengRobinsonGas<Specie>::PengRobinsonGas(Istream& is)
 :
     Specie(is),
     Tc_(readScalar(is)),
@@ -62,83 +57,10 @@ Foam::PengRobinsonGas<Specie>::PengRobinsonGas
 {}
 
 
-// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
-
-template<class Specie>
-PengRobinsonGas<Specie> operator+
-(
-    const PengRobinsonGas<Specie>& pg1,
-    const PengRobinsonGas<Specie>& pg2
-)
-{
-    scalar nMoles = pg1.nMoles() + pg2.nMoles();
-    scalar molr1 = pg1.nMoles()/nMoles;
-    scalar molr2 = pg2.nMoles()/nMoles;
-
-    return PengRobinsonGas<Specie>
-    (
-        static_cast<const Specie&>(pg1)
-      + static_cast<const Specie&>(pg2),
-        molr1*pg1.Tc_ + molr2*pg2.Tc_,
-        molr1*pg1.Pc_ + molr2*pg2.Pc_,
-        molr1*pg1.omega_ + molr2*pg2.omega_
-    );
-}
-
-
-template<class Specie>
-PengRobinsonGas<Specie> operator-
-(
-    const PengRobinsonGas<Specie>& pg1,
-    const PengRobinsonGas<Specie>& pg2
-)
-{
-    scalar nMoles = pg1.nMoles() + pg2.nMoles();
-    scalar molr1 = pg1.nMoles()/nMoles;
-    scalar molr2 = pg2.nMoles()/nMoles;
-
-    return PengRobinsonGas<Specie>
-    (
-        static_cast<const Specie&>(pg1)
-      - static_cast<const Specie&>(pg2),
-        molr1*pg1.Tc_ - molr2*pg2.Tc_,
-        molr1*pg1.Pc_ - molr2*pg2.Pc_,
-        molr1*pg1.omega_ - molr2*pg2.omega_
-    );
-}
-
-
-template<class Specie>
-PengRobinsonGas<Specie> operator*
-(
-    const scalar s,
-    const PengRobinsonGas<Specie>& pg
-)
-{
-    return PengRobinsonGas<Specie>
-    (
-        s*static_cast<const Specie&>(pg),
-        pg.Tc_,
-        pg.Pc_,
-        pg.omega_
-    );
-}
-
-
-template<class Specie>
-PengRobinsonGas<Specie> operator==
-(
-    const PengRobinsonGas<Specie>& pg1,
-    const PengRobinsonGas<Specie>& pg2
-)
-{
-    return pg2 - pg1;
-}
-
 // * * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * //
 
 template<class Specie>
-Ostream& operator<<
+Foam::Ostream& Foam::operator<<
 (
     Ostream& os,
     const PengRobinsonGas<Specie>& pg
@@ -156,9 +78,5 @@ Ostream& operator<<
     return os;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //
