@@ -79,7 +79,7 @@ public:
         general
         (
             const dictionary& dict,
-            const incompressibleTwoPhaseMixture& mixture
+            const incompressibleTwoPhaseInteractingMixture& mixture
         );
 
 

@@ -1,4 +1,0 @@
-plastic/plastic.C
-BinghamPlastic/BinghamPlastic.C
-
-LIB = $(FOAM_LIBBIN)/libdriftFluxTransportModels

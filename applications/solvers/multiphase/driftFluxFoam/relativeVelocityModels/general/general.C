@@ -43,13 +43,13 @@ namespace relativeVelocityModels
 Foam::relativeVelocityModels::general::general
 (
     const dictionary& dict,
-    const incompressibleTwoPhaseMixture& mixture
+    const incompressibleTwoPhaseInteractingMixture& mixture
 )
 :
     relativeVelocityModel(dict, mixture),
-    a_(dict.lookup("a")),
-    a1_(dict.lookup("a1")),
-    V0_(dict.lookup("V0")),
+    a_("a", dimless, dict.lookup("a")),
+    a1_("a1", dimless, dict.lookup("a1")),
+    V0_("V0", dimVelocity, dict.lookup("V0")),
     residualAlpha_(dict.lookup("residualAlpha"))
 {}
 
@@ -65,13 +65,13 @@ Foam::relativeVelocityModels::general::~general()
 void Foam::relativeVelocityModels::general::correct()
 {
     Udm_ =
-        (rhoC_/rho())
+        (rhoc_/rho())
        *V0_
        *(
-            exp(-a_*max(alphaD_ - residualAlpha_, scalar(0)))
-          - exp(-a1_*max(alphaD_ - residualAlpha_, scalar(0)))
+            exp(-a_*max(alphad_ - residualAlpha_, scalar(0)))
+          - exp(-a1_*max(alphad_ - residualAlpha_, scalar(0)))
         )
-       /max(alphaC_, residualAlpha_);
+       /max(alphac_, residualAlpha_);
 }
 
 

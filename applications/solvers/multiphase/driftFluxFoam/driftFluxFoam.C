@@ -36,7 +36,7 @@ Description
 #include "fvCFD.H"
 #include "CMULES.H"
 #include "subCycle.H"
-#include "incompressibleTwoPhaseMixture.H"
+#include "incompressibleTwoPhaseInteractingMixture.H"
 #include "relativeVelocityModel.H"
 #include "nearWallDist.H"
 #include "wallFvPatch.H"
@@ -87,6 +87,7 @@ int main(int argc, char *argv[])
             #include "alphaEqnSubCycle.H"
 
             twoPhaseProperties.correct();
+            Info<< average(twoPhaseProperties.mu()) << endl;
 
             #include "UEqn.H"
 

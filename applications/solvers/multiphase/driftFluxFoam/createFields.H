@@ -33,13 +33,13 @@
     // ~~~~~~~~~
 
     Info<< "Reading transportProperties\n" << endl;
-    incompressibleTwoPhaseMixture twoPhaseProperties(U, phi);
+    incompressibleTwoPhaseInteractingMixture twoPhaseProperties(U, phi);
 
     volScalarField& alpha1(twoPhaseProperties.alpha1());
     volScalarField& alpha2(twoPhaseProperties.alpha2());
 
-    const dimensionedScalar& rho1 = twoPhaseProperties.rho1();
-    const dimensionedScalar& rho2 = twoPhaseProperties.rho2();
+    const dimensionedScalar& rho1 = twoPhaseProperties.rhod();
+    const dimensionedScalar& rho2 = twoPhaseProperties.rhoc();
 
     IOdictionary transportProperties
     (

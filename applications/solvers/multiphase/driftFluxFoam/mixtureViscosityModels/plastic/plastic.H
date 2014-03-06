@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::viscosityModels::plastic
+    Foam::mixtureViscosityModels::plastic
 
 Description
      Viscosity correction model for a generic power-law plastic.
@@ -35,7 +35,7 @@ SourceFiles
 #ifndef plastic_H
 #define plastic_H
 
-#include "viscosityModel.H"
+#include "mixtureViscosityModel.H"
 #include "dimensionedScalar.H"
 #include "volFields.H"
 
@@ -44,9 +44,9 @@ SourceFiles
 namespace Foam
 {
 
-class incompressibleTwoPhaseMixture;
+class incompressibleTwoPhaseInteractingMixture;
 
-namespace viscosityModels
+namespace mixtureViscosityModels
 {
 
 /*---------------------------------------------------------------------------*\
@@ -55,7 +55,7 @@ namespace viscosityModels
 
 class plastic
 :
-    public viscosityModel
+    public mixtureViscosityModel
 {
 protected:
 
@@ -70,31 +70,11 @@ protected:
         //- Plastic viscosity exponent
         dimensionedScalar plasticViscosityExponent_;
 
-        //- Minimum viscosity
-        dimensionedScalar nuMin_;
-
         //- Maximum viscosity
-        dimensionedScalar nuMax_;
+        dimensionedScalar muMax_;
 
         //- Plastic phase fraction
         const volScalarField& alpha_;
-
-        //- Viscosity
-        volScalarField nu_;
-
-
-    // Protected Member Functions
-
-        //- Calculate and return the laminar viscosity
-        virtual tmp<volScalarField> calcNu() const;
-
-        //- Calculate and return the laminar viscosity correction
-        virtual tmp<volScalarField> correctionNu
-        (
-            const dimensionedScalar& rhoc,
-            const dimensionedScalar& rhop,
-            const volScalarField& nuc
-        ) const;
 
 
 public:
@@ -123,23 +103,9 @@ public:
 
     // Member Functions
 
-        //- Return the laminar viscosity
-        tmp<volScalarField> nu() const
-        {
-            return nu_;
-        }
-
-        //- Return the laminar viscosity for patch
-        tmp<scalarField> nu(const label patchi) const
-        {
-            return nu_.boundaryField()[patchi];
-        }
-
-        //- Correct the laminar viscosity
-        void correct()
-        {
-            nu_ = calcNu();
-        }
+        //- Return the mixture viscosity
+        //  given the viscosity of the continuous phase
+        tmp<volScalarField> mu(const volScalarField& muc) const;
 
         //- Read transportProperties dictionary
         bool read(const dictionary& viscosityProperties);
@@ -148,7 +114,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace viscosityModels
+} // End namespace mixtureViscosityModels
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
