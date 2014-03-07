@@ -24,6 +24,8 @@ particles
     {
         d               3e-4;
     }
+
+    alphaMax 0.62;
 }
 
 air

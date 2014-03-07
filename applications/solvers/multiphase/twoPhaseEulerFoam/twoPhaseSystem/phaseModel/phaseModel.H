@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -71,6 +71,9 @@ class phaseModel
 
         dictionary phaseDict_;
 
+        //- Optional maximum phase-fraction (e.g. packing limit)
+        scalar alphaMax_;
+
         //- Thermophysical properties
         autoPtr<rhoThermo> thermo_;
 
@@ -122,6 +125,13 @@ public:
 
         //- Return the other phase in this two-phase system
         const phaseModel& otherPhase() const;
+
+        //- Optional maximum phase-fraction (e.g. packing limit)
+        //  Defaults to 1
+        scalar alphaMax() const
+        {
+            return alphaMax_;
+        }
 
         //- Return the Sauter-mean diameter
         tmp<volScalarField> d() const;
