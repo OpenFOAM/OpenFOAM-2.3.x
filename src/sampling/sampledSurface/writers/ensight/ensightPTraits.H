@@ -32,6 +32,7 @@ Description
 #ifndef ensightPTraits_H
 #define ensightPTraits_H
 
+#include "vector.H"
 #include "pTraits.H"
 #include "fieldTypes.H"
 

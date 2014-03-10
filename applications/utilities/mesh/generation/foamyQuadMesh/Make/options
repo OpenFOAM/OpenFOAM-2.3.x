@@ -27,6 +27,8 @@ EXE_INC = \
 
 EXE_LIBS = \
     $(CGAL_LIBS) \
+    -lboost_thread-mt \
+    -lgmp \
     -lextrude2DMesh \
     -lextrudeModel \
     -lcv2DMesh \

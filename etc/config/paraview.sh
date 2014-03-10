@@ -144,6 +144,19 @@ else
     unset PV_PLUGIN_PATH
 fi
 
+if [ $WM_ARCH_BASE=="darwin" ]
+then
+    : ${PARAVIEW_APP_DIR:="/Applications/paraview.app"}; export PARAVIEW_APP_DIR
+    if [ -d $PARAVIEW_APP_DIR -a ! -r $ParaView_DIR ]
+    then
+	echo "Using paraview in directory $PARAVIEW_APP_DIR"
+	unset ParaView_VERSION ParaView_MAJOR ParaView_DIR
+	# needs to be an alias because if it is in the path the Python Shell does not work
+	alias paraview=$PARAVIEW_APP_DIR/Contents/MacOS/paraview
+	export PATH=$PARAVIEW_APP_DIR/Contents/bin:$PATH
+    fi
+fi
+
 unset _foamParaviewEval
 unset cleaned cmake paraviewInstDir paraviewPython
 

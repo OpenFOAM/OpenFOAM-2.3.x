@@ -35,6 +35,22 @@ cgal_version=CGAL-4.3
 export BOOST_ARCH_PATH=$WM_THIRD_PARTY_DIR/platforms/$WM_ARCH$WM_COMPILER/$boost_version
 export CGAL_ARCH_PATH=$WM_THIRD_PARTY_DIR/platforms/$WM_ARCH$WM_COMPILER/$cgal_version
 
+if [ -n "$WM_USE_MACPORT" ]
+then
+    if [ -d "/opt/local/include/boost" ]
+    then
+	export BOOST_ARCH_PATH=/opt/local
+    else
+	echo "No boost in MacPorts. Install boost with 'port install boost'"
+    fi
+    if [ -d "/opt/local/include/CGAL" ]
+    then
+	export CGAL_ARCH_PATH=/opt/local
+    else
+	echo "No CGAL in MacPorts. Install CGAL with 'port install cgal'"
+    fi
+fi
+
 if [ "$FOAM_VERBOSE" -a "$PS1" ]
 then
     echo "Using CGAL and boost"

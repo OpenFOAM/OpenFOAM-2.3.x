@@ -46,6 +46,14 @@ _foamAddLib()
     while [ $# -ge 1 ]
     do
         export LD_LIBRARY_PATH=$1:$LD_LIBRARY_PATH
+	if [ "$WM_ARCH_BASE" == "darwin" ]
+	then
+	    # do NOT add the lib of MacPort as this might break programs
+	    if [ "$1" != "/opt/local/lib" ]
+	    then
+		export DYLD_LIBRARY_PATH=$1:$DYLD_LIBRARY_PATH
+	    fi
+	fi
         shift
     done
 }
@@ -150,6 +158,152 @@ SunOS)
     export WM_CXXFLAGS='-mabi=64 -fPIC'
     export WM_LDFLAGS='-mabi=64 -G0'
     ;;
+
+Darwin)
+    export WM_ARCH_BASE=darwin
+
+    case `uname -p` in
+    powerpc)
+	export WM_ARCH=darwinPpc
+	;;
+    i386)
+	export WM_ARCH=darwinIntel
+        case $WM_ARCH_OPTION in
+        32)
+            export WM_COMPILER_LIB_ARCH=32
+            export WM_CC='gcc'
+            export WM_CXX='g++'
+            export WM_CFLAGS='-m32 -fPIC'
+            export WM_CXXFLAGS='-m32 -fPIC'
+            export WM_LDFLAGS='-m32'
+            ;;
+        64)
+            WM_ARCH=darwinIntel64
+            export WM_COMPILER_LIB_ARCH=64
+            export WM_CC='gcc'
+            export WM_CXX='g++'
+            export WM_CFLAGS='-m64 -fPIC'
+            export WM_CXXFLAGS='-m64 -fPIC'
+            export WM_LDFLAGS='-m64'
+            ;;
+        *)
+            echo Unknown WM_ARCH_OPTION $WM_ARCH_OPTION, should be 32 or 64
+            ;;
+        esac
+	;;
+    *)
+        echo "Unknown architecture "`uname -p` "for Darwin"
+    esac
+
+    which -s port >/dev/null
+    if [ $? -eq "0" -a -d '/opt/local/etc/macports' ]
+    then
+	if [ "$FOAM_VERBOSE" -a "$PS1" ]
+	then
+	    echo "Using Macports binaries"
+	fi
+
+	export WM_USE_MACPORT=1
+	export WM_BASE_COMPILER=`echo $WM_COMPILER | tr -d "[:digit:]"`
+	export WM_MACPORT_MPI_VERSION=`echo $WM_COMPILER | tr "[:upper:]" "[:lower:]"`
+	export WM_MACPORT_VERSION=`echo $WM_MACPORT_MPI_VERSION | tr -d "[:alpha:]" | sed -e "s/\(.\)\(.\)/\1\.\2/"`
+
+	if [ -z "$WM_CHOSEN_MAC_MPI" ]
+	then
+	    if [ -e '/opt/local/bin/mpicc' ]
+	    then
+		readlink /opt/local/bin/mpicc | grep openmpi >/dev/null
+		if [ $? -eq "0" ]
+		then
+		    export WM_MPLIB=MACPORTOPENMPI
+		    if [ "$FOAM_VERBOSE" -a "$PS1" ]
+		    then
+			echo "Using OpenMPI from MacPorts"
+		    fi
+		else
+		    readlink /opt/local/bin/mpicc | grep mpich >/dev/null
+		    if [ $? -eq "0" ]
+		    then
+			export WM_MPLIB=MACPORTMPICH
+			if [ "$FOAM_VERBOSE" -a "$PS1" ]
+			then
+			    echo "Using MPICH from MacPorts"
+			fi
+		    else
+			echo "/opt/local/bin/mpicc neither OpenMPI nor MPICH. Confused. Defaulting to OPENMPI"
+			export WM_MPLIB=OPENMPI
+		    fi
+		fi
+	    fi
+	else
+	    export WM_MPLIB=$WM_CHOSEN_MAC_MPI
+	    if [ "$FOAM_VERBOSE" -a "$PS1" ]
+	    then
+		echo "User chose WM_CHOSEN_MAC_MPI=$WM_CHOSEN_MAC_MPI"
+	    fi
+	fi
+
+	if [ "$WM_MPLIB" == "MACPORTOPENMPI" ]
+	then
+	    if [ ! -e "/opt/local/lib/openmpi-$WM_MACPORT_MPI_VERSION" ]
+	    then
+		export WM_MACPORT_MPI_VERSION=mp
+		if [ ! -e "/opt/local/lib/openmpi-$WM_MACPORT_MPI_VERSION" ]
+		then
+		    echo "Proper OpenMPI not installed. Either do 'port install openmpi-$WM_MACPORT_MPI_VERSION' or 'port install openmpi-default'"
+		fi
+	    fi
+	else
+	    if [ "$WM_MPLIB" == "MACPORTMPICH" ]
+	    then
+		if [ ! -e "/opt/local/lib/mpich-$WM_MACPORT_MPI_VERSION" ]
+		then
+		    echo "MPICH wants the same version as the used compiler. Do 'port install mpich-$WM_MACPORT_MPI_VERSION'"
+		fi
+	    fi
+	fi
+
+	if [ "$WM_COMPILER" != "Gcc" ]
+	then
+	    if [ "$WM_BASE_COMPILER" == "Gcc" ]
+	    then
+		export WM_CC="gcc-mp-$WM_MACPORT_VERSION"
+		export WM_CXX="g++-mp-$WM_MACPORT_VERSION"
+	    elif [ "$WM_BASE_COMPILER" == "Clang" ]
+	    then
+		export WM_CC="clang-mp-$WM_MACPORT_VERSION"
+		export WM_CXX="clang++-mp-$WM_MACPORT_VERSION"
+	    elif [ "$WM_BASE_COMPILER" == "Dragonegg" ]
+	    then
+		export WM_CC="dragonegg-$WM_MACPORT_VERSION-gcc"
+		export WM_CXX="dragonegg-$WM_MACPORT_VERSION-g++"
+	    else
+		echo "Unknown base compiler $WM_BASE_COMPILER"
+	    fi
+
+	    ruleDirBase=$WM_PROJECT_DIR/wmake/rules/$WM_ARCH
+	    ruleDirTarget=$ruleDirBase$WM_BASE_COMPILER
+	    ruleDir=$ruleDirBase$WM_COMPILER
+	    if [ ! -e $ruleDir ]
+	    then
+		echo "Rule directory $ruleDir not existing. Linking to $ruleDirTarget"
+		ln -s $ruleDirTarget $ruleDir
+	    fi
+	    unset ruleDir ruleDirBase
+	fi
+    else
+	echo "Seems you're not using MacPorts. This is currently not supported/tested. Find this line in 'etc/config/settings.sh', modify it accordingly and send patches to Bernhard"
+        export WM_COMPILER=
+        export WM_MPLIB=OPENMPI
+    fi
+
+    # Make sure that binaries use the best features of the used OS-Version
+    # We need to get rid of the revision number from this string. eg turn "10.7.5" into "10.7"
+    #    v=(`sw_vers -productVersion | sed 's/\./ /g'`)
+    #    export MACOSX_DEPLOYMENT_TARGET="${v[1]}.${v[2]}"
+    export MACOSX_DEPLOYMENT_TARGET=`sw_vers -productVersion | sed -e "s/\([0-9][0-9]*\)\.\([0-9][0-9]*\)\.\([0-9][0-9]*\)/\1.\2/g"`
+    ;;
+
 
 *)    # an unsupported operating system
     /bin/cat <<USAGE 1>&2
@@ -373,6 +527,19 @@ SYSTEMOPENMPI)
     unset libDir
     ;;
 
+MACPORTOPENMPI)
+	unset OPAL_PREFIX
+
+	export FOAM_MPI=openmpi-macport-$WM_MACPORT_MPI_VERSION
+
+	# Currently not correctly working on MacPorts
+	#	libDir=`mpicc-openmpi-$WM_MACPORT_MPI_VERSION --showme:libdirs`
+	libDir=/opt/local/lib/openmpi-$WM_MACPORT_MPI_VERSION
+
+	_foamAddLib     $libDir
+	unset libDir
+	;;
+
 OPENMPI)
     export FOAM_MPI=openmpi-1.6.5
     # optional configuration tweaks:
@@ -419,6 +586,17 @@ MPICH-GM)
     _foamAddLib     $MPI_ARCH_PATH/lib
 
     _foamAddLib     $GM_LIB_PATH
+    ;;
+
+MACPORTMPICH)
+    export FOAM_MPI=mpich-macports-$WM_MACPORT_MPI_VERSION
+    export MPI_HOME=$WM_THIRD_PARTY_DIR/$FOAM_MPI
+
+    libDir=/opt/local/lib/mpich-$WM_MACPORT_MPI_VERSION
+
+    _foamAddLib     $libDir
+    unset libDir
+
     ;;
 
 HPMPI)
@@ -548,6 +726,23 @@ then
 fi
 export MPI_BUFFER_SIZE
 
+if [ -n "$WM_USE_MACPORT" ]
+then
+    if [ -e "/opt/local/include/mpfr.h" ]
+    then
+	export MPFR_ARCH_PATH=/opt/local
+	unset MPFR_VERSION
+    else
+	echo "No mpfr in MacPorts. Install mpfr with 'port install mpfr'"
+    fi
+    if [ -e "/opt/local/include/gmp.h" ]
+    then
+	export GMP_ARCH_PATH=/opt/local
+	unset GMP_VERSION
+    else
+	echo "No gmp in MacPorts. Install gmp with 'port install gmp'"
+    fi
+fi
 
 # cleanup environment:
 # ~~~~~~~~~~~~~~~~~~~~

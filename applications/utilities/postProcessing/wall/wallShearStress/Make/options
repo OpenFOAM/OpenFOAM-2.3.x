@@ -7,8 +7,10 @@ EXE_INC = \
 EXE_LIBS = \
     -lincompressibleTransportModels \
     -lincompressibleRASModels \
+    -lincompressibleTurbulenceModel \
     -lfluidThermophysicalModels \
     -lspecie \
     -lcompressibleRASModels \
+    -lcompressibleTurbulenceModel \
     -lfiniteVolume \
     -lgenericPatchFields

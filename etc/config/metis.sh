@@ -36,4 +36,15 @@
 export METIS_VERSION=metis-5.1.0
 export METIS_ARCH_PATH=$WM_THIRD_PARTY_DIR/platforms/$WM_ARCH$WM_COMPILER/$METIS_VERSION
 
+if [ -n "$WM_USE_MACPORT" ]
+then
+    if [ -e "/opt/local/include/metis.h" ]
+    then
+	export METIS_ARCH_PATH=/opt/local
+	unset METIS_VERSION
+    else
+	echo "No metis in MacPorts. Install metis with 'port install metis'"
+    fi
+fi
+
 # -----------------------------------------------------------------------------

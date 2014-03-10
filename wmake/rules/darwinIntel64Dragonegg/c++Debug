@@ -1,0 +1,2 @@
+c++DBUG    = -ggdb2 -DFULLDEBUG
+c++OPT      = -O0 -fdefault-inline

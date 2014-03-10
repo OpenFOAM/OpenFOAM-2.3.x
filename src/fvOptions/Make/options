@@ -13,5 +13,4 @@ LIB_LIBS = \
     -lfiniteVolume \
     -lsampling \
     -lmeshTools \
-    /*-lsolidThermo*/ \
     -lcompressibleTurbulenceModel

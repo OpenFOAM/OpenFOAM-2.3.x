@@ -20,6 +20,11 @@ wmake $makeType renumberMethods
 
 if [ -n "$BOOST_ARCH_PATH" ]
 then
+    if [ -n "$WM_USE_MACPORT" ]
+    then
+        export BOOST_THREAD_EXTENSION=-mt
+    fi
+
     wmake $makeType SloanRenumber
 else
     echo

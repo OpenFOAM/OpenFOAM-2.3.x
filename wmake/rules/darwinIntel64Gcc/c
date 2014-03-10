@@ -1,0 +1,16 @@
+.SUFFIXES: .c .h
+
+cWARN        = -Wall
+
+cc          = $(WM_CC) -m64 -fsignaling-nans  -ftrapping-math
+
+include $(RULES)/c$(WM_COMPILE_OPTION)
+
+cFLAGS      = $(GFLAGS) $(cWARN) $(cOPT) $(cDBUG) $(LIB_HEADER_DIRS) -fPIC -Ddarwin
+
+ctoo        = $(WM_SCHEDULER) $(cc) $(cFLAGS) -c $$SOURCE -o $@
+
+LINK_LIBS   = $(cDBUG)
+
+LINKLIBSO   = $(cc) -dynamiclib  -flat_namespace -undefined suppress
+LINKEXE     = $(cc) -Xlinker -z -Xlinker nodefs

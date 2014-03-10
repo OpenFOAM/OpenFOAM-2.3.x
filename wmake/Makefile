@@ -91,7 +91,11 @@ EXE_DEP         = $(OBJECTS_DIR)/options
 LIB             = libNULL
 
 # Shared library extension
+ifeq ($(WM_ARCH_BASE),darwin)
+SO              = dylib
+else
 SO              = so
+endif
 
 # Project executable
 EXE             = $(WM_PROJECT).out

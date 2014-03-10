@@ -1,0 +1,5 @@
+PFLAGS     = -DOMPI_SKIP_MPICXX
+# PINC       = $(shell mpicc-openmpi-$(WM_MACPORT_MPI_VERSION) --showme:compile)
+# PLIBS      = $(shell mpicc-openmpi-$(WM_MACPORT_MPI_VERSION)  --showme:link)
+PINC         = -I/opt/local/include/openmpi-$(WM_MACPORT_MPI_VERSION)
+PLIBS        = -L/opt/local/lib/openmpi-$(WM_MACPORT_MPI_VERSION) -lmpi

@@ -36,8 +36,10 @@ EXE_LIBS = \
     -lsampling \
     -lcompressibleRASModels \
     -lcompressibleLESModels \
+    -lcompressibleTurbulenceModel \
     -lspecie \
     -lfluidThermophysicalModels \
+    -lliquidProperties \
     -lsolidProperties \
     -lsolidMixtureProperties \
     -lthermophysicalFunctions \
@@ -53,5 +55,6 @@ EXE_LIBS = \
     -lpyrolysisModels \
     -lregionCoupling \
     -llagrangianIntermediate \
+    -llagrangian \
     -llagrangianTurbulence \
     -lODE

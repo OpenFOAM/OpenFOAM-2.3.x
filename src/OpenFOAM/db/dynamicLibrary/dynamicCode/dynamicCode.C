@@ -50,6 +50,11 @@ const char* const Foam::dynamicCode::libTargetRoot =
 
 const char* const Foam::dynamicCode::topDirName = "dynamicCode";
 
+#ifndef darwin
+const char* const Foam::dynamicCode::dynamicLibExtension = ".so";
+#else
+const char* const Foam::dynamicCode::dynamicLibExtension = ".dylib";
+#endif
 
 // * * * * * * * * * * * * * Static Member Functions * * * * * * * * * * * * //
 
@@ -334,7 +339,7 @@ Foam::fileName Foam::dynamicCode::codeRelPath() const
 
 Foam::fileName Foam::dynamicCode::libRelPath() const
 {
-    return codeRelPath()/libSubDir_/"lib" + codeName_ + ".so";
+    return codeRelPath()/libSubDir_/"lib" + codeName_ + dynamicLibExtension;
 }
 
 

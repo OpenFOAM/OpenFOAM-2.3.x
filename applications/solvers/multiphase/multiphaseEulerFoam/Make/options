@@ -17,6 +17,7 @@ EXE_LIBS = \
     -linterfaceProperties \
     -lincompressibleTransportModels \
     -lcompressibleMultiphaseEulerianInterfacialModels \
+    -lincompressibleTurbulenceModel \
     -lincompressibleLESModels \
     -lincompressibleRASModels \
     -lfiniteVolume

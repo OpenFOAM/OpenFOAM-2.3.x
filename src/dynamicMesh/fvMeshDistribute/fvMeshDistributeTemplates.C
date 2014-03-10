@@ -231,7 +231,7 @@ void Foam::fvMeshDistribute::sendFields
         // Send all fieldNames. This has to be exactly the same set as is
         // being received!
         const GeoField& fld =
-            subsetter.baseMesh().lookupObject<GeoField>(fieldNames[i]);
+            subsetter.baseMesh().objectRegistry::lookupObject<GeoField>(fieldNames[i]);
 
         tmp<GeoField> tsubfld = subsetter.interpolate(fld);
 

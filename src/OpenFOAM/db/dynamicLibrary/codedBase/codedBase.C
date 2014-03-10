@@ -228,13 +228,15 @@ void Foam::codedBase::createLibrary
 
         off_t mySize = Foam::fileSize(libPath);
         off_t masterSize = mySize;
-        Pstream::scatter(masterSize);
+        label scatterMaster=masterSize;
+        Pstream::scatter(scatterMaster);
+        masterSize=scatterMaster;
 
         if (debug)
         {
             Pout<< endl<< "on processor " << Pstream::myProcNo()
-                << " have masterSize:" << masterSize
-                << " and localSize:" << mySize
+                << " have masterSize:" << label(masterSize)
+                << " and localSize:" << label(mySize)
                 << endl;
         }
 
@@ -244,9 +246,9 @@ void Foam::codedBase::createLibrary
             if (debug)
             {
                 Pout<< "Local file " << libPath
-                    << " not of same size (" << mySize
+                    << " not of same size (" << label(mySize)
                     << ") as master ("
-                    << masterSize << "). Waiting for "
+                    << label(masterSize) << "). Waiting for "
                     << regIOobject::fileModificationSkew
                     << " seconds." << endl;
             }
@@ -264,8 +266,8 @@ void Foam::codedBase::createLibrary
                 )   << "Cannot read (NFS mounted) library " << nl
                     << libPath << nl
                     << "on processor " << Pstream::myProcNo()
-                    << " detected size " << mySize
-                    << " whereas master size is " << masterSize
+                    << " detected size " << label(mySize)
+                    << " whereas master size is " << label(masterSize)
                     << " bytes." << nl
                     << "If your case is not NFS mounted"
                     << " (so distributed) set fileModificationSkew"
@@ -277,8 +279,8 @@ void Foam::codedBase::createLibrary
         if (debug)
         {
             Pout<< endl<< "on processor " << Pstream::myProcNo()
-                << " after waiting: have masterSize:" << masterSize
-                << " and localSize:" << mySize
+                << " after waiting: have masterSize:" << label(masterSize)
+                << " and localSize:" << label(mySize)
                 << endl;
         }
     }

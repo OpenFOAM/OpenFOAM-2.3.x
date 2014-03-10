@@ -51,7 +51,7 @@ bool Foam::ensightPart::isFieldDefined(const List<scalar>& field) const
         {
             const label id = idList[i];
 
-            if (id >= field.size() || isnan(field[id]))
+            if (id >= field.size() || std::isnan(field[id]))
             {
                 return false;
             }

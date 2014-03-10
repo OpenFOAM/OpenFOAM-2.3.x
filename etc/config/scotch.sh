@@ -36,4 +36,16 @@
 export SCOTCH_VERSION=scotch_6.0.0
 export SCOTCH_ARCH_PATH=$WM_THIRD_PARTY_DIR/platforms/$WM_ARCH$WM_COMPILER/$SCOTCH_VERSION
 
+if [ -n "$WM_USE_MACPORT" ]
+then
+    if [ -e "/opt/local/include/scotch.h" ]
+    then
+	export SCOTCH_ARCH_PATH=/opt/local
+	export SCOTCH_ROOT=$SCOTCH_ARCH_PATH
+#	unset SCOTCH_VERSION
+    else
+	echo "No scotch in MacPorts. Install scotch with 'port install scotch'"
+    fi
+fi
+
 # -----------------------------------------------------------------------------

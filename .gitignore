@@ -35,6 +35,7 @@ core
 lnInclude
 
 # build directories - anywhere
+darwinIntel64Gcc*/
 linux*Clang*/
 linux*Gcc*/
 linux*Icc*/

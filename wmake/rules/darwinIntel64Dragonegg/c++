@@ -1,0 +1,22 @@
+.SUFFIXES: .C .cxx .cc .cpp
+
+c++WARN     = -Wall -Wextra -Wno-unused-parameter -Wold-style-cast -Wnon-virtual-dtor
+
+CC          = $(WM_CXX) -m64 -fsignaling-nans  -ftrapping-math
+
+include $(RULES)/c++$(WM_COMPILE_OPTION)
+
+ptFLAGS     = -DNoRepository -ftemplate-depth-100
+
+c++FLAGS    = $(GFLAGS) $(c++WARN) $(c++OPT) $(c++DBUG) $(ptFLAGS) $(LIB_HEADER_DIRS) -fPIC -Ddarwin
+
+Ctoo        = $(WM_SCHEDULER) $(CC) $(c++FLAGS) -c $$SOURCE -o $@
+cxxtoo      = $(Ctoo)
+cctoo       = $(Ctoo)
+cpptoo      = $(Ctoo)
+
+LINK_LIBS   = $(c++DBUG) -lpthread
+
+LINKLIBSO   = $(CC) $(c++FLAGS) -lpthread -dynamiclib -undefined dynamic_lookup
+# LINKEXE     = $(CC) $(c++FLAGS) -lpthread -L$(FOAM_LIBBIN) -lOpenFOAM -L$(FOAM_MPI_LIBBIN) -lPstream
+LINKEXE     = $(CC) $(c++FLAGS) -lpthread -L$(FOAM_LIBBIN)/$(FOAM_MPI) -lPstream

@@ -1,0 +1,4 @@
+cDBUG       = -g -DFULLDEBUG
+cOPT        = -O0
+# cDBUG       = -ggdb -DFULLDEBUG
+# cOPT        = -O1 -fdefault-inline -finline-functions

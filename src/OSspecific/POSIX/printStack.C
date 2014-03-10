@@ -33,6 +33,11 @@ License
 #include <cxxabi.h>
 #include <execinfo.h>
 #include <dlfcn.h>
+#include <string.h>
+
+#ifdef darwin
+#include <mach-o/dyld.h>
+#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,11 +58,22 @@ string pOpen(const string &cmd, label line=0)
         for (label cnt = 0; cnt <= line; cnt++)
         {
             char buffer[MAX];
+
             char* s = fgets(buffer, MAX-1, cmdPipe);
 
             if (s == NULL)
             {
+#ifdef darwin
+                // workaround for the Python-Script
+                for(int i=0;i<MAX;i++) {
+                    if(buffer[i]=='\n') {
+                        buffer[i]='\0';
+                    }
+                }
+                return buffer;
+#else
                 return "";
+#endif
             }
 
             if (cnt == line)
@@ -86,7 +102,11 @@ void printSourceFileAndLine
 {
     word myAddress = address;
 
+#ifndef darwin
     if (filename.ext() == "so")
+#else
+    if (filename.ext() == "dylib")
+#endif
     {
         // Convert offset into .so into offset into executable.
 
@@ -97,7 +117,7 @@ void printSourceFileAndLine
 
         dladdr(addr, &info);
 
-        unsigned long offset = ulong(info.dli_fbase);
+        unsigned long offset = (unsigned long)(info.dli_fbase);
 
         IStringStream addressStr(address.substr(2));
         long addressValue = ReadHex<long>(addressStr);
@@ -109,11 +129,19 @@ void printSourceFileAndLine
         myAddress = nStream.str();
     }
 
+#ifndef darwin
     if (filename[0] == '/')
+#else
+    if (1)
+#endif
     {
         string line = pOpen
         (
+#ifndef darwin
             "addr2line -f --demangle=auto --exe "
+#else
+            "addr2line4Mac.py "
+#endif
           + filename
           + " "
           + myAddress,
@@ -151,7 +179,11 @@ void getSymbolForRaw
     {
         string fcnt = pOpen
         (
+#ifndef darwin
             "addr2line -f --demangle=auto --exe "
+#else
+            "addr2line4Mac.py "
+#endif
           + filename
           + " "
           + address
@@ -165,7 +197,6 @@ void getSymbolForRaw
     }
     os  << "Uninterpreted: " << raw.c_str();
 }
-
 
 void error::safePrintStack(std::ostream& os)
 {
@@ -231,6 +262,7 @@ void error::printStack(Ostream& os)
 
         os  << '#' << label(i) << "  ";
         //os  << "Raw   : " << msg << "\n\t";
+#ifndef darwin
         {
             string::size_type lPos = msg.find('[');
             string::size_type rPos = msg.find(']');
@@ -260,7 +292,38 @@ void error::printStack(Ostream& os)
         }
 
         string::size_type bracketPos = msg.find('(');
-
+#else
+        string::size_type counter=0;
+        while(msg[counter]!=' ') {
+            counter++;
+        }
+        while(msg[counter]==' ') {
+            counter++;
+        }
+        string::size_type fileStart=counter;
+        while(msg[counter]!=' ') {
+            counter++;
+        }
+        programFile = msg.substr(fileStart,counter-fileStart);
+        if(programFile=="???") {
+            char path[1024];
+            uint32_t size = sizeof(path);
+            if (_NSGetExecutablePath(path, &size) == 0) {
+                programFile=path;
+            } else {
+                programFile="unknownFile";
+            }
+        }
+        while(msg[counter]==' ') {
+            counter++;
+        }
+        string::size_type addrStart=counter;
+        while(msg[counter]!=' ') {
+            counter++;
+        }
+        address = msg.substr(addrStart,counter-addrStart);
+#endif
+#ifndef darwin
         if (bracketPos != string::npos)
         {
             string::size_type start = bracketPos+1;
@@ -270,7 +333,21 @@ void error::printStack(Ostream& os)
             if (plusPos != string::npos)
             {
                 string cName(msg.substr(start, plusPos-start));
+#else
+        if(1){
+            while(msg[counter]==' ') {
+                counter++;
+            }
+            string::size_type nameStart=counter;
+            while(msg[counter]!=' ') {
+                counter++;
+            }
 
+            string::size_type start = counter;
+
+            if(1) {
+                string cName(msg.substr(nameStart,counter-nameStart));
+#endif
                 int status;
                 char* cplusNamePtr = abi::__cxa_demangle
                 (

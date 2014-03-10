@@ -30,6 +30,7 @@ License
 #include "dynamicCode.H"
 #include "dynamicCodeContext.H"
 #include "Time.H"
+#include "longLong.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 

@@ -1,0 +1,3 @@
+cDBUG       = 
+cOPT        = -O2
+# cOPT        = -O3

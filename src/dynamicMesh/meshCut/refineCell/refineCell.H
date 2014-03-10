@@ -35,8 +35,8 @@ SourceFiles
 #ifndef refineCell_H
 #define refineCell_H
 
-#include "label.H"
 #include "vector.H"
+#include "label.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -123,4 +123,3 @@ public:
 #endif
 
 // ************************************************************************* //
-

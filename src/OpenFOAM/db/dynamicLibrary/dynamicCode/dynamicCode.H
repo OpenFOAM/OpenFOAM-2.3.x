@@ -109,7 +109,8 @@ protected:
         //- Top-level directory name for copy/compiling
         static const char* const topDirName;
 
-
+        static const char* const dynamicLibExtension;
+       
     // Protected Member Functions
 
         //- Copy lines while expanding variables
@@ -221,7 +222,7 @@ public:
         //  Corresponds to codeRoot()/libSubDir()/lib\<codeName\>.so
         fileName libPath() const
         {
-            return codeRoot_/libSubDir_/"lib" + codeName_ + ".so";
+            return codeRoot_/libSubDir_/"lib" + codeName_ + dynamicLibExtension;
         }
 
         //- Path for specified code name relative to \$FOAM_CASE
