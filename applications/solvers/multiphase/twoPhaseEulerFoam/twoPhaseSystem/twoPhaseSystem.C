@@ -248,7 +248,7 @@ Foam::twoPhaseSystem::twoPhaseSystem
             pair2In1_
         )
     );
-    
+
     wallLubrication_.set
     (
         new BlendedInterfacialModel<wallLubricationModel>
@@ -264,7 +264,7 @@ Foam::twoPhaseSystem::twoPhaseSystem
             pair2In1_
         )
     );
-    
+
     turbulentDispersion_.set
     (
         new BlendedInterfacialModel<turbulentDispersionModel>
@@ -508,7 +508,7 @@ void Foam::twoPhaseSystem::solve()
                 alphaPhic1,
                 Sp,
                 Su,
-                1,
+                phase1_.alphaMax(),
                 0
             );
 

@@ -22,72 +22,99 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::dragModels::noDrag
+    Foam::mixtureViscosityModels::plastic
 
 Description
+     Viscosity correction model for a generic power-law plastic.
 
 SourceFiles
-    noDrag.C
+    plastic.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef noDrag_H
-#define noDrag_H
+#ifndef plastic_H
+#define plastic_H
 
-#include "dragModel.H"
+#include "mixtureViscosityModel.H"
+#include "dimensionedScalar.H"
+#include "volFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-class phasePair;
+class incompressibleTwoPhaseInteractingMixture;
 
-namespace dragModels
+namespace mixtureViscosityModels
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class noDrag Declaration
+                           Class plastic Declaration
 \*---------------------------------------------------------------------------*/
 
-class noDrag
+class plastic
 :
-    public dragModel
+    public mixtureViscosityModel
 {
+protected:
+
+    // Protected data
+
+        //- Dictionary
+        dictionary plasticCoeffs_;
+
+        //- Plastic viscosity coefficient
+        dimensionedScalar plasticViscosityCoeff_;
+
+        //- Plastic viscosity exponent
+        dimensionedScalar plasticViscosityExponent_;
+
+        //- Maximum viscosity
+        dimensionedScalar muMax_;
+
+        //- Plastic phase fraction
+        const volScalarField& alpha_;
+
+
 public:
 
     //- Runtime type information
-    TypeName("none");
+    TypeName("plastic");
 
 
     // Constructors
 
-        //- Construct from a dictionary and a phase pair
-        noDrag
+        //- Construct from components
+        plastic
         (
-            const dictionary& dict,
-            const phasePair& pair,
-            const bool registerObject
+            const word& name,
+            const dictionary& viscosityProperties,
+            const volVectorField& U,
+            const surfaceScalarField& phi,
+            const word modelName=typeName
         );
 
 
     //- Destructor
-    virtual ~noDrag();
+    ~plastic()
+    {}
 
 
     // Member Functions
 
-        //- Drag coefficient
-        virtual tmp<volScalarField> CdRe() const;
+        //- Return the mixture viscosity
+        //  given the viscosity of the continuous phase
+        tmp<volScalarField> mu(const volScalarField& muc) const;
 
-        //- The drag function used in the momentum equation
-        virtual tmp<volScalarField> K() const;
+        //- Read transportProperties dictionary
+        bool read(const dictionary& viscosityProperties);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace dragModels
+} // End namespace mixtureViscosityModels
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

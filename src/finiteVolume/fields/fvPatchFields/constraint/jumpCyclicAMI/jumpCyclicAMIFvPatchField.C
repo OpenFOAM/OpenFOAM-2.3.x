@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -99,10 +99,21 @@ Foam::jumpCyclicAMIFvPatchField<Type>::patchNeighbourField() const
         this->cyclicAMIPatch().cyclicAMIPatch().neighbPatch().faceCells();
 
     Field<Type> pnf(iField, nbrFaceCells);
-    tmp<Field<Type> > tpnf
-    (
-        new Field<Type>(this->cyclicAMIPatch().interpolate(pnf))
-    );
+    tmp<Field<Type> > tpnf;
+
+    if (this->cyclicAMIPatch().applyLowWeightCorrection())
+    {
+        tpnf =
+            this->cyclicAMIPatch().interpolate
+            (
+                pnf,
+                this->patchInternalField()()
+            );
+    }
+    else
+    {
+        tpnf = this->cyclicAMIPatch().interpolate(pnf);
+    }
 
     if (this->doTransform())
     {
@@ -157,7 +168,20 @@ void Foam::jumpCyclicAMIFvPatchField<Type>::updateInterfaceMatrix
 
     Field<Type> pnf(psiInternal, nbrFaceCells);
 
-    pnf = this->cyclicAMIPatch().interpolate(pnf);
+    if (this->cyclicAMIPatch().applyLowWeightCorrection())
+    {
+        pnf =
+            this->cyclicAMIPatch().interpolate
+            (
+                pnf,
+                this->patchInternalField()()
+            );
+
+    }
+    else
+    {
+        pnf = this->cyclicAMIPatch().interpolate(pnf);
+    }
 
     // only apply jump to original field
     if (&psiInternal == &this->internalField())

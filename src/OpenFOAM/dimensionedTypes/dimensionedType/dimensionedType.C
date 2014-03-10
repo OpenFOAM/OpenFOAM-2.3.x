@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -242,6 +242,13 @@ void Foam::dimensioned<Type>::replace
 {
     dimensions_ = dc.dimensions();
     value_.replace(d, dc.value());
+}
+
+
+template<class Type>
+void Foam::dimensioned<Type>::read(const dictionary& dict)
+{
+    dict.lookup(name_) >> value_;
 }
 
 

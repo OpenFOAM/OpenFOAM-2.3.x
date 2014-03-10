@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -127,10 +127,12 @@ bool Foam::kineticTheoryModels::frictionalStressModels::JohnsonJackson::read()
 {
     coeffDict_ <<= dict_.subDict(typeName + "Coeffs");
 
-    Fr_.readIfPresent(coeffDict_);
-    eta_.readIfPresent(coeffDict_);
-    p_.readIfPresent(coeffDict_);
-    phi_.readIfPresent(coeffDict_);
+    Fr_.read(coeffDict_);
+    eta_.read(coeffDict_);
+    p_.read(coeffDict_);
+
+    phi_.read(coeffDict_);
+    phi_ *= constant::mathematical::pi/180.0;
 
     return true;
 }

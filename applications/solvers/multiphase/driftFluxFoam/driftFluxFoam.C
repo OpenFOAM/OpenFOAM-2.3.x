@@ -36,12 +36,12 @@ Description
 #include "fvCFD.H"
 #include "CMULES.H"
 #include "subCycle.H"
+#include "incompressibleTwoPhaseInteractingMixture.H"
+#include "relativeVelocityModel.H"
 #include "nearWallDist.H"
 #include "wallFvPatch.H"
 #include "bound.H"
 #include "Switch.H"
-#include "plasticViscosity.H"
-#include "yieldStress.H"
 #include "pimpleControl.H"
 #include "fvIOoptionList.H"
 #include "fixedFluxPressureFvPatchScalarField.H"
@@ -82,9 +82,12 @@ int main(int argc, char *argv[])
         {
             #include "alphaControls.H"
 
-            #include "calcVdj.H"
+            UdmModel.correct();
+
             #include "alphaEqnSubCycle.H"
-            #include "correctViscosity.H"
+
+            twoPhaseProperties.correct();
+            Info<< average(twoPhaseProperties.mu()) << endl;
 
             #include "UEqn.H"
 

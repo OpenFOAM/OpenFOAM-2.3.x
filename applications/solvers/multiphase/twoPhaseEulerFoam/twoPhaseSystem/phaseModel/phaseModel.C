@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -63,6 +63,7 @@ Foam::phaseModel::phaseModel
     (
         phaseProperties.subDict(name_)
     ),
+    alphaMax_(phaseDict_.lookupOrDefault("alphaMax", 1.0)),
     thermo_(rhoThermo::New(fluid.mesh(), name_)),
     U_
     (

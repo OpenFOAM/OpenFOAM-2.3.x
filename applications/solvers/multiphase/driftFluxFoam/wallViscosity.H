@@ -2,8 +2,6 @@
     const scalar Cmu25 = ::pow(Cmu.value(), 0.25);
     const scalar kappa_ = kappa.value();
     const scalar E_ = E.value();
-    const scalar muc_ = muc.value();
-    const scalar nuc_ = muc_/rho2.value();
 
     const fvPatchList& patches = mesh.boundary();
 
@@ -14,6 +12,7 @@
         if (isA<wallFvPatch>(curPatch))
         {
             scalarField& mutw = mut.boundaryField()[patchi];
+            const scalarField& mucw = muc.boundaryField()[patchi];
 
             forAll(curPatch, facei)
             {
@@ -21,12 +20,12 @@
 
                 scalar yPlus =
                     Cmu25*y[patchi][facei]*::sqrt(k[faceCelli])
-                   /nuc_;
+                   /(mucw[facei]/rho2.value());
 
                 if (yPlus > 11.6)
                 {
                     mutw[facei] =
-                        muc_*(yPlus*kappa_/::log(E_*yPlus) - 1);
+                        mucw[facei]*(yPlus*kappa_/::log(E_*yPlus) - 1);
                 }
                 else
                 {

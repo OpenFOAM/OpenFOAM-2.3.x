@@ -21,73 +21,50 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
-Class
-    Foam::heatTransferModels::noHeatTransfer
-
-Description
-
-SourceFiles
-    noHeatTransfer.C
-
 \*---------------------------------------------------------------------------*/
 
-#ifndef noHeatTransfer_H
-#define noHeatTransfer_H
+#include "simple.H"
+#include "addToRunTimeSelectionTable.H"
 
-#include "heatTransferModel.H"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-class phasePair;
-
-namespace heatTransferModels
+namespace relativeVelocityModels
 {
+    defineTypeNameAndDebug(simple, 0);
+    addToRunTimeSelectionTable(relativeVelocityModel, simple, dictionary);
+}
+}
 
-/*---------------------------------------------------------------------------*\
-                           Class noHeatTransfer Declaration
-\*---------------------------------------------------------------------------*/
 
-class noHeatTransfer
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::relativeVelocityModels::simple::simple
+(
+    const dictionary& dict,
+    const incompressibleTwoPhaseInteractingMixture& mixture
+)
 :
-    public heatTransferModel
+    relativeVelocityModel(dict, mixture),
+    a_("a", dimless, dict.lookup("a")),
+    V0_("V0", dimVelocity, dict.lookup("V0")),
+    residualAlpha_("residualAlpha", dimless, dict.lookup("residualAlpha"))
+{}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+Foam::relativeVelocityModels::simple::~simple()
+{}
+
+
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
+
+void Foam::relativeVelocityModels::simple::correct()
 {
-public:
+    Udm_ = (rhoc_/rho())*V0_*pow(scalar(10), -a_*max(alphad_, scalar(0)));
+}
 
-    //- Runtime type information
-    TypeName("none");
-
-
-    // Constructors
-
-        //- Construct from a dictionary and a phase pair
-        noHeatTransfer
-        (
-            const dictionary& dict,
-            const phasePair& pair
-        );
-
-
-    //- Destructor
-    virtual ~noHeatTransfer();
-
-
-    // Member Functions
-
-        //- The heat transfer function K used in the enthalpy equation
-        tmp<volScalarField> K() const;
-};
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace heatTransferModels
-} // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#endif
 
 // ************************************************************************* //

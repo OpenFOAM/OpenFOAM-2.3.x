@@ -23,64 +23,71 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "noHeatTransfer.H"
-#include "phasePair.H"
+#include "slurry.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace heatTransferModels
+namespace mixtureViscosityModels
 {
-    defineTypeNameAndDebug(noHeatTransfer, 0);
-    addToRunTimeSelectionTable(heatTransferModel, noHeatTransfer, dictionary);
+    defineTypeNameAndDebug(slurry, 0);
+
+    addToRunTimeSelectionTable
+    (
+        mixtureViscosityModel,
+        slurry,
+        dictionary
+    );
 }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::noHeatTransfer::noHeatTransfer
+Foam::mixtureViscosityModels::slurry::slurry
 (
-    const dictionary& dict,
-    const phasePair& pair
+    const word& name,
+    const dictionary& viscosityProperties,
+    const volVectorField& U,
+    const surfaceScalarField& phi,
+    const word modelName
 )
 :
-    heatTransferModel(dict, pair)
+    mixtureViscosityModel(name, viscosityProperties, U, phi),
+    alpha_
+    (
+        U.mesh().lookupObject<volScalarField>
+        (
+            IOobject::groupName
+            (
+                viscosityProperties.lookupOrDefault<word>("alpha", "alpha"),
+                viscosityProperties.dictName()
+            )
+        )
+    )
 {}
 
 
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-Foam::heatTransferModels::noHeatTransfer::~noHeatTransfer()
-{}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
 Foam::tmp<Foam::volScalarField>
-Foam::heatTransferModels::noHeatTransfer::K() const
+Foam::mixtureViscosityModels::slurry::mu(const volScalarField& muc) const
 {
-    const fvMesh& mesh(this->pair_.phase1().mesh());
-
     return
-        tmp<volScalarField>
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    "zero",
-                    mesh.time().timeName(),
-                    mesh,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
-                mesh,
-                dimensionedScalar("zero", dimensionSet(1, -1, -3, -1, 0), 0)
-            )
-        );
+    (
+        muc*(1.0 + 2.5*alpha_ + 10.05*sqr(alpha_) + 0.00273*exp(16.6*alpha_))
+    );
+}
+
+
+bool Foam::mixtureViscosityModels::slurry::read
+(
+    const dictionary& viscosityProperties
+)
+{
+    return true;
 }
 
 

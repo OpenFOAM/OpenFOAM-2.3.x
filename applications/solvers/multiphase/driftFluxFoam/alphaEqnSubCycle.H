@@ -13,7 +13,7 @@
 
     surfaceScalarField phir
     (
-        rho2*(mesh.Sf() & fvc::interpolate(Vdj/rho))
+        mesh.Sf() & fvc::interpolate(UdmModel.Udm())
     );
 
     if (nAlphaSubCycles > 1)

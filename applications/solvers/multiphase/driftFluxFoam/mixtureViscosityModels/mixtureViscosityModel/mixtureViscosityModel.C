@@ -23,68 +23,42 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "noDrag.H"
-#include "phasePair.H"
-#include "addToRunTimeSelectionTable.H"
+#include "mixtureViscosityModel.H"
+#include "volFields.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace dragModels
-{
-    defineTypeNameAndDebug(noDrag, 0);
-    addToRunTimeSelectionTable(dragModel, noDrag, dictionary);
-}
+    defineTypeNameAndDebug(mixtureViscosityModel, 0);
+    defineRunTimeSelectionTable(mixtureViscosityModel, dictionary);
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::dragModels::noDrag::noDrag
+Foam::mixtureViscosityModel::mixtureViscosityModel
 (
-    const dictionary& dict,
-    const phasePair& pair,
-    const bool registerObject
+    const word& name,
+    const dictionary& viscosityProperties,
+    const volVectorField& U,
+    const surfaceScalarField& phi
 )
 :
-    dragModel(pair, registerObject)
+    name_(name),
+    viscosityProperties_(viscosityProperties),
+    U_(U),
+    phi_(phi)
 {}
 
 
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-Foam::dragModels::noDrag::~noDrag()
-{}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-Foam::tmp<Foam::volScalarField> Foam::dragModels::noDrag::CdRe() const
+bool Foam::mixtureViscosityModel::read(const dictionary& viscosityProperties)
 {
-    const fvMesh& mesh(this->pair_.phase1().mesh());
+    viscosityProperties_ = viscosityProperties;
 
-    return
-        tmp<volScalarField>
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    "Cd",
-                    mesh.time().timeName(),
-                    mesh
-                ),
-                mesh,
-                dimensionedScalar("Cd", dimless, 0)
-            )
-        );
-}
-
-
-Foam::tmp<Foam::volScalarField> Foam::dragModels::noDrag::K() const
-{
-    return CdRe()*dimensionedScalar("zero", dimensionSet(1, -3, -1, 0, 0), 0);
+    return true;
 }
 
 
