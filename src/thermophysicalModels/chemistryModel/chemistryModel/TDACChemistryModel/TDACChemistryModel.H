@@ -52,7 +52,7 @@ namespace Foam
 class fvMesh;
 
 /*---------------------------------------------------------------------------*\
-                      Class TDAChemistryModel Declaration
+                      Class TDACChemistryModel Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class CompType, class ThermoType>
@@ -73,16 +73,6 @@ class TDACChemistryModel
         //  Variable number of species added
         template<class DeltaTType>
         scalar solve(const DeltaTType& deltaT);
-
-
-protected:
-
-    typedef ThermoType thermoType;
-
-    // Private data
-
-
-    // Protected Member Functions
 
 
 public:
@@ -128,10 +118,6 @@ public:
             scalar& cr,
             label& rRef
         ) const;
-
-
-        //- Calculates the reaction rates
-        virtual void calculate();
 
 
         // Chemistry model functions (overriding functions in

@@ -25,6 +25,7 @@ License
 
 #include "basicChemistryModel.H"
 #include "basicThermo.H"
+#include "Switch.H"
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
 
@@ -58,10 +59,11 @@ Foam::autoPtr<ChemistryModel> Foam::basicChemistryModel::New
 
         Info<< "Selecting chemistry type " << chemistryTypeDict << endl;
 
-        const int nCmpt = 7;
+        const int nCmpt = 8;
         const char* cmptNames[nCmpt] =
         {
             "chemistrySolver",
+            "chemistryModel",
             "chemistryThermo",
             "transport",
             "thermo",
@@ -105,28 +107,44 @@ Foam::autoPtr<ChemistryModel> Foam::basicChemistryModel::New
                  << exit(FatalIOError);
         }
 
-        // Construct the name of the chemistry type from the components
-        chemistryTypeName =
-            word(chemistryTypeDict.lookup("chemistrySolver")) + '<'
-          + word(chemistryTypeDict.lookup("chemistryThermo")) + ','
-          + thermoTypeName + ">";
+        Switch isTDAC(chemistryTypeDict.lookupOrDefault("TDAC",false));
 
+        // Construct the name of the chemistry type from the components
+        if (isTDAC)
+        {
+            chemistryTypeName =
+                word(chemistryTypeDict.lookup("chemistrySolver")) + '<'
+              + "TDACChemistryModel<"
+              + word(chemistryTypeDict.lookup("chemistryThermo")) + ','
+              + thermoTypeName + ">>";
+        }
+        else
+        {
+            chemistryTypeName =
+            word(chemistryTypeDict.lookup("chemistrySolver")) + '<'
+            + "chemistryModel<"
+            + word(chemistryTypeDict.lookup("chemistryThermo")) + ','
+            + thermoTypeName + ">>";
+        }
         typename ChemistryModel::fvMeshConstructorTable::iterator cstrIter =
             ChemistryModel::fvMeshConstructorTablePtr_->find(chemistryTypeName);
 
         if (cstrIter == ChemistryModel::fvMeshConstructorTablePtr_->end())
         {
+
             FatalErrorIn(ChemistryModel::typeName + "::New(const mesh&)")
                 << "Unknown " << ChemistryModel::typeName << " type " << nl
                 << "chemistryType" << chemistryTypeDict << nl << nl
                 << "Valid " << ChemistryModel ::typeName << " types are:"
                 << nl << nl;
 
+
             // Get the list of all the suitable chemistry packages available
             wordList validChemistryTypeNames
             (
                 ChemistryModel::fvMeshConstructorTablePtr_->sortedToc()
             );
+
 
             // Build a table of the thermo packages constituent parts
             // Note: row-0 contains the names of constituent parts

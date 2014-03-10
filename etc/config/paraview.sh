@@ -153,7 +153,7 @@ then
 	unset ParaView_VERSION ParaView_MAJOR ParaView_DIR
 	# needs to be an alias because if it is in the path the Python Shell does not work
 	alias paraview=$PARAVIEW_APP_DIR/Contents/MacOS/paraview
-	export PATH=$PARAVIEW_APP_DIR/Contents/bin:$PATH
+	export PATH=$PATH:$PARAVIEW_APP_DIR/Contents/bin
     fi
 fi
 
