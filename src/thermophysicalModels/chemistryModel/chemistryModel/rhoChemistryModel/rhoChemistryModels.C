@@ -1,12 +1,14 @@
 /*---------------------------------------------------------------------------*\
-  =========                 |
-  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
-     \\/     M anipulation  |
--------------------------------------------------------------------------------
-License
-    This file is part of OpenFOAM.
+ =========                 |
+ \\      /  F ield         | Unsupported Contributions for OpenFOAM
+  \\    /   O peration     |
+   \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\/     M anipulation  |
+ -------------------------------------------------------------------------------
+ 2014-03-10 Francesco Contino: added makeChemistryModel for TDACChemistryModel
+ -------------------------------------------------------------------------------
+ License
+    This file is a derivative work of OpenFOAM.
 
     OpenFOAM is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -21,6 +23,7 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
+
 InClass
     Foam::rhoChemistryModel
 
@@ -33,6 +36,7 @@ Description
 
 #include "rhoChemistryModel.H"
 #include "chemistryModel.H"
+#include "TDACChemistryModel.H"
 #include "thermoPhysicsTypes.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -75,6 +79,40 @@ namespace Foam
         icoPoly8HThermoPhysics
     );
 
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        rhoChemistryModel,
+        constGasHThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        rhoChemistryModel,
+        gasHThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        rhoChemistryModel,
+        constIncompressibleGasHThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        rhoChemistryModel,
+        incompressibleGasHThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        rhoChemistryModel,
+        icoPoly8HThermoPhysics
+     );
 
     // Chemistry moldels based on sensibleInternalEnergy
     makeChemistryModel
@@ -111,6 +149,43 @@ namespace Foam
         rhoChemistryModel,
         icoPoly8EThermoPhysics
     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        rhoChemistryModel,
+        constGasEThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        rhoChemistryModel,
+        gasEThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        rhoChemistryModel,
+        constIncompressibleGasEThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        rhoChemistryModel,
+        incompressibleGasEThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        rhoChemistryModel,
+        icoPoly8EThermoPhysics
+     );
+
 }
+
 
 // ************************************************************************* //

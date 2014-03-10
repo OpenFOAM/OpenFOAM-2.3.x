@@ -1,12 +1,14 @@
 /*---------------------------------------------------------------------------*\
-  =========                 |
-  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
-     \\/     M anipulation  |
--------------------------------------------------------------------------------
-License
-    This file is part of OpenFOAM.
+ =========                 |
+ \\      /  F ield         | Unsupported Contributions for OpenFOAM
+  \\    /   O peration     |
+   \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\/     M anipulation  |
+ -------------------------------------------------------------------------------
+ 2014-03-10 Francesco Contino: added makeChemistryModel for TDACChemistryModel
+ -------------------------------------------------------------------------------
+ License
+    This file is a derivative work of OpenFOAM.
 
     OpenFOAM is free software: you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by
@@ -33,6 +35,7 @@ Description
 
 #include "psiChemistryModel.H"
 #include "chemistryModel.H"
+#include "TDACChemistryModel.H"
 #include "thermoPhysicsTypes.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -75,6 +78,41 @@ namespace Foam
         icoPoly8HThermoPhysics
     );
 
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        psiChemistryModel,
+        constGasHThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        psiChemistryModel,
+        gasHThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        psiChemistryModel,
+        constIncompressibleGasHThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        psiChemistryModel,
+        incompressibleGasHThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        psiChemistryModel,
+        icoPoly8HThermoPhysics
+     );
+
     // Chemistry moldels based on sensibleInternalEnergy
     makeChemistryModel
     (
@@ -110,6 +148,42 @@ namespace Foam
         psiChemistryModel,
         icoPoly8EThermoPhysics
     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        psiChemistryModel,
+        constGasEThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        psiChemistryModel,
+        gasEThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        psiChemistryModel,
+        constIncompressibleGasEThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        psiChemistryModel,
+        incompressibleGasEThermoPhysics
+     );
+
+    makeChemistryModel
+    (
+        TDACChemistryModel,
+        psiChemistryModel,
+        icoPoly8EThermoPhysics
+     );
+
 }
 
 // ************************************************************************* //
