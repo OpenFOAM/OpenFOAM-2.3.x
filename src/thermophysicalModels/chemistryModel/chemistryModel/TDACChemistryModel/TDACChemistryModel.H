@@ -121,7 +121,7 @@ public:
 
 
         // Chemistry model functions (overriding functions in
-        // chemistryModel.H)
+        // chemistryModel.H to take into account the private solve function)
 
             //- Solve the reaction system for the given time step
             //  and return the characteristic time
@@ -130,11 +130,10 @@ public:
             //- Solve the reaction system for the given time step
             //  and return the characteristic time
             virtual scalar solve(const scalarField& deltaT);
-
+    
 
         // ODE functions (overriding functions in chemistryModel.H to take into
         //  account the variable number of species)
-
 
             virtual void derivatives
             (

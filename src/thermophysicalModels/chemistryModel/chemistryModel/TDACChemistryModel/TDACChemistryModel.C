@@ -36,7 +36,6 @@ Foam::TDACChemistryModel<CompType, ThermoType>::TDACChemistryModel
 :
     chemistryModel<CompType, ThermoType>(mesh)
 {
-    Info<< "New constructor" << endl;
 }
 
 
