@@ -36,6 +36,12 @@ Foam::TDACChemistryModel<CompType, ThermoType>::TDACChemistryModel
 :
     chemistryModel<CompType, ThermoType>(mesh)
 {
+    mechRed_ =
+        mechanismReduction<CompType, ThermoType>::New
+        (
+            *this,
+            *this
+        );
 }
 
 
@@ -47,6 +53,13 @@ Foam::TDACChemistryModel<CompType, ThermoType>::~TDACChemistryModel()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+template<class CompType, class ThermoType>
+const Foam::PtrList<Foam::volScalarField>&
+Foam::TDACChemistryModel<CompType, ThermoType>::Y()
+{
+    return this->Y_;
+}
+
 
 template<class CompType, class ThermoType>
 Foam::tmp<Foam::scalarField>

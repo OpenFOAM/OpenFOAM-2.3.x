@@ -8,4 +8,6 @@ chemistryModel/rhoChemistryModel/rhoChemistryModels.C
 
 chemistrySolver/chemistrySolver/makeChemistrySolvers.C
 
+chemistryModel/TDACChemistryModel/mechanismReduction/mechanismReduction/makeMechanismReductions.C
+
 LIB = $(FOAM_LIBBIN)/libchemistryModel

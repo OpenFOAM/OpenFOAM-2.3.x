@@ -121,10 +121,10 @@ Foam::autoPtr<ChemistryModel> Foam::basicChemistryModel::New
         else
         {
             chemistryTypeName =
-            word(chemistryTypeDict.lookup("chemistrySolver")) + '<'
-            + "chemistryModel<"
-            + word(chemistryTypeDict.lookup("chemistryThermo")) + ','
-            + thermoTypeName + ">>";
+                word(chemistryTypeDict.lookup("chemistrySolver")) + '<'
+              + "chemistryModel<"
+              + word(chemistryTypeDict.lookup("chemistryThermo")) + ','
+              + thermoTypeName + ">>";
         }
         typename ChemistryModel::fvMeshConstructorTable::iterator cstrIter =
             ChemistryModel::fvMeshConstructorTablePtr_->find(chemistryTypeName);

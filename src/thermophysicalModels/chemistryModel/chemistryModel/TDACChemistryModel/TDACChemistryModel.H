@@ -42,6 +42,7 @@ SourceFiles
 #define TDACChemistryModel_H
 
 #include "chemistryModel.H"
+#include "mechanismReduction.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -74,6 +75,8 @@ class TDACChemistryModel
         template<class DeltaTType>
         scalar solve(const DeltaTType& deltaT);
 
+        autoPtr<mechanismReduction<CompType, ThermoType> > mechRed_;
+
 
 public:
 
@@ -92,6 +95,8 @@ public:
 
 
     // Member Functions
+
+        const PtrList<volScalarField>& Y();
 
         //- dc/dt = omega, rate of change in concentration, for each species
         //  adapted to work with a variable number of species
