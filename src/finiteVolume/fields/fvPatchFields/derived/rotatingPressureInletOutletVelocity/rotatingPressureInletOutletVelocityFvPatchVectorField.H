@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -176,9 +176,6 @@ public:
 
 
     // Member functions
-
-        //- Update the coefficients associated with the patch field
-        virtual void updateCoeffs();
 
         //- Write
         virtual void write(Ostream&) const;
