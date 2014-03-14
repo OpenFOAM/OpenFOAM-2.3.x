@@ -115,6 +115,12 @@ class DRGEP
 :
     public mechanismReduction<CompType, ThermoType>
 {
+    // Private data
+        //List of label for the search initiating set
+        labelList searchInitSet_;
+
+        List<label> sC_,sH_,sO_,sN_;
+        label NGroupBased_;
 
 public:
 
