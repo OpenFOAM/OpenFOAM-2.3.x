@@ -55,6 +55,9 @@ class EFA
 :
     public mechanismReduction<CompType, ThermoType>
 {
+    // Private data
+        List<label> sC_,sH_,sO_,sN_;
+        scalar  sortPart_;
 
 public:
 
