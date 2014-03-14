@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -287,7 +287,10 @@ Foam::functionEntries::codeStream::getFunction
     }
 
     bool haveLib = lib;
-    reduce(haveLib, andOp<bool>());
+    if (!regIOobject::masterOnlyReading)
+    {
+        reduce(haveLib, andOp<bool>());
+    }
 
     if (!haveLib)
     {
