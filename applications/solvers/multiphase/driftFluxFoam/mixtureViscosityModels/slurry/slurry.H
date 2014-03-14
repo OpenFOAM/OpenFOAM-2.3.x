@@ -22,88 +22,87 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::viscosityModels::BinghamPlastic
+    Foam::mixtureViscosityModels::slurry
 
 Description
-     Viscosity correction model for Bingham plastics.
+     Thomas' viscosity correction for slurry.
+
+     References:
+     \verbatim
+         "Transport characteristics of suspension:
+          VIII. A note on the viscosity of Newtonian suspensions
+          of uniform spherical particles".
+          D.G. Thomas,
+          J. Colloid Sci. 20 (3), 1965, p267.
+    \endverbatim
 
 SourceFiles
-    BinghamPlastic.C
+    slurry.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef BinghamPlastic_H
-#define BinghamPlastic_H
+#ifndef slurry_H
+#define slurry_H
 
-#include "plastic.H"
+#include "mixtureViscosityModel.H"
+#include "dimensionedScalar.H"
+#include "volFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace viscosityModels
+
+class incompressibleTwoPhaseInteractingMixture;
+
+namespace mixtureViscosityModels
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class BinghamPlastic Declaration
+                           Class slurry Declaration
 \*---------------------------------------------------------------------------*/
 
-class BinghamPlastic
+class slurry
 :
-    public plastic
+    public mixtureViscosityModel
 {
 protected:
 
     // Protected data
 
-        //- Yield stress coefficient
-        dimensionedScalar yieldStressCoeff_;
-
-        //- Yield stress exponent
-        dimensionedScalar yieldStressExponent_;
-
-        //- Yield stress offset
-        dimensionedScalar yieldStressOffset_;
-
-        //- Velocity
-        const volVectorField& U_;
-
-
-    // Protected Member Functions
-
-        //- Calculate and return the laminar viscosity correction
-        virtual tmp<volScalarField> correctionNu
-        (
-            const dimensionedScalar& rhoc,
-            const dimensionedScalar& rhop,
-            const volScalarField& nuc
-        ) const;
+        //- Slurry phase fraction
+        const volScalarField& alpha_;
 
 
 public:
 
     //- Runtime type information
-    TypeName("BinghamPlastic");
+    TypeName("slurry");
 
 
     // Constructors
 
         //- Construct from components
-        BinghamPlastic
+        slurry
         (
             const word& name,
             const dictionary& viscosityProperties,
             const volVectorField& U,
-            const surfaceScalarField& phi
+            const surfaceScalarField& phi,
+            const word modelName=typeName
         );
 
 
     //- Destructor
-    ~BinghamPlastic()
+    ~slurry()
     {}
 
 
     // Member Functions
+
+        //- Return the mixture viscosity
+        //  given the viscosity of the continuous phase
+        tmp<volScalarField> mu(const volScalarField& muc) const;
 
         //- Read transportProperties dictionary
         bool read(const dictionary& viscosityProperties);
@@ -112,7 +111,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace viscosityModels
+} // End namespace mixtureViscosityModels
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

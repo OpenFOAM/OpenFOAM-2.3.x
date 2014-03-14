@@ -198,6 +198,13 @@ public:
                 const label i
             );
 
+            //- Return reaction rate of the specieI in reactionI
+            virtual tmp<DimensionedField<scalar, volMesh> > calculateRR
+            (
+                const label reactionI,
+                const label specieI
+            ) const;
+
             //- Solve the reaction system for the given time step
             //  and return the characteristic time
             virtual scalar solve(const scalar deltaT);

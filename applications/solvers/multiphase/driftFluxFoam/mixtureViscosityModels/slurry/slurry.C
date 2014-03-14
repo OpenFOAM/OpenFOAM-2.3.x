@@ -23,47 +23,71 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "simple.H"
+#include "slurry.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace relativeVelocityModels
+namespace mixtureViscosityModels
 {
-    defineTypeNameAndDebug(simple, 0);
-    addToRunTimeSelectionTable(relativeVelocityModel, simple, dictionary);
+    defineTypeNameAndDebug(slurry, 0);
+
+    addToRunTimeSelectionTable
+    (
+        mixtureViscosityModel,
+        slurry,
+        dictionary
+    );
 }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::relativeVelocityModels::simple::simple
+Foam::mixtureViscosityModels::slurry::slurry
 (
-    const dictionary& dict,
-    const incompressibleTwoPhaseInteractingMixture& mixture
+    const word& name,
+    const dictionary& viscosityProperties,
+    const volVectorField& U,
+    const surfaceScalarField& phi,
+    const word modelName
 )
 :
-    relativeVelocityModel(dict, mixture),
-    a_("a", dimless, dict.lookup("a")),
-    V0_("V0", dimVelocity, dict.lookup("V0")),
-    residualAlpha_("residualAlpha", dimless, dict.lookup("residualAlpha"))
-{}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-Foam::relativeVelocityModels::simple::~simple()
+    mixtureViscosityModel(name, viscosityProperties, U, phi),
+    alpha_
+    (
+        U.mesh().lookupObject<volScalarField>
+        (
+            IOobject::groupName
+            (
+                viscosityProperties.lookupOrDefault<word>("alpha", "alpha"),
+                viscosityProperties.dictName()
+            )
+        )
+    )
 {}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-void Foam::relativeVelocityModels::simple::correct()
+Foam::tmp<Foam::volScalarField>
+Foam::mixtureViscosityModels::slurry::mu(const volScalarField& muc) const
 {
-    Udm_ = (rhoc_/rho())*V0_*pow(scalar(10), -a_*max(alphad_, scalar(0)));
+    return
+    (
+        muc*(1.0 + 2.5*alpha_ + 10.05*sqr(alpha_) + 0.00273*exp(16.6*alpha_))
+    );
+}
+
+
+bool Foam::mixtureViscosityModels::slurry::read
+(
+    const dictionary& viscosityProperties
+)
+{
+    return true;
 }
 
 

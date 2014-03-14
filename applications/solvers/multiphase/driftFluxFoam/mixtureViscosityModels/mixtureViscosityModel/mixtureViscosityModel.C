@@ -23,47 +23,42 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "simple.H"
-#include "addToRunTimeSelectionTable.H"
+#include "mixtureViscosityModel.H"
+#include "volFields.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace relativeVelocityModels
-{
-    defineTypeNameAndDebug(simple, 0);
-    addToRunTimeSelectionTable(relativeVelocityModel, simple, dictionary);
-}
+    defineTypeNameAndDebug(mixtureViscosityModel, 0);
+    defineRunTimeSelectionTable(mixtureViscosityModel, dictionary);
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::relativeVelocityModels::simple::simple
+Foam::mixtureViscosityModel::mixtureViscosityModel
 (
-    const dictionary& dict,
-    const incompressibleTwoPhaseInteractingMixture& mixture
+    const word& name,
+    const dictionary& viscosityProperties,
+    const volVectorField& U,
+    const surfaceScalarField& phi
 )
 :
-    relativeVelocityModel(dict, mixture),
-    a_("a", dimless, dict.lookup("a")),
-    V0_("V0", dimVelocity, dict.lookup("V0")),
-    residualAlpha_("residualAlpha", dimless, dict.lookup("residualAlpha"))
-{}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-Foam::relativeVelocityModels::simple::~simple()
+    name_(name),
+    viscosityProperties_(viscosityProperties),
+    U_(U),
+    phi_(phi)
 {}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-void Foam::relativeVelocityModels::simple::correct()
+bool Foam::mixtureViscosityModel::read(const dictionary& viscosityProperties)
 {
-    Udm_ = (rhoc_/rho())*V0_*pow(scalar(10), -a_*max(alphad_, scalar(0)));
+    viscosityProperties_ = viscosityProperties;
+
+    return true;
 }
 
 

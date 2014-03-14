@@ -36,7 +36,7 @@ SourceFiles
 
 #include "fvCFD.H"
 #include "dictionary.H"
-#include "incompressibleTwoPhaseMixture.H"
+#include "incompressibleTwoPhaseInteractingMixture.H"
 #include "runTimeSelectionTables.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -63,28 +63,25 @@ protected:
     // Protected data
 
         //- Mixture properties
-        const incompressibleTwoPhaseMixture& mixture_;
+        const incompressibleTwoPhaseInteractingMixture& mixture_;
 
         //- Name of the continuous phase
         const word continuousPhaseName_;
 
         //- Continuous phase fraction
-        const volScalarField& alphaC_;
+        const volScalarField& alphac_;
 
         //- Dispersed phase fraction
-        const volScalarField& alphaD_;
+        const volScalarField& alphad_;
 
         //- Continuous density
-        const dimensionedScalar& rhoC_;
+        const dimensionedScalar& rhoc_;
 
         //- Dispersed density
-        const dimensionedScalar& rhoD_;
+        const dimensionedScalar& rhod_;
 
         //- Dispersed diffusion velocity
-        volVectorField Udm_;
-
-        //- Stress
-        volSymmTensorField tau_;
+        mutable volVectorField Udm_;
 
 
 public:
@@ -98,7 +95,8 @@ public:
         autoPtr,
         relativeVelocityModel,
         dictionary,
-        (const dictionary& dict, const incompressibleTwoPhaseMixture& mixture),
+        (const dictionary& dict,
+         const incompressibleTwoPhaseInteractingMixture& mixture),
         (dict, mixture)
     );
 
@@ -109,7 +107,7 @@ public:
         relativeVelocityModel
         (
             const dictionary& dict,
-            const incompressibleTwoPhaseMixture& mixture
+            const incompressibleTwoPhaseInteractingMixture& mixture
         );
 
 
@@ -117,7 +115,7 @@ public:
     static autoPtr<relativeVelocityModel> New
     (
         const dictionary& dict,
-        const incompressibleTwoPhaseMixture& mixture
+        const incompressibleTwoPhaseInteractingMixture& mixture
     );
 
 
@@ -127,8 +125,8 @@ public:
 
     // Member Functions
 
-        //- Calculate the relative velocity of the dispersed phase
-        virtual tmp<volVectorField> Ur() const = 0;
+        //- Return the mixture mean density
+        tmp<volScalarField> rho() const;
 
         //- Return the diffusion velocity of the dispersed phase
         const volVectorField& Udm() const
@@ -137,13 +135,10 @@ public:
         }
 
         //- Return the stress tensor due to the phase transport
-        const volSymmTensorField& tau() const
-        {
-            return tau_;
-        }
+        tmp<volSymmTensorField> tauDm() const;
 
-        //- Update the stored diffusion velocity and stress
-        void update();
+        //- Update the diffusion velocity
+        virtual void correct() = 0;
 };
 
 

@@ -23,47 +23,42 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "simple.H"
-#include "addToRunTimeSelectionTable.H"
+#include "mixtureViscosityModel.H"
+#include "volFields.H"
+#include "surfaceFields.H"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace Foam
-{
-namespace relativeVelocityModels
-{
-    defineTypeNameAndDebug(simple, 0);
-    addToRunTimeSelectionTable(relativeVelocityModel, simple, dictionary);
-}
-}
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-Foam::relativeVelocityModels::simple::simple
+Foam::autoPtr<Foam::mixtureViscosityModel> Foam::mixtureViscosityModel::New
 (
-    const dictionary& dict,
-    const incompressibleTwoPhaseInteractingMixture& mixture
+    const word& name,
+    const dictionary& viscosityProperties,
+    const volVectorField& U,
+    const surfaceScalarField& phi
 )
-:
-    relativeVelocityModel(dict, mixture),
-    a_("a", dimless, dict.lookup("a")),
-    V0_("V0", dimVelocity, dict.lookup("V0")),
-    residualAlpha_("residualAlpha", dimless, dict.lookup("residualAlpha"))
-{}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-Foam::relativeVelocityModels::simple::~simple()
-{}
-
-
-// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
-
-void Foam::relativeVelocityModels::simple::correct()
 {
-    Udm_ = (rhoc_/rho())*V0_*pow(scalar(10), -a_*max(alphad_, scalar(0)));
+    const word modelType(viscosityProperties.lookup("transportModel"));
+
+    Info<< "Selecting incompressible transport model " << modelType << endl;
+
+    dictionaryConstructorTable::iterator cstrIter =
+        dictionaryConstructorTablePtr_->find(modelType);
+
+    if (cstrIter == dictionaryConstructorTablePtr_->end())
+    {
+        FatalErrorIn
+        (
+            "mixtureViscosityModel::New(const volVectorField&, "
+            "const surfaceScalarField&)"
+        )   << "Unknown mixtureViscosityModel type "
+            << modelType << nl << nl
+            << "Valid mixtureViscosityModels are : " << endl
+            << dictionaryConstructorTablePtr_->sortedToc()
+            << exit(FatalError);
+    }
+
+    return autoPtr<mixtureViscosityModel>
+        (cstrIter()(name, viscosityProperties, U, phi));
 }
 
 

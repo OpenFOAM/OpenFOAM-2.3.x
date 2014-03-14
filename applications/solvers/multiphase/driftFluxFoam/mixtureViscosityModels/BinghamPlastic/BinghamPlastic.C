@@ -25,20 +25,19 @@ License
 
 #include "BinghamPlastic.H"
 #include "addToRunTimeSelectionTable.H"
-#include "surfaceFields.H"
-#include "fvc.H"
+#include "fvcGrad.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace viscosityModels
+namespace mixtureViscosityModels
 {
     defineTypeNameAndDebug(BinghamPlastic, 0);
 
     addToRunTimeSelectionTable
     (
-        viscosityModel,
+        mixtureViscosityModel,
         BinghamPlastic,
         dictionary
     );
@@ -46,56 +45,9 @@ namespace viscosityModels
 }
 
 
-// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
-
-Foam::tmp<Foam::volScalarField>
-Foam::viscosityModels::BinghamPlastic::correctionNu
-(
-    const dimensionedScalar& rhoc,
-    const dimensionedScalar& rhop,
-    const volScalarField& nuc
-) const
-{
-    volScalarField
-        tauy
-        (
-            yieldStressCoeff_
-           *(
-                pow
-                (
-                    scalar(10),
-                    yieldStressExponent_
-                   *(max(alpha_, scalar(0)) + yieldStressOffset_)
-                )
-              - pow
-                (
-                    scalar(10),
-                    yieldStressExponent_*yieldStressOffset_
-                )
-            )
-        );
-
-    volScalarField
-        nup
-        (
-            plastic::correctionNu(rhoc, rhop, nuc)
-        );
-
-    dimensionedScalar tauySmall("tauySmall", tauy.dimensions(), SMALL);
-
-    return
-        tauy
-       /(
-            mag(fvc::grad(U_))
-          + 1.0e-4*(tauy + tauySmall)/(nup + (rhoc/rhop)*nuc)
-        )
-      + nup;
-}
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::viscosityModels::BinghamPlastic::BinghamPlastic
+Foam::mixtureViscosityModels::BinghamPlastic::BinghamPlastic
 (
     const word& name,
     const dictionary& viscosityProperties,
@@ -104,16 +56,72 @@ Foam::viscosityModels::BinghamPlastic::BinghamPlastic
 )
 :
     plastic(name, viscosityProperties, U, phi, typeName),
-    yieldStressCoeff_(plasticCoeffs_.lookup("yieldStressCoeff")),
-    yieldStressExponent_(plasticCoeffs_.lookup("yieldStressExponent")),
-    yieldStressOffset_(plasticCoeffs_.lookup("yieldStressOffset")),
+    yieldStressCoeff_
+    (
+        "BinghamCoeff",
+        dimensionSet(1, -1, -2, 0, 0),
+        plasticCoeffs_.lookup("BinghamCoeff")
+    ),
+    yieldStressExponent_
+    (
+        "BinghamExponent",
+        dimless,
+        plasticCoeffs_.lookup("BinghamExponent")
+    ),
+    yieldStressOffset_
+    (
+        "BinghamOffset",
+        dimless,
+        plasticCoeffs_.lookup("BinghamOffset")
+    ),
     U_(U)
 {}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-bool Foam::viscosityModels::BinghamPlastic::read
+Foam::tmp<Foam::volScalarField>
+Foam::mixtureViscosityModels::BinghamPlastic::mu
+(
+    const volScalarField& muc
+) const
+{
+    volScalarField tauy
+    (
+        yieldStressCoeff_
+       *(
+            pow
+            (
+                scalar(10),
+                yieldStressExponent_
+               *(max(alpha_, scalar(0)) + yieldStressOffset_)
+            )
+          - pow
+            (
+                scalar(10),
+                yieldStressExponent_*yieldStressOffset_
+            )
+        )
+    );
+
+    volScalarField mup(plastic::mu(muc));
+
+    dimensionedScalar tauySmall("tauySmall", tauy.dimensions(), SMALL);
+
+    return min
+    (
+        tauy
+       /(
+            mag(fvc::grad(U_))
+          + 1.0e-4*(tauy + tauySmall)/mup
+        )
+      + mup,
+        muMax_
+    );
+}
+
+
+bool Foam::mixtureViscosityModels::BinghamPlastic::read
 (
     const dictionary& viscosityProperties
 )

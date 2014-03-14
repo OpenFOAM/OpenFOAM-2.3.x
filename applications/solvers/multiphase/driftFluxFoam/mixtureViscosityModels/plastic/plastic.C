@@ -25,20 +25,18 @@ License
 
 #include "plastic.H"
 #include "addToRunTimeSelectionTable.H"
-#include "surfaceFields.H"
-#include "incompressibleTwoPhaseMixture.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace viscosityModels
+namespace mixtureViscosityModels
 {
     defineTypeNameAndDebug(plastic, 0);
 
     addToRunTimeSelectionTable
     (
-        viscosityModel,
+        mixtureViscosityModel,
         plastic,
         dictionary
     );
@@ -46,90 +44,9 @@ namespace viscosityModels
 }
 
 
-// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
-
-Foam::tmp<Foam::volScalarField>
-Foam::viscosityModels::plastic::calcNu() const
-{
-    const incompressibleTwoPhaseMixture& twoPhaseProperties =
-        alpha_.mesh().lookupObject<incompressibleTwoPhaseMixture>
-        (
-            "transportProperties"
-        );
-
-    bool isThisIsPhase1(&twoPhaseProperties.nuModel1() == this);
-
-    dimensionedScalar
-        rhoc
-        (
-            isThisIsPhase1
-          ? twoPhaseProperties.rho2()
-          : twoPhaseProperties.rho1()
-        );
-
-    dimensionedScalar
-        rhop
-        (
-            isThisIsPhase1
-          ? twoPhaseProperties.rho1()
-          : twoPhaseProperties.rho2()
-        );
-
-    volScalarField
-        nuc
-        (
-            (
-                isThisIsPhase1
-              ? twoPhaseProperties.nuModel2()
-              : twoPhaseProperties.nuModel1()
-            ).nu()
-        );
-
-    volScalarField
-        nup
-        (
-            correctionNu(rhoc, rhop, nuc)
-        );
-
-    return
-        max
-        (
-            nuMin_,
-            min
-            (
-                nuMax_,
-                (
-                    nup + (rhoc/rhop)*nuc*alpha_
-                )
-            )
-        )
-       /max(alpha_, SMALL);
-}
-
-
-Foam::tmp<Foam::volScalarField>
-Foam::viscosityModels::plastic::correctionNu
-(
-    const dimensionedScalar& rhoc,
-    const dimensionedScalar& rhop,
-    const volScalarField& nuc
-) const
-{
-    return
-        plasticViscosityCoeff_
-       *(
-            pow
-            (
-                scalar(10),
-                plasticViscosityExponent_*alpha_
-            ) - scalar(1)
-        );
-}
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::viscosityModels::plastic::plastic
+Foam::mixtureViscosityModels::plastic::plastic
 (
     const word& name,
     const dictionary& viscosityProperties,
@@ -138,18 +55,26 @@ Foam::viscosityModels::plastic::plastic
     const word modelName
 )
 :
-    viscosityModel(name, viscosityProperties, U, phi),
+    mixtureViscosityModel(name, viscosityProperties, U, phi),
     plasticCoeffs_(viscosityProperties.subDict(modelName + "Coeffs")),
     plasticViscosityCoeff_
     (
-        plasticCoeffs_.lookup("plasticViscosityCoeff")
+        "coeff",
+        dimensionSet(1, -1, -1, 0, 0),
+        plasticCoeffs_.lookup("coeff")
     ),
     plasticViscosityExponent_
     (
-        plasticCoeffs_.lookup("plasticViscosityExponent")
+        "exponent",
+        dimless,
+        plasticCoeffs_.lookup("exponent")
     ),
-    nuMin_(plasticCoeffs_.lookup("nuMin")),
-    nuMax_(plasticCoeffs_.lookup("nuMax")),
+    muMax_
+    (
+        "muMax",
+        dimensionSet(1, -1, -1, 0, 0),
+        plasticCoeffs_.lookup("muMax")
+    ),
     alpha_
     (
         U.mesh().lookupObject<volScalarField>
@@ -160,38 +85,43 @@ Foam::viscosityModels::plastic::plastic
                 viscosityProperties.dictName()
             )
         )
-    ),
-    nu_
-    (
-        IOobject
-        (
-            name,
-            U_.time().timeName(),
-            U_.db(),
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        U_.mesh(),
-        dimensionedScalar("nu", dimViscosity, 0)
     )
 {}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-bool Foam::viscosityModels::plastic::read
+Foam::tmp<Foam::volScalarField>
+Foam::mixtureViscosityModels::plastic::mu(const volScalarField& muc) const
+{
+    return min
+    (
+        muc
+      + plasticViscosityCoeff_
+       *(
+            pow
+            (
+                scalar(10),
+                plasticViscosityExponent_*alpha_
+            ) - scalar(1)
+        ),
+        muMax_
+    );
+}
+
+
+bool Foam::mixtureViscosityModels::plastic::read
 (
     const dictionary& viscosityProperties
 )
 {
-    viscosityModel::read(viscosityProperties);
+    mixtureViscosityModel::read(viscosityProperties);
 
     plasticCoeffs_ = viscosityProperties.subDict(typeName + "Coeffs");
 
     plasticCoeffs_.lookup("k") >> plasticViscosityCoeff_;
     plasticCoeffs_.lookup("n") >> plasticViscosityExponent_;
-    plasticCoeffs_.lookup("nuMin") >> nuMin_;
-    plasticCoeffs_.lookup("nuMax") >> nuMax_;
+    plasticCoeffs_.lookup("muMax") >> muMax_;
 
     return true;
 }

@@ -39,69 +39,26 @@ namespace Foam
 Foam::relativeVelocityModel::relativeVelocityModel
 (
     const dictionary& dict,
-    const incompressibleTwoPhaseMixture& mixture
+    const incompressibleTwoPhaseInteractingMixture& mixture
 )
 :
     mixture_(mixture),
-
-    continuousPhaseName_(dict.lookup("continuousPhase")),
-
-    alphaC_
-    (
-        mixture.phase1Name() == continuousPhaseName_
-      ? mixture.alpha1()
-      : mixture.alpha2()
-    ),
-
-    alphaD_
-    (
-        mixture.phase1Name() == continuousPhaseName_
-      ? mixture.alpha2()
-      : mixture.alpha1()
-    ),
-
-    rhoC_
-    (
-        mixture.phase1Name() == continuousPhaseName_
-      ? mixture.rho1()
-      : mixture.rho2()
-    ),
-
-    rhoD_
-    (
-        mixture.phase1Name() == continuousPhaseName_
-      ? mixture.rho2()
-      : mixture.rho1()
-    ),
+    alphac_(mixture.alpha2()),
+    alphad_(mixture.alpha1()),
+    rhoc_(mixture.rhoc()),
+    rhod_(mixture.rhod()),
 
     Udm_
     (
         IOobject
         (
             "Udm",
-            alphaC_.time().timeName(),
-            alphaC_.mesh()
+            alphac_.time().timeName(),
+            alphac_.mesh()
         ),
-        alphaC_.mesh(),
+        alphac_.mesh(),
         dimensionedVector("Udm", dimVelocity, vector::zero),
         mixture.U().boundaryField().types()
-    ),
-
-    tau_
-    (
-        IOobject
-        (
-            "Udm",
-            alphaC_.time().timeName(),
-            alphaC_.mesh()
-        ),
-        alphaC_.mesh(),
-        dimensionedSymmTensor
-        (
-            "Udm",
-            sqr(dimVelocity)*dimDensity,
-            symmTensor::zero
-        )
     )
 {}
 
@@ -111,7 +68,7 @@ Foam::relativeVelocityModel::relativeVelocityModel
 Foam::autoPtr<Foam::relativeVelocityModel> Foam::relativeVelocityModel::New
 (
     const dictionary& dict,
-    const incompressibleTwoPhaseMixture& mixture
+    const incompressibleTwoPhaseInteractingMixture& mixture
 )
 {
     word modelType(dict.lookup(typeName));
@@ -156,19 +113,28 @@ Foam::relativeVelocityModel::~relativeVelocityModel()
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-void Foam::relativeVelocityModel::update()
+tmp<volScalarField> Foam::relativeVelocityModel::rho() const
 {
-    tmp<volVectorField> URel(Ur());
+    return alphac_*rhoc_ + alphad_*rhod_;
+}
 
-    tmp<volScalarField> betaC(alphaC_*rhoC_);
-    tmp<volScalarField> betaD(alphaD_*rhoD_);
-    tmp<volScalarField> rhoM(betaC() + betaD());
 
-    tmp<volVectorField> Udm = URel()*betaC()/rhoM;
-    tmp<volVectorField> Ucm = Udm() - URel;
+tmp<volSymmTensorField> Foam::relativeVelocityModel::tauDm() const
+{
+    volScalarField betac(alphac_*rhoc_);
+    volScalarField betad(alphad_*rhod_);
 
-    Udm_ = Udm();
-    tau_ = betaD*sqr(Udm) + betaC*sqr(Ucm);
+    // Calculate the relative velocity of the continuous phase w.r.t the mean
+    volVectorField Ucm(betad*Udm_/betac);
+
+    return tmp<volSymmTensorField>
+    (
+        new volSymmTensorField
+        (
+            "tauDm",
+            betad*sqr(Udm_) + betac*sqr(Ucm)
+        )
+    );
 }
 
 

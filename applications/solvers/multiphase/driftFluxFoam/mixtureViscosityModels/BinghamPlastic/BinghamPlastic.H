@@ -22,78 +22,90 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::simple
+    Foam::mixtureViscosityModels::BinghamPlastic
 
 Description
-    Simple relative velocity model
+     Viscosity correction model for Bingham plastics.
 
 SourceFiles
-    simple.C
+    BinghamPlastic.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef simple_H
-#define simple_H
+#ifndef BinghamPlastic_H
+#define BinghamPlastic_H
 
-#include "relativeVelocityModel.H"
+#include "plastic.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace relativeVelocityModels
+namespace mixtureViscosityModels
 {
 
 /*---------------------------------------------------------------------------*\
-                         Class simple Declaration
+                           Class BinghamPlastic Declaration
 \*---------------------------------------------------------------------------*/
 
-class simple
+class BinghamPlastic
 :
-    public relativeVelocityModel
+    public plastic
 {
-    // Private data
+protected:
 
-        //- a coefficient
-        dimensionedScalar a_;
+    // Protected data
 
-        //- Drift velocity
-        dimensionedVector V0_;
+        //- Yield stress coefficient
+        dimensionedScalar yieldStressCoeff_;
 
-        //- Residual phase fraction
-        dimensionedScalar residualAlpha_;
+        //- Yield stress exponent
+        dimensionedScalar yieldStressExponent_;
+
+        //- Yield stress offset
+        dimensionedScalar yieldStressOffset_;
+
+        //- Velocity
+        const volVectorField& U_;
 
 
 public:
 
     //- Runtime type information
-    TypeName("simple");
+    TypeName("BinghamPlastic");
 
 
     // Constructors
 
         //- Construct from components
-        simple
+        BinghamPlastic
         (
-            const dictionary& dict,
-            const incompressibleTwoPhaseInteractingMixture& mixture
+            const word& name,
+            const dictionary& viscosityProperties,
+            const volVectorField& U,
+            const surfaceScalarField& phi
         );
 
 
     //- Destructor
-    ~simple();
+    ~BinghamPlastic()
+    {}
 
 
     // Member Functions
 
-        //- Update the diffusion velocity
-        virtual void correct();
+        //- Return the mixture viscosity
+        //  given the viscosity of the continuous phase
+        tmp<volScalarField> mu(const volScalarField& muc) const;
+
+        //- Read transportProperties dictionary
+        bool read(const dictionary& viscosityProperties);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace relativeVelocityModels
+} // End namespace mixtureViscosityModels
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
