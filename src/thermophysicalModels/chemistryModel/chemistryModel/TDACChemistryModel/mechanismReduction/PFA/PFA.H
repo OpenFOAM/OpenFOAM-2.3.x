@@ -54,6 +54,8 @@ class PFA
 {
     // Private data
 
+        //List of label for the search initiating set
+        labelList searchInitSet_;
 
 
 public:
