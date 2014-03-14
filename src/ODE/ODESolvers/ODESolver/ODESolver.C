@@ -81,6 +81,11 @@ Foam::scalar Foam::ODESolver::normalizeError
     return maxErr;
 }
 
+void Foam::ODESolver::setNEqns(label nEqns) const
+{
+    n_=nEqns;
+}
+
 
 void Foam::ODESolver::solve
 (

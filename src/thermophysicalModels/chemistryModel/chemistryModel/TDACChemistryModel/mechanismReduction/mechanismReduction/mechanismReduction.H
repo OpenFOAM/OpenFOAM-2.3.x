@@ -75,11 +75,6 @@ private:
 
     //Tolerance for the mechanism reduction algorithm
     const scalar tolerance_;
-    //Dictionary that store the initial set
-    const dictionary initSet_;
-
-    //List of label for the search initiating set
-    labelList searchInitSet_;
 
     //Is mechanism reduction active?
     const Switch active_;
@@ -150,9 +145,7 @@ public:
         //- Return the tolerance
         inline scalar tolerance() const;
 
-        inline const labelList& searchInitSet() const;
-
-        inline Switch active();
+        inline Switch active() const;
 
 };
 

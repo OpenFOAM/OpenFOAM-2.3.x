@@ -51,6 +51,11 @@ class DRG
     public mechanismReduction<CompType, ThermoType>
 {
 
+protected:
+
+    //List of label for the search initiating set
+    labelList searchInitSet_;
+
 public:
 
     //- Runtime type information

@@ -48,27 +48,8 @@ Foam::mechanismReduction<CompType,ThermoType>::mechanismReduction
     nSpecie_(chemistry.nSpecie()),
     coeffsDict_(dict.subDict("mechanismReduction")),
     tolerance_(readScalar(coeffsDict_.lookup("tolerance"))),
-    //    initSet_(coeffsDict_.subDict("initialSet")),
-    //    searchInitSet_(initSet_.size()),
     active_(coeffsDict_.lookup("active"))
 {
-    label j=0;
-    for (label i=0; i<chemistry.nSpecie(); i++)
-    {
-        if (initSet_.found(chemistry.Y()[i].name()))
-        {
-            searchInitSet_[j++]=i;
-        }
-    }
-    if (j<searchInitSet_.size())
-    {
-        FatalErrorIn("mechanismReduction")
-            << searchInitSet_.size()-j
-            << " species in the intial set is not in the mechanism "
-            << initSet_
-            << abort(FatalError);
-    }
-    
 }
 
 

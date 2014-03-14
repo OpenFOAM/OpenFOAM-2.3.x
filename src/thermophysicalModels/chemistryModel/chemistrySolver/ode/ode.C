@@ -62,6 +62,7 @@ void Foam::ode<ChemistryModel>::solve
 {
     label nSpecie = this->nSpecie();
 
+    cTp_.setSize(this->nEqns());
     // Copy the concentration, T and P to the total solve-vector
     for (register int i=0; i<nSpecie; i++)
     {
@@ -70,6 +71,9 @@ void Foam::ode<ChemistryModel>::solve
     cTp_[nSpecie] = T;
     cTp_[nSpecie+1] = p;
 
+    //reset the size of the ODE system to the simplified size
+    //when mechanism reduction is active
+    odeSolver_->setNEqns(this->nEqns());
     odeSolver_->solve(0, deltaT, cTp_, subDeltaT);
 
     for (register int i=0; i<nSpecie; i++)

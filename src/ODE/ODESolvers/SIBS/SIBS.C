@@ -100,7 +100,6 @@ void Foam::SIBS::solve
                    /((a_[iq + 1] - a_[0] + 1.0)*(2*k + 3)));
             }
         }
-
         epsOld_ = relTol_[0];
         a_[0] += n_;
 
@@ -121,8 +120,10 @@ void Foam::SIBS::solve
     }
 
     label k = 0;
-    yTemp_ = y;
-
+    forAll(y,yi)
+    {
+        yTemp_[yi] = y[yi];
+    }
     odes_.jacobian(x, y, dfdx_, dfdy_);
 
     if (x != xNew_ || h != dxTry)

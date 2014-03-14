@@ -59,7 +59,7 @@ protected:
         const ODESystem& odes_;
 
         //- Size of the ODESystem
-        label n_;
+        mutable label n_;
 
         //- Absolute convergence tolerance per step
         scalarField absTol_;
@@ -170,6 +170,8 @@ public:
         {
             return relTol_;
         }
+
+        void setNEqns(label nEqns) const;
 
         //- Solve the ODE system as far as possible upto dxTry
         //  adjusting the step as necessary to provide a solution within

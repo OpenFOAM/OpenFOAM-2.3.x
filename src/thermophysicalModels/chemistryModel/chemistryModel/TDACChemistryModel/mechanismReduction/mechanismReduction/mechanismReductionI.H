@@ -71,15 +71,8 @@ Foam::mechanismReduction<CompType,ThermoType>::tolerance() const
 
 
 template<class CompType, class ThermoType>
-inline const Foam::labelList&
-Foam::mechanismReduction<CompType,ThermoType>::searchInitSet() const
-{
-    return searchInitSet_;
-}
-
-template<class CompType, class ThermoType>
 inline Foam::Switch
-Foam::mechanismReduction<CompType,ThermoType>::active()
+Foam::mechanismReduction<CompType,ThermoType>::active() const
 {
     return active_;
 }

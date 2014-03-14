@@ -1,9 +1,9 @@
 /*---------------------------------------------------------------------------*\
-  =========                 |
-  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
-     \\/     M anipulation  |
+=========                 |
+\\      /  F ield         | Unsupported Contributions for OpenFOAM
+ \\    /   O peration     |
+  \\  /    A nd           | Copyright (C) 2014 Francesco Contino
+   \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
@@ -34,7 +34,13 @@ Foam::TDACChemistryModel<CompType, ThermoType>::TDACChemistryModel
     const fvMesh& mesh
 )
 :
-    chemistryModel<CompType, ThermoType>(mesh)
+    chemistryModel<CompType, ThermoType>(mesh),
+    NsDAC_(this->nSpecie_),
+    completeC_(this->nSpecie_,0.0),
+    reactionsDisabled_(this->reactions_.size(), false),
+    activeSpecies_(this->nSpecie_,false),
+    completeToSimplifiedIndex_(this->nSpecie_,-1),
+    simplifiedToCompleteIndex_(this->nSpecie_)
 {
     mechRed_ =
         mechanismReduction<CompType, ThermoType>::New
@@ -54,14 +60,6 @@ Foam::TDACChemistryModel<CompType, ThermoType>::~TDACChemistryModel()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 template<class CompType, class ThermoType>
-const Foam::PtrList<Foam::volScalarField>&
-Foam::TDACChemistryModel<CompType, ThermoType>::Y()
-{
-    return this->Y_;
-}
-
-
-template<class CompType, class ThermoType>
 Foam::tmp<Foam::scalarField>
 Foam::TDACChemistryModel<CompType, ThermoType>::omega
 (
@@ -73,33 +71,66 @@ Foam::TDACChemistryModel<CompType, ThermoType>::omega
     scalar pf, cf, pr, cr;
     label lRef, rRef;
 
+    //tom will have a reduced size when mechanism reduction is active
+    //because nEqns() takes into account the reduced set of species
     tmp<scalarField> tom(new scalarField(this->nEqns(), 0.0));
     scalarField& om = tom();
 
-    forAll(this->reactions_, i)
+    //However we need a vector of the complete set of species for the
+    //third-body reactions
+    scalarField c2(completeC_.size(), 0.0);
+    if (mechRed_->active())
     {
-        const Reaction<ThermoType>& R = this->reactions_[i];
-
-        scalar omegai = omega
-        (
-            R, c, T, p, pf, cf, lRef, pr, cr, rRef
-        );
-
-        forAll(R.lhs(), s)
+        c2 = completeC_;
+        //Update the concentration of the species in the simplified mechanism
+        //the other species remain the same and are used only for third-body
+        //efficiencies
+        for(label i=0; i<NsDAC_; i++)
         {
-            const label si = R.lhs()[s].index;
-            const scalar sl = R.lhs()[s].stoichCoeff;
-            om[si] -= sl*omegai;
+            c2[simplifiedToCompleteIndex_[i]] = max(0.0, c[i]);
         }
-
-        forAll(R.rhs(), s)
+    }
+    else
+    {
+        for(label i=0; i<this->nSpecie(); i++)
         {
-            const label si = R.rhs()[s].index;
-            const scalar sr = R.rhs()[s].stoichCoeff;
-            om[si] += sr*omegai;
+            c2[i] = max(0.0, c[i]);
         }
     }
 
+    forAll(this->reactions_, i)
+    {
+        if (!reactionsDisabled_[i])
+        {
+            const Reaction<ThermoType>& R = this->reactions_[i];
+
+            scalar omegai = omega
+            (
+                R, c2, T, p, pf, cf, lRef, pr, cr, rRef
+            );
+
+            forAll(R.lhs(), s)
+            {
+                label si = R.lhs()[s].index;
+                if (mechRed_->active())
+                {
+                    si = completeToSimplifiedIndex_[si];
+                }
+                const scalar sl = R.lhs()[s].stoichCoeff;
+                om[si] -= sl*omegai;
+            }
+            forAll(R.rhs(), s)
+            {
+                label si = R.rhs()[s].index;
+                if (mechRed_->active())
+                {
+                    si = completeToSimplifiedIndex_[si];
+                }
+                const scalar sr = R.rhs()[s].stoichCoeff;
+                om[si] += sr*omegai;
+            }
+        }
+    }
     return tom;
 }
 
@@ -109,7 +140,7 @@ template<class CompType, class ThermoType>
 Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::omega
 (
     const Reaction<ThermoType>& R,
-    const scalarField& c,
+    const scalarField& c,//contains all species even when mechRed is active
     const scalar T,
     const scalar p,
     scalar& pf,
@@ -120,8 +151,8 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::omega
     label& rRef
 ) const
 {
-    scalarField c2(this->nSpecie_, 0.0);
-    for (label i = 0; i < this->nSpecie_; i++)
+    scalarField c2(completeC_.size(), 0.0);
+    for (label i = 0; i < completeC_.size(); i++)
     {
         c2[i] = max(0.0, c[i]);
     }
@@ -234,33 +265,71 @@ void Foam::TDACChemistryModel<CompType, ThermoType>::derivatives
     const scalar T = c[this->nSpecie_];
     const scalar p = c[this->nSpecie_ + 1];
 
-    dcdt = omega(c, T, p);
+    tmp<scalarField> tom(omega(c, T, p));
+    for (label i=0; i<this->nEqns(); i++)
+    {
+        dcdt[i] = tom()[i];
+    }
+
+    scalarField c2(completeC_.size(), 0.0);
+    if (mechRed_->active())
+    {
+        //when using DAC, the ODE solver submit a reduced set of species
+        //the complete set is used and only the species in the simplified
+        //mechanism are updated
+        c2 = completeC_;
+
+        //update the concentration of the species in the simplified mechanism
+        //the other species remain the same and are used only for third-body
+        //efficiencies
+        for(label i=0; i<NsDAC_; i++)
+        {
+            c2[simplifiedToCompleteIndex_[i]] = max(0.0, c[i]);
+        }
+    }
+    else
+    {
+        for(label i=0; i<this->nSpecie(); i++)
+        {
+            c2[i] = max(0.0, c[i]);
+        }
+    }
 
     // constant pressure
     // dT/dt = ...
     scalar rho = 0.0;
-    scalar cSum = 0.0;
-    for (label i = 0; i < this->nSpecie_; i++)
+    for (label i = 0; i < c2.size(); i++)
     {
         const scalar W = this->specieThermo_[i].W();
-        cSum += c[i];
-        rho += W*c[i];
+        rho += W*c2[i];
     }
     scalar cp = 0.0;
-    for (label i=0; i<this->nSpecie_; i++)
+    for (label i=0; i<c2.size(); i++)
     {
-        cp += c[i]*this->specieThermo_[i].cp(p, T);
+        //cp function returns [J/(kmol K)]
+        cp += c2[i]*this->specieThermo_[i].cp(p, T);
     }
     cp /= rho;
-
     scalar dT = 0.0;
+    //when mechanism reduction is active
+    //dT is computed on the reduced set since dcdt is null
+    //for species not involved in the simplified mechanism
     for (label i = 0; i < this->nSpecie_; i++)
     {
-        const scalar hi = this->specieThermo_[i].ha(p, T);
+        label si;
+        if (mechRed_->active())
+        {
+            si = simplifiedToCompleteIndex_[i];
+        }
+        else
+        {
+            si = i;
+        }
+        //ha function returns [J/kmol]
+        const scalar hi = this->specieThermo_[si].ha(p, T);
         dT += hi*dcdt[i];
     }
     dT /= rho*cp;
-
     dcdt[this->nSpecie_] = -dT;
 
     // dp/dt = ...
@@ -277,13 +346,28 @@ void Foam::TDACChemistryModel<CompType, ThermoType>::jacobian
     scalarSquareMatrix& dfdc
 ) const
 {
+    //if the mechanism reduction is active, the computed Jacobian
+    //is compact (size of the reduced set of species)
+    //but according to the informations of the complete set
+    //(i.e. for the third-body efficiencies)
     const scalar T = c[this->nSpecie_];
     const scalar p = c[this->nSpecie_ + 1];
 
-    scalarField c2(this->nSpecie_, 0.0);
-    forAll(c2, i)
+    scalarField c2(completeC_.size(), 0.0);
+    if (mechRed_->active())
     {
-        c2[i] = max(c[i], 0.0);
+        c2 = completeC_;
+        for(label i=0; i<NsDAC_; i++)
+        {
+            c2[simplifiedToCompleteIndex_[i]] = max(0.0, c[i]);
+        }
+    }
+    else
+    {
+        forAll(c2, i)
+        {
+            c2[i] = max(c[i], 0.0);
+        }
     }
 
     for (label i=0; i<this->nEqns(); i++)
@@ -295,112 +379,144 @@ void Foam::TDACChemistryModel<CompType, ThermoType>::jacobian
     }
 
     // length of the first argument must be nSpecie()
-    dcdt = omega(c2, T, p);
+    // (reduced when mechanism reduction is active)
+    tmp<scalarField> tom(omega(c, T, p));
+    for (label i=0; i<this->nEqns(); i++)
+    {
+        dcdt[i] = tom()[i];
+    }
 
     forAll(this->reactions_, ri)
     {
-        const Reaction<ThermoType>& R = this->reactions_[ri];
-
-        const scalar kf0 = R.kf(p, T, c2);
-        const scalar kr0 = R.kr(p, T, c2);
-
-        forAll(R.lhs(), j)
+        if (!reactionsDisabled_[ri])
         {
-            const label sj = R.lhs()[j].index;
-            scalar kf = kf0;
-            forAll(R.lhs(), i)
+            const Reaction<ThermoType>& R = this->reactions_[ri];
+
+            const scalar kf0 = R.kf(p, T, c2);
+            const scalar kr0 = R.kr(kf0, p, T, c2);
+
+            forAll(R.lhs(), j)
             {
-                const label si = R.lhs()[i].index;
-                const scalar el = R.lhs()[i].exponent;
-                if (i == j)
+                label sj = R.lhs()[j].index;
+                if (mechRed_->active())
                 {
-                    if (el < 1.0)
+                    sj = completeToSimplifiedIndex_[sj];
+                }
+                scalar kf = kf0;
+                forAll(R.lhs(), i)
+                {
+                    const label si = R.lhs()[i].index;
+                    const scalar el = R.lhs()[i].exponent;
+                    if (i == j)
                     {
-                        if (c2[si] > SMALL)
+                        if (el < 1.0)
                         {
-                            kf *= el*pow(c2[si] + VSMALL, el - 1.0);
+                            if (c2[si] > SMALL)
+                            {
+                                kf *= el*pow(c2[si] + VSMALL, el - 1.0);
+                            }
+                            else
+                            {
+                                kf = 0.0;
+                            }
                         }
                         else
                         {
-                            kf = 0.0;
+                            kf *= el*pow(c2[si], el - 1.0);
                         }
                     }
                     else
                     {
-                        kf *= el*pow(c2[si], el - 1.0);
+                        kf *= pow(c2[si], el);
                     }
                 }
-                else
+
+                forAll(R.lhs(), i)
                 {
-                    kf *= pow(c2[si], el);
+                    label si = R.lhs()[i].index;
+                    if (mechRed_->active())
+                    {
+                        si = completeToSimplifiedIndex_[si];
+                    }
+                    const scalar sl = R.lhs()[i].stoichCoeff;
+                    dfdc[si][sj] -= sl*kf;
+                }
+                forAll(R.rhs(), i)
+                {
+                    label si = R.rhs()[i].index;
+                    if (mechRed_->active())
+                    {
+                        si = completeToSimplifiedIndex_[si];
+                    }
+                    const scalar sr = R.rhs()[i].stoichCoeff;
+                    dfdc[si][sj] += sr*kf;
                 }
             }
 
-            forAll(R.lhs(), i)
+            forAll(R.rhs(), j)
             {
-                const label si = R.lhs()[i].index;
-                const scalar sl = R.lhs()[i].stoichCoeff;
-                dfdc[si][sj] -= sl*kf;
-            }
-            forAll(R.rhs(), i)
-            {
-                const label si = R.rhs()[i].index;
-                const scalar sr = R.rhs()[i].stoichCoeff;
-                dfdc[si][sj] += sr*kf;
-            }
-        }
-
-        forAll(R.rhs(), j)
-        {
-            const label sj = R.rhs()[j].index;
-            scalar kr = kr0;
-            forAll(R.rhs(), i)
-            {
-                const label si = R.rhs()[i].index;
-                const scalar er = R.rhs()[i].exponent;
-                if (i == j)
+                label sj = R.rhs()[j].index;
+                if (mechRed_->active())
                 {
-                    if (er < 1.0)
+                    sj = completeToSimplifiedIndex_[sj];
+                }
+                scalar kr = kr0;
+                forAll(R.rhs(), i)
+                {
+                    const label si = R.rhs()[i].index;
+                    const scalar er = R.rhs()[i].exponent;
+                    if (i == j)
                     {
-                        if (c2[si] > SMALL)
+                        if (er < 1.0)
                         {
-                            kr *= er*pow(c2[si] + VSMALL, er - 1.0);
+                            if (c2[si] > SMALL)
+                            {
+                                kr *= er*pow(c2[si] + VSMALL, er - 1.0);
+                            }
+                            else
+                            {
+                                kr = 0.0;
+                            }
                         }
                         else
                         {
-                            kr = 0.0;
+                            kr *= er*pow(c2[si], er - 1.0);
                         }
                     }
                     else
                     {
-                        kr *= er*pow(c2[si], er - 1.0);
+                        kr *= pow(c2[si], er);
                     }
                 }
-                else
-                {
-                    kr *= pow(c2[si], er);
-                }
-            }
 
-            forAll(R.lhs(), i)
-            {
-                const label si = R.lhs()[i].index;
-                const scalar sl = R.lhs()[i].stoichCoeff;
-                dfdc[si][sj] += sl*kr;
-            }
-            forAll(R.rhs(), i)
-            {
-                const label si = R.rhs()[i].index;
-                const scalar sr = R.rhs()[i].stoichCoeff;
-                dfdc[si][sj] -= sr*kr;
+                forAll(R.lhs(), i)
+                {
+                    label si = R.lhs()[i].index;
+                    if (mechRed_->active())
+                    {
+                        si = completeToSimplifiedIndex_[si];
+                    }
+                    const scalar sl = R.lhs()[i].stoichCoeff;
+                    dfdc[si][sj] += sl*kr;
+                }
+                forAll(R.rhs(), i)
+                {
+                    label si = R.rhs()[i].index;
+                    if (mechRed_->active())
+                    {
+                        si = completeToSimplifiedIndex_[si];
+                    }
+                    const scalar sr = R.rhs()[i].stoichCoeff;
+                    dfdc[si][sj] -= sr*kr;
+                }
             }
         }
     }
 
     // Calculate the dcdT elements numerically
     const scalar delta = 1.0e-3;
-    const scalarField dcdT0(omega(c2, T - delta, p));
-    const scalarField dcdT1(omega(c2, T + delta, p));
+    const scalarField dcdT0(omega(c, T - delta, p));
+    const scalarField dcdT1(omega(c, T + delta, p));
 
     for (label i = 0; i < this->nEqns(); i++)
     {
@@ -460,12 +576,35 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
         // Initialise time progress
         scalar timeLeft = deltaT[celli];
 
+        if (mechRed_->active())
+        {
+            mechRed_->reduceMechanism(c,Ti,pi);
+        }
         // Calculate the chemical source terms
         while (timeLeft > SMALL)
         {
             scalar dt = timeLeft;
-            this->solve(c, Ti, pi, dt, this->deltaTChem_[celli]);
+            if (mechRed_->active())
+            {
+                //completeC_ used in the overridden ODE methods
+                //to update only the active species
+                completeC_ = c;
+                this->solve(simplifiedC_, Ti, pi, dt, this->deltaTChem_[celli]);
+                for (label i=0; i<NsDAC_; i++)
+                {
+                    c[simplifiedToCompleteIndex_[i]] = simplifiedC_[i];
+                }
+            }
+            else
+            {
+                this->solve(c, Ti, pi, dt, this->deltaTChem_[celli]);
+            }
             timeLeft -= dt;
+        }
+
+        if (mechRed_->active())
+        {
+            this->nSpecie_ = mechRed_->nSpecie();
         }
 
         deltaTMin = min(this->deltaTChem_[celli], deltaTMin);

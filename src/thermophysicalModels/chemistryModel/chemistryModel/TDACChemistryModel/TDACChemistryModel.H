@@ -34,6 +34,7 @@ Description
     Institute, 33(2):3057–3064, 2011
 
 SourceFiles
+    TDACChemistryModelI.H
     TDACChemistryModel.C
 
 \*---------------------------------------------------------------------------*/
@@ -75,7 +76,15 @@ class TDACChemistryModel
         template<class DeltaTType>
         scalar solve(const DeltaTType& deltaT);
 
+        //- Mechanism reduction
         autoPtr<mechanismReduction<CompType, ThermoType> > mechRed_;
+        label NsDAC_;
+        scalarField completeC_;
+        scalarField simplifiedC_;
+        Field<bool> reactionsDisabled_;
+        List<bool> activeSpecies_;
+        Field<label> completeToSimplifiedIndex_;
+        DynamicList<label> simplifiedToCompleteIndex_;
 
 
 public:
@@ -96,7 +105,7 @@ public:
 
     // Member Functions
 
-        const PtrList<volScalarField>& Y();
+        inline const PtrList<volScalarField>& Y();
 
         //- dc/dt = omega, rate of change in concentration, for each species
         //  adapted to work with a variable number of species
@@ -163,6 +172,30 @@ public:
                 scalar& deltaT,
                 scalar& subDeltaT
             ) const;
+
+        // Mechanism reduction related functions
+
+            inline void setNsDAC(label newNsDAC);
+
+            inline void setNSpecie(label newNs);
+
+            inline scalarField& completeC();
+
+            inline scalarField& simplifiedC();
+
+            inline Field<bool>& reactionsDisabled();
+
+            void setActive(label i);
+
+            bool isActive(label i);
+
+            inline DynamicList<label>& simplifiedToCompleteIndex();
+
+            inline Field<label>& completeToSimplifiedIndex();
+
+            inline const Field<label>& completeToSimplifiedIndex() const;
+
+
 };
 
 
@@ -170,6 +203,10 @@ public:
 
 } // End namespace Foam
 
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "TDACChemistryModelI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

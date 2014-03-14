@@ -39,7 +39,6 @@ void Foam::SIBS::polyExtrapolate
 ) const
 {
     label n = yz.size();
-
     x[iest] = xest;
 
     for (register label j=0; j<n; j++)

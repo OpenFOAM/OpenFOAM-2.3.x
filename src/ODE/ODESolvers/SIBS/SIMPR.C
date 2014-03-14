@@ -59,6 +59,7 @@ void Foam::SIBS::SIMPR
         yEnd[i] = h*(dydx[i] + h*dfdx[i]);
     }
 
+    //size of yEnd not used in LUBacksubstitute and can remain at full size
     LUBacksubstitute(a, pivotIndices, yEnd);
 
     scalarField del(yEnd);
