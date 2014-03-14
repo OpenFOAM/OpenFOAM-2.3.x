@@ -100,7 +100,22 @@ class DAC
 :
     public mechanismReduction<CompType, ThermoType>
 {
+    // Private data
+        //List of label for the search initiating set
+        labelList searchInitSet_;
 
+        scalar zprime_;
+        label nbCLarge_;
+        List<label> sC_,sH_,sO_,sN_;
+        label CO2Id_,COId_,HO2Id_,H2OId_,NOId_;
+        Switch automaticSIS_;
+        scalar phiTol_;
+        scalar NOxThreshold_;
+        wordList fuelSpecies_;
+        scalarField fuelSpeciesProp_;
+        List<label> fuelSpeciesID_;
+        word CO2Name_, COName_, HO2Name_, H2OName_, NOName_; 
+        Switch forceFuelInclusion_;
 
 public:
 

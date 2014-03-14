@@ -40,8 +40,33 @@ Foam::TDACChemistryModel<CompType, ThermoType>::TDACChemistryModel
     reactionsDisabled_(this->reactions_.size(), false),
     activeSpecies_(this->nSpecie_,false),
     completeToSimplifiedIndex_(this->nSpecie_,-1),
-    simplifiedToCompleteIndex_(this->nSpecie_)
+    simplifiedToCompleteIndex_(this->nSpecie_),
+    specieComp_(this->nSpecie_)
 {
+    {
+        IOdictionary thermoDict
+        (
+         IOobject
+         (
+          "thermophysicalProperties",
+          mesh.time().constant(),
+          mesh,
+          IOobject::MUST_READ,
+          IOobject::NO_WRITE
+          )
+         );
+
+        // Store the species composition according to the species index
+        speciesTable speciesTab = this->thermo().composition().species();
+        chemkinReader tchemRead(thermoDict, speciesTab);
+        const HashTable<List<chemkinReader::specieElement> >& specComp =
+        tchemRead.specieComposition();
+        forAll(specieComp_,i)
+        {
+            specieComp_[i] = specComp[this->Y()[i].name()];
+        }
+    }
+
     mechRed_ =
         mechanismReduction<CompType, ThermoType>::New
         (
@@ -601,7 +626,6 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
             }
             timeLeft -= dt;
         }
-
         if (mechRed_->active())
         {
             this->nSpecie_ = mechRed_->nSpecie();

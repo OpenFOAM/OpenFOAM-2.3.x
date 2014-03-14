@@ -44,6 +44,7 @@ SourceFiles
 
 #include "chemistryModel.H"
 #include "mechanismReduction.H"
+#include "chemkinReader.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -85,6 +86,7 @@ class TDACChemistryModel
         List<bool> activeSpecies_;
         Field<label> completeToSimplifiedIndex_;
         DynamicList<label> simplifiedToCompleteIndex_;
+        List<List<chemkinReader::specieElement> > specieComp_;
 
 
 public:
@@ -194,6 +196,8 @@ public:
             inline Field<label>& completeToSimplifiedIndex();
 
             inline const Field<label>& completeToSimplifiedIndex() const;
+
+            inline List<List<chemkinReader::specieElement> >& specieComp();
 
 
 };
