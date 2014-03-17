@@ -58,6 +58,9 @@ protected:
         //- Phase pair
         const phasePair& pair_;
 
+        //- Residual phase fraction
+        const dimensionedScalar residualAlpha_;
+
 
 public:
 

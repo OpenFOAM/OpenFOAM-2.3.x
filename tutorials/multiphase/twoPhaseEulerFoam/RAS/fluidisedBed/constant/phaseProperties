@@ -42,7 +42,6 @@ blending
     default
     {
         type            none;
-        residualAlpha   1e-3;
         continuousPhase air;
     }
 }
@@ -72,11 +71,6 @@ drag
 
 virtualMass
 (
-    (particles in air)
-    {
-        type            constantCoefficient;
-        Cvm             0;
-    }
 );
 
 heatTransfer
@@ -84,6 +78,7 @@ heatTransfer
     (particles in air)
     {
         type            RanzMarshall;
+        residualAlpha   1e-3;
     }
 );
 

@@ -64,7 +64,12 @@ Foam::heatTransferModels::RanzMarshall::K() const
 {
     volScalarField Nu(scalar(2) + 0.6*pair_.Re()*cbrt(pair_.Pr()));
 
-    return 6.0*pair_.continuous().kappa()*Nu/sqr(pair_.dispersed().d());
+    return
+        6.0
+       *max(pair_.dispersed(), residualAlpha_)
+       *pair_.continuous().kappa()
+       *Nu
+       /sqr(pair_.dispersed().d());
 }
 
 
