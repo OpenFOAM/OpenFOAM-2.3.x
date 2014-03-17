@@ -17,6 +17,11 @@
                 phi,
                 upwind<scalar>(mesh, phi)
             ).fvmDiv(phi, alpha1)
+        );
+
+        solve
+        (
+            alpha1Eqn
           - fv::gaussLaplacianScheme<scalar, scalar>
             (
                 mesh,
@@ -24,8 +29,6 @@
                 fv::uncorrectedSnGrad<scalar>(mesh)
             ).fvmLaplacian(fvc::interpolate(mut/rho), alpha1)
         );
-
-        alpha1Eqn.solve();
 
         Info<< "Phase-1 volume fraction = "
             << alpha1.weightedAverage(mesh.Vsc()).value()
