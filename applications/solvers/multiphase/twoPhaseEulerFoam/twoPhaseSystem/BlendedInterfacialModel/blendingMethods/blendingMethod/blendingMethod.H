@@ -49,14 +49,6 @@ namespace Foam
 
 class blendingMethod
 {
-protected:
-
-    // Protected data
-
-        //- Residual phase fraction
-        const dimensionedScalar residualAlpha_;
-
-
 public:
 
     //- Runtime type information
@@ -100,9 +92,6 @@ public:
 
 
     // Member Functions
-
-        //- Residual phase fraction
-        const dimensionedScalar& residualAlpha() const;
 
         //- Factor for first phase
         virtual tmp<volScalarField> f1

@@ -47,7 +47,7 @@ namespace Foam
 class phasePair;
 
 /*---------------------------------------------------------------------------*\
-                           Class virtualMassModel Declaration
+                         Class virtualMassModel Declaration
 \*---------------------------------------------------------------------------*/
 
 class virtualMassModel
@@ -120,13 +120,8 @@ public:
         virtual tmp<volScalarField> Cvm() const = 0;
 
         //- The virtual mass function K used in the momentum equation
-        //    ddt(alpha1*rho1*U1) + ... = ... alpha1*alpha2*K*(DU1_Dt - DU2_Dt)
-        //    ddt(alpha2*rho2*U2) + ... = ... alpha1*alpha2*K*(DU1_Dt - DU2_Dt)
-        // ********************************** NB! *****************************
-        // for numerical reasons alpha1 and alpha2 has been extracted from the
-        // virtual mass function K, so you MUST divide K by alpha1*alpha2 when
-        // implemnting the virtual mass function
-        // ********************************** NB! *****************************
+        //    ddt(alpha1*rho1*U1) + ... = ... K*(DU1_Dt - DU2_Dt)
+        //    ddt(alpha2*rho2*U2) + ... = ... K*(DU1_Dt - DU2_Dt)
         virtual tmp<volScalarField> K() const;
 
         // Dummy write for regIOobject
