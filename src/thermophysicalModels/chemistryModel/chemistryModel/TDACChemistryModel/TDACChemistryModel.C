@@ -73,6 +73,13 @@ Foam::TDACChemistryModel<CompType, ThermoType>::TDACChemistryModel
             *this,
             *this
         );
+
+    tabulation_ =
+        tabulation<CompType, ThermoType>::New
+        (
+            *this,
+            *this
+        );
 }
 
 
@@ -551,6 +558,185 @@ void Foam::TDACChemistryModel<CompType, ThermoType>::jacobian
 
 
 template<class CompType, class ThermoType>
+void Foam::TDACChemistryModel<CompType, ThermoType>::jacobian
+(
+ const scalar t,
+ const scalarField& c
+ scalarSquareMatrix& dfdc
+ ) const
+{
+    //if the mechanism reduction is active, the computed Jacobian
+    //is compact (size of the reduced set of species)
+    //but according to the informations of the complete set
+    //(i.e. for the third-body efficiencies)
+    const scalar T = c[this->nSpecie_];
+    const scalar p = c[this->nSpecie_ + 1];
+
+    scalarField c2(completeC_.size(), 0.0);
+    if (mechRed_->active())
+    {
+        c2 = completeC_;
+        for(label i=0; i<NsDAC_; i++)
+        {
+            c2[simplifiedToCompleteIndex_[i]] = max(0.0, c[i]);
+        }
+    }
+    else
+    {
+        forAll(c2, i)
+        {
+            c2[i] = max(c[i], 0.0);
+        }
+    }
+
+    for (label i=0; i<this->nEqns(); i++)
+    {
+        for (label j=0; j<this->nEqns(); j++)
+        {
+            dfdc[i][j] = 0.0;
+        }
+    }
+
+    forAll(this->reactions_, ri)
+    {
+        if (!reactionsDisabled_[ri])
+        {
+            const Reaction<ThermoType>& R = this->reactions_[ri];
+
+            const scalar kf0 = R.kf(p, T, c2);
+            const scalar kr0 = R.kr(kf0, p, T, c2);
+
+            forAll(R.lhs(), j)
+            {
+                label sj = R.lhs()[j].index;
+                if (mechRed_->active())
+                {
+                    sj = completeToSimplifiedIndex_[sj];
+                }
+                scalar kf = kf0;
+                forAll(R.lhs(), i)
+                {
+                    const label si = R.lhs()[i].index;
+                    const scalar el = R.lhs()[i].exponent;
+                    if (i == j)
+                    {
+                        if (el < 1.0)
+                        {
+                            if (c2[si] > SMALL)
+                            {
+                                kf *= el*pow(c2[si] + VSMALL, el - 1.0);
+                            }
+                            else
+                            {
+                                kf = 0.0;
+                            }
+                        }
+                        else
+                        {
+                            kf *= el*pow(c2[si], el - 1.0);
+                        }
+                    }
+                    else
+                    {
+                        kf *= pow(c2[si], el);
+                    }
+                }
+
+                forAll(R.lhs(), i)
+                {
+                    label si = R.lhs()[i].index;
+                    if (mechRed_->active())
+                    {
+                        si = completeToSimplifiedIndex_[si];
+                    }
+                    const scalar sl = R.lhs()[i].stoichCoeff;
+                    dfdc[si][sj] -= sl*kf;
+                }
+                forAll(R.rhs(), i)
+                {
+                    label si = R.rhs()[i].index;
+                    if (mechRed_->active())
+                    {
+                        si = completeToSimplifiedIndex_[si];
+                    }
+                    const scalar sr = R.rhs()[i].stoichCoeff;
+                    dfdc[si][sj] += sr*kf;
+                }
+            }
+
+            forAll(R.rhs(), j)
+            {
+                label sj = R.rhs()[j].index;
+                if (mechRed_->active())
+                {
+                    sj = completeToSimplifiedIndex_[sj];
+                }
+                scalar kr = kr0;
+                forAll(R.rhs(), i)
+                {
+                    const label si = R.rhs()[i].index;
+                    const scalar er = R.rhs()[i].exponent;
+                    if (i == j)
+                    {
+                        if (er < 1.0)
+                        {
+                            if (c2[si] > SMALL)
+                            {
+                                kr *= er*pow(c2[si] + VSMALL, er - 1.0);
+                            }
+                            else
+                            {
+                                kr = 0.0;
+                            }
+                        }
+                        else
+                        {
+                            kr *= er*pow(c2[si], er - 1.0);
+                        }
+                    }
+                    else
+                    {
+                        kr *= pow(c2[si], er);
+                    }
+                }
+
+                forAll(R.lhs(), i)
+                {
+                    label si = R.lhs()[i].index;
+                    if (mechRed_->active())
+                    {
+                        si = completeToSimplifiedIndex_[si];
+                    }
+                    const scalar sl = R.lhs()[i].stoichCoeff;
+                    dfdc[si][sj] += sl*kr;
+                }
+                forAll(R.rhs(), i)
+                {
+                    label si = R.rhs()[i].index;
+                    if (mechRed_->active())
+                    {
+                        si = completeToSimplifiedIndex_[si];
+                    }
+                    const scalar sr = R.rhs()[i].stoichCoeff;
+                    dfdc[si][sj] -= sr*kr;
+                }
+            }
+        }
+    }
+
+    // Calculate the dcdT elements numerically
+    const scalar delta = 1.0e-3;
+    const scalarField dcdT0(omega(c, T - delta, p));
+    const scalarField dcdT1(omega(c, T + delta, p));
+
+    for (label i = 0; i < this->nEqns(); i++)
+    {
+        dfdc[i][this->nSpecie()] = 0.5*(dcdT1[i] - dcdT0[i])/delta;
+    }
+}
+
+
+template<class CompType, class ThermoType>
 template<class DeltaTType>
 Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
 (
@@ -592,52 +778,99 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
         scalar pi = p[celli];
         scalar Ti = T[celli];
 
+        scalarField phiq(this->nEqns());//composition vector (Yi, T, p)
         for (label i=0; i<this->nSpecie_; i++)
         {
             c[i] = rhoi*this->Y_[i][celli]/this->specieThermo_[i].W();
             c0[i] = c[i];
+            phiq[i] = this->Y()[i][celli];
         }
+        phiq[this->nSpecie()]=Ti;
+        phiq[this->nSpecie()+1]=pi;
 
         // Initialise time progress
         scalar timeLeft = deltaT[celli];
 
-        if (mechRed_->active())
+        scalarField Rphiq(this->nEqns(),0.0);
+        // When tabulation is active (short-circuit evaluation for retrieve)
+        // It first tries to retrieve the solution of the system with the
+        // information stored through the tabulation method
+        if (tabulation_->active() && tabulation_->retrieve(phiq, Rphiq))
         {
-            mechRed_->reduceMechanism(c,Ti,pi);
+            // Retrieved solution in Rphiq
+            for (label i=0; i<this->nSpecie(); i++)
+            {
+                c[i] = rhoi*Rphiq[i]/this->specieThermo_[i].W();
+            }
         }
-        // Calculate the chemical source terms
-        while (timeLeft > SMALL)
+        // This position is reached when tabulation is not used OR
+        // if the solution is not retrieved.
+        // In the later, it adds the information to the tabulation (it will
+        // either expand the current data or add new stored points).
+        else
         {
-            scalar dt = timeLeft;
             if (mechRed_->active())
             {
-                //completeC_ used in the overridden ODE methods
-                //to update only the active species
-                completeC_ = c;
-                this->solve(simplifiedC_, Ti, pi, dt, this->deltaTChem_[celli]);
-                for (label i=0; i<NsDAC_; i++)
-                {
-                    c[simplifiedToCompleteIndex_[i]] = simplifiedC_[i];
-                }
+                mechRed_->reduceMechanism(c,Ti,pi);
             }
-            else
+            // Calculate the chemical source terms
+            while (timeLeft > SMALL)
             {
-                this->solve(c, Ti, pi, dt, this->deltaTChem_[celli]);
+                scalar dt = timeLeft;
+                if (mechRed_->active())
+                {
+                    //completeC_ used in the overridden ODE methods
+                    //to update only the active species
+                    completeC_ = c;
+                    this->solve
+                    (
+                        simplifiedC_, Ti, pi, dt, this->deltaTChem_[celli]
+                    );
+                    for (label i=0; i<NsDAC_; i++)
+                    {
+                        c[simplifiedToCompleteIndex_[i]] = simplifiedC_[i];
+                    }
+                }
+                else
+                {
+                    this->solve(c, Ti, pi, dt, this->deltaTChem_[celli]);
+                }
+                timeLeft -= dt;
             }
-            timeLeft -= dt;
-        }
-        if (mechRed_->active())
-        {
-            this->nSpecie_ = mechRed_->nSpecie();
+
+            // If tabulation is used, we add the information computed here to
+            // the stored points (either expand or add)
+            if (tabulation_->active())
+            {
+                forAll(Rphiq,i)
+                {
+                    Rphiq[i] = c[i]/rhoi*this->specieThermo_[i].W();
+                }
+                tabulation_->add(phiq, Rphiq, rhoi);
+            }
+
+            // When all operations are done and if mechanism reduction is on
+            // the number of species (which also affect nEqns) is set back
+            // to the total number of species (stored in the mechRed object)
+            if (mechRed_->active())
+            {
+                this->nSpecie_ = mechRed_->nSpecie();
+            }
+
+            deltaTMin = min(this->deltaTChem_[celli], deltaTMin);
         }
 
-        deltaTMin = min(this->deltaTChem_[celli], deltaTMin);
-
+        // Set the RR vector (used in the solver)
         for (label i=0; i<this->nSpecie_; i++)
         {
             this->RR_[i][celli] =
                 (c[i] - c0[i])*this->specieThermo_[i].W()/deltaT[celli];
         }
+    }
+
+    if (tabulation_->active())
+    {
+        tabulation->writePerformance(this->path + "../");
     }
 
     return deltaTMin;

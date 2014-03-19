@@ -35,7 +35,6 @@ Foam::mechanismReduction<CompType,ThermoType>::New
     TDACChemistryModel<CompType,ThermoType>& chemistry
 )
 {
-
     IOdictionary thermoDict
     (
         IOobject
@@ -71,14 +70,12 @@ Foam::mechanismReduction<CompType,ThermoType>::New
              << exit(FatalIOError);
     }
 
-
     dictionary MRdict(dict.subDict("mechanismReduction")); 
 
     word mechanismReductionTypeName =
         word(MRdict.lookup("reductionMethod")) + '<'
       + word(dict.subDict("chemistryType").lookup("chemistryThermo")) + ','
       + thermoTypeName + '>';
-
 
     typename dictionaryConstructorTable::iterator cstrIter =
         dictionaryConstructorTablePtr_->find(mechanismReductionTypeName);

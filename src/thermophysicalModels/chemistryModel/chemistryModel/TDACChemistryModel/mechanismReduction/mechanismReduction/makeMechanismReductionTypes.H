@@ -1,9 +1,9 @@
 /*---------------------------------------------------------------------------*\
-  =========                 |
-  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
-     \\/     M anipulation  |
+=========                 |
+\\      /  F ield         | Unsupported Contributions for OpenFOAM
+ \\    /   O peration     |
+  \\  /    A nd           | Copyright (C) 2014 Francesco Contino
+   \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
@@ -46,7 +46,7 @@ License
     (                                                                         \
         SS##Comp##Thermo,                                                     \
         (#SS"<" + word(Comp::typeName_())                                     \
-      + "," + Thermo::typeName() + ">").c_str(),                             \
+      + "," + Thermo::typeName() + ">").c_str(),                              \
         0                                                                     \
     );                                                                        \
                                                                               \
@@ -69,7 +69,7 @@ License
                                                                               \
     defineTemplateRunTimeSelectionTable                                       \
     (                                                                         \
-        mechanismReduction##CompChemModel##Thermo,                                     \
+        mechanismReduction##CompChemModel##Thermo,                            \
         dictionary                                                            \
     );                                                                        \
                                                                               \

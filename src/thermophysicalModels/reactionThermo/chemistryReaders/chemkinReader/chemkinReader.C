@@ -753,7 +753,7 @@ void Foam::chemkinReader::addReaction
 
     forAll(nAtoms, i)
     {
-        if (mag(nAtoms[i]) > SMALL)
+        if (mag(nAtoms[i]) > 1E-3)
         {
             FatalErrorIn("chemkinReader::addReaction")
                 << "Elemental imbalance in " << elementNames_[i]
