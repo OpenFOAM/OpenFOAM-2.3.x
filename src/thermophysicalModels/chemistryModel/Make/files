@@ -10,4 +10,6 @@ chemistrySolver/chemistrySolver/makeChemistrySolvers.C
 
 chemistryModel/TDACChemistryModel/mechanismReduction/mechanismReduction/makeMechanismReductions.C
 
+chemistryModel/TDACChemistryModel/tabulation/tabulation/makeTabulations.C
+
 LIB = $(FOAM_LIBBIN)/libchemistryModel
