@@ -871,7 +871,7 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
 
     if (tabulation_->active())
     {
-        tabulation->writePerformance(this->path + "../");
+        tabulation->writePerformance(this->path + "/../");
     }
 
     return deltaTMin;
