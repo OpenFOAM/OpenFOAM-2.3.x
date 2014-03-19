@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -132,6 +132,13 @@ public:
         (
             const label i
         ) const = 0;
+
+        //- Returns the reaction rate of the specieI in reactionI
+        virtual tmp<DimensionedField<scalar, volMesh> > calculateRR
+        (
+            const label reactionI,
+            const label specieI
+        ) const;
 
         //- Return sensible enthalpy for gas i [J/Kg]
         virtual tmp<volScalarField> gasHs

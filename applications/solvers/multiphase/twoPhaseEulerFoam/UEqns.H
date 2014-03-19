@@ -23,12 +23,11 @@ volScalarField dragCoeff(fluid.dragCoeff());
           + phase1.turbulence().divDevReff(U1)
          ==
           - fvm::Sp(dragCoeff/rho1, U1)
-          - alpha1*alpha2/rho1
-           *(
+          - (
                 liftForce
               + wallLubricationForce
               + turbulentDispersionForce
-            )
+            )/rho1
           - virtualMassCoeff/rho1
            *(
                 fvm::ddt(U1)
@@ -50,12 +49,11 @@ volScalarField dragCoeff(fluid.dragCoeff());
           + phase2.turbulence().divDevReff(U2)
          ==
           - fvm::Sp(dragCoeff/rho2, U2)
-          + alpha1*alpha2/rho2
-           *(
+          + (
                 liftForce
               + wallLubricationForce
               + turbulentDispersionForce
-            )
+            )/rho2
           - virtualMassCoeff/rho2
            *(
                 fvm::ddt(U2)

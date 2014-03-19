@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -623,6 +623,88 @@ Foam::label Foam::chemistryModel<CompType, ThermoType>::nEqns() const
 {
     // nEqns = number of species + temperature + pressure
     return nSpecie_ + 2;
+}
+
+
+template<class CompType, class ThermoType>
+Foam::tmp<Foam::DimensionedField<Foam::scalar, Foam::volMesh> >
+Foam::chemistryModel<CompType, ThermoType>::calculateRR
+(
+    const label reactionI,
+    const label specieI
+) const
+{
+    scalar pf, cf, pr, cr;
+    label lRef, rRef;
+
+    const volScalarField rho
+    (
+        IOobject
+        (
+            "rho",
+            this->time().timeName(),
+            this->mesh(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            false
+        ),
+        this->thermo().rho()
+    );
+
+    tmp<DimensionedField<scalar, volMesh> > tRR
+    (
+        new DimensionedField<scalar, volMesh>
+        (
+            IOobject
+            (
+                "RR",
+                this->mesh().time().timeName(),
+                this->mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            this->mesh(),
+            dimensionedScalar("zero", dimMass/dimVolume/dimTime, 0.0)
+        )
+    );
+
+    DimensionedField<scalar, volMesh>& RR = tRR();
+
+    const scalarField& T = this->thermo().T();
+    const scalarField& p = this->thermo().p();
+
+    forAll(rho, celli)
+    {
+        const scalar rhoi = rho[celli];
+        const scalar Ti = T[celli];
+        const scalar pi = p[celli];
+
+        scalarField c(nSpecie_, 0.0);
+        for (label i=0; i<nSpecie_; i++)
+        {
+            const scalar Yi = Y_[i][celli];
+            c[i] = rhoi*Yi/specieThermo_[i].W();
+        }
+
+        const scalar w = omegaI
+        (
+            reactionI,
+            c,
+            Ti,
+            pi,
+            pf,
+            cf,
+            lRef,
+            pr,
+            cr,
+            rRef
+        );
+
+        RR[celli] = w*specieThermo_[specieI].W();
+
+    }
+
+    return tRR;
 }
 
 

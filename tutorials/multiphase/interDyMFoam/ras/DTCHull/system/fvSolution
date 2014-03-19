@@ -24,8 +24,6 @@ solvers
         cAlpha          1;
         icAlpha         0;
 
-        alphaOuterCorrectors  yes;
-
         MULESCorr       yes;
         nLimiterIter    10;
         alphaApplyPrevCorr  yes;

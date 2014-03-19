@@ -154,13 +154,10 @@ int main(int argc, char *argv[])
                 dimensionedScalar("0", dimMass/dimTime, 0)
             );
 
-            if (pimple.firstIter() || alphaOuterCorrectors)
-            {
-                twoPhaseProperties->correct();
+            twoPhaseProperties->correct();
 
-                #include "alphaEqnSubCycle.H"
-                interface.correct();
-            }
+            #include "alphaEqnSubCycle.H"
+            interface.correct();
 
             #include "UEqn.H"
 

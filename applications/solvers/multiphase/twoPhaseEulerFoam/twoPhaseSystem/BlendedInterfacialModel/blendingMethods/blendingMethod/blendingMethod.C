@@ -40,8 +40,6 @@ Foam::blendingMethod::blendingMethod
 (
     const dictionary& dict
 )
-:
-    residualAlpha_("residualAlpha", dimless, dict.lookup("residualAlpha"))
 {}
 
 
@@ -49,14 +47,6 @@ Foam::blendingMethod::blendingMethod
 
 Foam::blendingMethod::~blendingMethod()
 {}
-
-
-// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
-
-const Foam::dimensionedScalar& Foam::blendingMethod::residualAlpha() const
-{
-    return residualAlpha_;
-}
 
 
 // ************************************************************************* //

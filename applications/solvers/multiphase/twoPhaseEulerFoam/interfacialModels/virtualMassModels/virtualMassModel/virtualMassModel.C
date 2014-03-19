@@ -72,7 +72,7 @@ Foam::virtualMassModel::~virtualMassModel()
 
 Foam::tmp<Foam::volScalarField> Foam::virtualMassModel::K() const
 {
-    return Cvm()*pair_.continuous().rho();
+    return Cvm()*pair_.dispersed()*pair_.continuous().rho();
 }
 
 

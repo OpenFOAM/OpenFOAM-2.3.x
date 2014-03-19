@@ -23,8 +23,6 @@ solvers
         nAlphaSubCycles 1;
         cAlpha          1;
 
-        alphaOuterCorrectors  yes;
-
         MULESCorr       yes;
         nLimiterIter    5;
         alphaApplyPrevCorr  true;

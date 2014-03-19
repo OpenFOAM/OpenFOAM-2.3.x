@@ -163,8 +163,6 @@ Foam::BlendedInterfacialModel<modelType>::K() const
 
     if (model_.valid() || model1In2_.valid() || model2In1_.valid())
     {
-        x() *= max(pair_.phase1()*pair_.phase2(), blending_.residualAlpha());
-
         correctFixedFluxBCs(x());
     }
 

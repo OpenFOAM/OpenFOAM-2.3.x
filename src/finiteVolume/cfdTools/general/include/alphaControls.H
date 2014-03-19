@@ -6,11 +6,6 @@ label nAlphaSubCycles(readLabel(alphaControls.lookup("nAlphaSubCycles")));
 
 bool MULESCorr(alphaControls.lookupOrDefault<Switch>("MULESCorr", false));
 
-bool alphaOuterCorrectors
-(
-    alphaControls.lookupOrDefault<Switch>("alphaOuterCorrectors", false)
-);
-
 // Apply the compression correction from the previous iteration
 // Improves efficiency for steady-simulations but can only be applied
 // once the alpha field is reasonably steady, i.e. fully developed
