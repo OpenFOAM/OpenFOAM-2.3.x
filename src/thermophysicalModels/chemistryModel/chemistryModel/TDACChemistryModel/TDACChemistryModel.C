@@ -797,7 +797,7 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
         // information stored through the tabulation method
         if (tabulation_->active() && tabulation_->retrieve(phiq, Rphiq))
         {
-            // Retrieved solution in Rphiq
+            // Retrieved solution stored in Rphiq
             for (label i=0; i<this->nSpecie(); i++)
             {
                 c[i] = rhoi*Rphiq[i]/this->specieThermo_[i].W();
@@ -805,8 +805,8 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
         }
         // This position is reached when tabulation is not used OR
         // if the solution is not retrieved.
-        // In the later, it adds the information to the tabulation (it will
-        // either expand the current data or add new stored points).
+        // In the latter case, it adds the information to the tabulation
+        // (it will either expand the current data or add a new stored poin).
         else
         {
             if (mechRed_->active())
@@ -822,6 +822,7 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
                     //completeC_ used in the overridden ODE methods
                     //to update only the active species
                     completeC_ = c;
+                    //solve the reduced set of ODE
                     this->solve
                     (
                         simplifiedC_, Ti, pi, dt, this->deltaTChem_[celli]
@@ -849,8 +850,8 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
                 tabulation_->add(phiq, Rphiq, rhoi);
             }
 
-            // When all operations are done and if mechanism reduction is on
-            // the number of species (which also affect nEqns) is set back
+            // When operations are done and if mechanism reduction is active,
+            // the number of species (which also affects nEqns) is set back
             // to the total number of species (stored in the mechRed object)
             if (mechRed_->active())
             {
