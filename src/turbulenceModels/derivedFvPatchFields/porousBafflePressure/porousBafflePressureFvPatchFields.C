@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -76,9 +76,9 @@ void Foam::porousBafflePressureFvPatchField<Foam::scalar>::updateCoeffs()
                 "turbulenceModel"
             );
 
-        const scalarField nuEffw = turbModel.nuEff()().boundaryField()[patchI];
+        const scalarField nu = turbModel.nu()().boundaryField()[patchI];
 
-        jump_ = -sign(Un)*(I_*nuEffw + D_*0.5*magUn)*magUn*length_;
+        jump_ = -sign(Un)*(D_*nu + I_*0.5*magUn)*magUn*length_;
     }
     else
     {
@@ -88,14 +88,14 @@ void Foam::porousBafflePressureFvPatchField<Foam::scalar>::updateCoeffs()
                 "turbulenceModel"
             );
 
-        const scalarField muEffw = turbModel.muEff()().boundaryField()[patchI];
+        const scalarField mu = turbModel.mu().boundaryField()[patchI];
 
         const scalarField rhow =
             patch().lookupPatchField<volScalarField, scalar>("rho");
 
         Un /= rhow;
 
-        jump_ = -sign(Un)*(I_*muEffw + D_*0.5*rhow*magUn)*magUn*length_;
+        jump_ = -sign(Un)*(D_*mu + I_*0.5*rhow*magUn)*magUn*length_;
     }
 
     if (debug)

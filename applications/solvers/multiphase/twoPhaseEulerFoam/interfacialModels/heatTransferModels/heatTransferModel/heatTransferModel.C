@@ -45,7 +45,8 @@ Foam::heatTransferModel::heatTransferModel
     const phasePair& pair
 )
 :
-    pair_(pair)
+    pair_(pair),
+    residualAlpha_("residualAlpha", dimless, dict.lookup("residualAlpha"))
 {}
 
 

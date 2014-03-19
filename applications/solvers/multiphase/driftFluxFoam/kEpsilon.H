@@ -10,7 +10,7 @@ if (turbulence)
     dimensionedScalar epsilon0("epsilon0", epsilon.dimensions(), 0);
     dimensionedScalar epsilonMin("epsilonMin", epsilon.dimensions(), SMALL);
 
-    volScalarField divU(fvc::div(rhoPhi/fvc::interpolate(rho)));
+    volScalarField divU(fvc::div(phi));
 
     tmp<volTensorField> tgradU = fvc::grad(U);
     volScalarField G(mut*(tgradU() && dev(twoSymm(tgradU()))));

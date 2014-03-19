@@ -34,7 +34,7 @@ Description
     The porous baffle introduces a pressure jump defined by:
 
         \f[
-            \Delta p = -(I \mu U + 0.5 D \rho |U|^2 )L
+            \Delta p = -(D \mu U + 0.5 I \rho |U|^2 )L
         \f]
 
     where
@@ -42,7 +42,7 @@ Description
     \vartable
         p      | pressure [Pa]
         \rho   | density [kg/m3]
-        \mu    | viscosity [Pa s]
+        \mu    | laminar viscosity [Pa s]
         I      | inertial coefficient
         D      | Darcy coefficient
         L      | porous media length in the flow direction
@@ -66,8 +66,8 @@ Description
         type            porousBafflePressure;
         patchType       cyclic;
         jump            uniform 0;
-        D               1000000;
-        I               0.001;
+        I               1000000;
+        D               0.001;
         L               0.1;
         value           uniform 0;
     }

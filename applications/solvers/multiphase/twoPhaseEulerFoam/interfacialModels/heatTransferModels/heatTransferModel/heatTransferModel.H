@@ -46,7 +46,7 @@ namespace Foam
 class phasePair;
 
 /*---------------------------------------------------------------------------*\
-                           Class heatTransferModel Declaration
+                        Class heatTransferModel Declaration
 \*---------------------------------------------------------------------------*/
 
 class heatTransferModel
@@ -57,6 +57,9 @@ protected:
 
         //- Phase pair
         const phasePair& pair_;
+
+        //- Residual phase fraction
+        const dimensionedScalar residualAlpha_;
 
 
 public:
@@ -112,13 +115,8 @@ public:
     // Member Functions
 
         //- The heat transfer function K used in the enthalpy equation
-        //    ddt(alpha1*rho1*ha) + ... = ... alpha1*alpha2*K*(Ta - Tb)
-        //    ddt(alpha2*rho2*hb) + ... = ... alpha1*alpha2*K*(Tb - Ta)
-        // ********************************** NB!*****************************
-        // for numerical reasons alpha1 and alpha2 has been extracted from the
-        // heat transfer function K, so you MUST divide K by alpha1*alpha2 when
-        // implementing the heat transfer function
-        // ********************************** NB!*****************************
+        //    ddt(alpha1*rho1*ha) + ... = ... K*(Ta - Tb)
+        //    ddt(alpha2*rho2*hb) + ... = ... K*(Tb - Ta)
         virtual tmp<volScalarField> K() const = 0;
 };
 
