@@ -1,0 +1,263 @@
+/*---------------------------------------------------------------------------*\
+=========                 |
+\\      /  F ield         | Unsupported Contributions for OpenFOAM
+ \\    /   O peration     |
+  \\  /    A nd           | Copyright (C) <year> <author name(s)>
+   \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is a derivative work of OpenFOAM.
+
+    OpenFOAM is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
+
+Class
+    Foam::binaryTree
+
+Description
+ 
+    Data storage of the chemistryOnLineLibrary according to a binary 
+    tree structure.
+
+    0 (root node)
+    /   \
+    0      0
+    /   \  /   \
+    L    R L     0
+    /   \
+    L     R
+
+    L: elementLeft_
+    R: elementRight_
+
+    The binaryTree class manages two DynamicList: nodeList_ and chemPointList_
+    which store pointer to the nodes and leafs (chemPoint) in the binary tree.
+    Therefore, there is only one instance of the node and leaf and the class
+    using them (e.g. ISAT, chemistryModel,...) are only
+    dealing with pointers
+
+ \*---------------------------------------------------------------------------*/
+
+#ifndef binaryTree_H
+#define binaryTree_H
+
+#include "binaryNode.H"      
+#include "chemPointISAT.H"
+#include "scalarField.H"
+#include "List.H"
+
+
+namespace Foam
+{
+
+template<class CompType, class ThermoType>
+class TDACChemistryModel;
+
+template<class CompType, class ThermoType>
+class binaryTree
+{
+
+public:
+    typedef binaryNode<CompType, ThermoType> bn;
+    typedef chemPointISAT<CompType, ThermoType> chP;
+    
+private:
+
+    //- Reference to the chemistryModel
+    TDACChemistryModel<CompType, ThermoType>& chemistry_;
+
+    //- Root node of the binary tree
+    bn *root_;
+    
+    //- Maximum number of elements in the binary tree
+    label maxElements_;
+    
+    //- Size of the BST (= number of chemPoint stored)
+    label size_;
+    
+    //- Secondary retrieve search variables
+    label n2ndSearch_;
+    label max2ndSearch_;
+    
+    label minBalanceThreshold_;
+    label maxNbBalanceTest_;
+    scalar balanceProp_;
+    
+    
+    //- Insert new node at the position of phi0
+    //  phi0 should be already attached to another node or the pointer to it
+    //  will be lost
+    void insertNode
+    (
+        chP*& phi0,
+        bn*& newNode
+    );
+
+    //- Perform a search in the subtree starting from the subtree node y
+    //  This search continue to use the hyperplan to walk the tree
+    //  If covering EOA is found return true and x points to the chemPoint
+    //  CAUTION : x pointer should not be used if inSubTree returns false
+    bool inSubTree
+    (
+        const scalarField& phiq, 
+        bn* y,
+        chP*& x
+    );
+    
+    void deleteSubTree(binaryNode<CompType, ThermoType>* subTreeRoot);
+
+    inline void deleteSubTree()
+    {
+        deleteSubTree(root_);
+    }
+
+    void transplant(bn* u, bn* v);
+    
+    chP* chemPSibling(bn* y);
+    chP* chemPSibling(chP* x);
+    
+    bn* nodeSibling(bn* y);
+    bn* nodeSibling(chP* x);
+    
+    void deleteAllNode(bn* subTreeRoot);
+
+    dictionary coeffsDict_;
+
+public:
+    //- Constructors
+    
+        //- Construct from dictionary and chemistryOnLineLibrary
+        binaryTree
+        (
+            TDACChemistryModel<CompType, ThermoType>& chemistry,
+            dictionary coeffsDict
+        );
+    
+    //- Member functions
+        inline label size()
+        {
+            return size_;
+        } 
+
+        //- Computes iteratively the depth of the subTree
+        label depth(bn* subTreeRoot);
+        
+        inline label depth()
+        {
+            return depth(root_);
+        }
+        
+        inline bn* root()
+        {
+            return root_;
+        }
+        
+        inline label maxElements()
+        {
+            return maxElements_;
+        }
+        
+        //Insert a new leaf starting from the parent node of phi0
+        //Parameters: phi0 the leaf to replace by a node
+        //phiq the new composition to store
+        //Rphiq the mapping of the new composition point
+        //A the mapping gradient matrix
+        //B the matrix used to initialize the EOA
+        //nCols the size of the matrix
+        //Returns: void
+        //Description :
+        //1) Create a new leaf with the data to initialize the EOA and to
+        //retrieve the mapping by linear interpolation (the EOA is
+        //initialize in the chemPoint constructor)
+        //2) Get the parent node of phi0 and connect a new node in place of the
+        //leaf of phi0. This new node is constructed with phi0 on the left
+        //and phiq on the right (the hyperplane is computed inside the
+        //binaryNode constructor)
+        void insertNewLeaf
+        (
+            const scalarField& phiq,
+            const scalarField& Rphiq,
+            const List<List<scalar> >& A,
+            const scalarField& scaleFactor,
+            const scalar& epsTol,
+            const label nCols,
+            chP*& phi0
+        );
+        
+        
+        
+        //Search the binaryTree until the nearest leaf of a specified
+        //leaf is found. 
+        void binaryTreeSearch
+        (
+            const scalarField& phiq,
+            bn* node,
+            chemPointBase*& nearest
+        );
+
+        //Perform a secondary binary tree search starting from a failed
+        //chemPoint x/
+        //If another candidate is found return true and x points to the chemP
+        //The nUsed features is handled at ISAT level
+        bool secondaryBTSearch(const scalarField& phiq,chP*& x);
+
+        //- Delete a leaf from the binary tree and reshape the binary tree for
+        //  the following binary tree search
+        //  Return the index in the nodeList of the removed node
+        //  (-1 when no node)
+        void deleteLeaf(chP*& phi0);
+        
+        //- Cheap balance function
+        //  This function just roughly separate the space in two parts 
+        //  with a hyperplane perpendicular to the variance vector.
+        //  Then, it repopulate the tree with this hyperplane stored at the root
+        //  and by inserting the chemPoint randomly which should give a
+        //  depth O(log_2(n))
+        bool balance();
+        
+        inline void deleteAllNode()
+        {
+            deleteAllNode(root_);
+        }
+        
+        chP* treeMin(bn* subTreeRoot);
+        
+        inline chP* treeMin()
+        {
+            return treeMin(root_);
+        }
+        
+        chP* treeSuccessor(chP* x);
+        
+        //- Removes every entries of the tree and delete the associated objects
+        void clear();
+        
+        //- ListFull
+        bool isFull();
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#ifdef NoRepository
+#   include "binaryTree.C"
+#endif
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+#endif
