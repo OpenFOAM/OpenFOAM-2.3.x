@@ -41,7 +41,6 @@ blending
     default
     {
         type            linear;
-        residualAlpha   1e-6;
         maxFullyDispersedAlpha.air 0.3;
         maxPartlyDispersedAlpha.air 0.5;
         maxFullyDispersedAlpha.water 0.3;
@@ -126,11 +125,13 @@ heatTransfer
     (air in water)
     {
         type            RanzMarshall;
+        residualAlpha   1e-6;
     }
 
     (water in air)
     {
         type            RanzMarshall;
+        residualAlpha   1e-6;
     }
 );
 

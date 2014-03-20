@@ -47,7 +47,7 @@ namespace Foam
 class phasePair;
 
 /*---------------------------------------------------------------------------*\
-                           Class wallLubricationModel Declaration
+                      Class wallLubricationModel Declaration
 \*---------------------------------------------------------------------------*/
 
 class wallLubricationModel

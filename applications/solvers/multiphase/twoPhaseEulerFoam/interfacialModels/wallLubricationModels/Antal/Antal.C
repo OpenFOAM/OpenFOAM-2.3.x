@@ -79,6 +79,7 @@ Foam::tmp<Foam::volVectorField> Foam::wallLubricationModels::Antal::F() const
             dimensionedScalar("zero", dimless/dimLength, 0),
             Cw1_/pair_.dispersed().d() + Cw2_/yWall_
         )
+       *pair_.dispersed()
        *pair_.continuous().rho()
        *magSqr(Ur - (Ur & nWall)*nWall)
        *nWall;
