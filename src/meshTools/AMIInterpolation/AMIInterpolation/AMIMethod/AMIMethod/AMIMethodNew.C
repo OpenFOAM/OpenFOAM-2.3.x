@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,7 +35,8 @@ Foam::AMIMethod<SourcePatch, TargetPatch>::New
     const scalarField& srcMagSf,
     const scalarField& tgtMagSf,
     const faceAreaIntersect::triangulationMode& triMode,
-    const bool reverseTarget
+    const bool reverseTarget,
+    const bool requireMatch
 )
 {
     if (debug)
@@ -58,6 +59,7 @@ Foam::AMIMethod<SourcePatch, TargetPatch>::New
                 "const scalarField&, "
                 "const scalarField&, "
                 "const faceAreaIntersect::triangulationMode&, "
+                "const bool, "
                 "const bool"
             ")"
         )   << "Unknown AMIMethod type "
@@ -75,7 +77,8 @@ Foam::AMIMethod<SourcePatch, TargetPatch>::New
             srcMagSf,
             tgtMagSf,
             triMode,
-            reverseTarget
+            reverseTarget,
+            requireMatch
         )
     );
 }

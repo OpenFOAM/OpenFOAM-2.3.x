@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -63,7 +63,8 @@ partialFaceAreaWeightAMI
     const scalarField& srcMagSf,
     const scalarField& tgtMagSf,
     const faceAreaIntersect::triangulationMode& triMode,
-    const bool reverseTarget
+    const bool reverseTarget,
+    const bool requireMatch
 )
 :
     faceAreaWeightAMI<SourcePatch, TargetPatch>
@@ -73,7 +74,8 @@ partialFaceAreaWeightAMI
         srcMagSf,
         tgtMagSf,
         triMode,
-        reverseTarget
+        reverseTarget,
+        requireMatch
     )
 {}
 

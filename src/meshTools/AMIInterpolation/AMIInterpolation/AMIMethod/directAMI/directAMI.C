@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -106,7 +106,8 @@ Foam::directAMI<SourcePatch, TargetPatch>::directAMI
     const scalarField& srcMagSf,
     const scalarField& tgtMagSf,
     const faceAreaIntersect::triangulationMode& triMode,
-    const bool reverseTarget
+    const bool reverseTarget,
+    const bool requireMatch
 )
 :
     AMIMethod<SourcePatch, TargetPatch>
@@ -116,7 +117,8 @@ Foam::directAMI<SourcePatch, TargetPatch>::directAMI
         srcMagSf,
         tgtMagSf,
         triMode,
-        reverseTarget
+        reverseTarget,
+        requireMatch
     )
 {}
 
