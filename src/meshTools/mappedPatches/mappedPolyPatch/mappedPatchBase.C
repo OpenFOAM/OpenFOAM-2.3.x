@@ -836,6 +836,7 @@ void Foam::mappedPatchBase::calcAMI() const
             samplePolyPatch(), // nbrPatch0,
             surfPtr(),
             faceAreaIntersect::tmMesh,
+            true,
             AMIPatchToPatchInterpolation::imFaceAreaWeight,
             -1,
             AMIReverse_

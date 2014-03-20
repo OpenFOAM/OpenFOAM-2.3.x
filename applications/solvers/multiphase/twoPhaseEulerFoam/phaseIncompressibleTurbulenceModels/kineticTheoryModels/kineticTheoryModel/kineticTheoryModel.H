@@ -128,6 +128,12 @@ class kineticTheoryModel
             //- The granular bulk viscosity
             volScalarField lambda_;
 
+            //- The granular radial distribution
+            volScalarField gs0_;
+
+            //- The granular "thermal" conductivity
+            volScalarField kappa_;
+
 
     // Private Member Functions
 

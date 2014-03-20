@@ -482,6 +482,7 @@ Foam::faceAreaWeightAMI<SourcePatch, TargetPatch>::faceAreaWeightAMI
     const scalarField& tgtMagSf,
     const faceAreaIntersect::triangulationMode& triMode,
     const bool reverseTarget,
+    const bool requireMatch,
     const bool restartUncoveredSourceFace
 )
 :
@@ -492,7 +493,8 @@ Foam::faceAreaWeightAMI<SourcePatch, TargetPatch>::faceAreaWeightAMI
         srcMagSf,
         tgtMagSf,
         triMode,
-        reverseTarget
+        reverseTarget,
+        requireMatch
     ),
     restartUncoveredSourceFace_(restartUncoveredSourceFace)
 {}
