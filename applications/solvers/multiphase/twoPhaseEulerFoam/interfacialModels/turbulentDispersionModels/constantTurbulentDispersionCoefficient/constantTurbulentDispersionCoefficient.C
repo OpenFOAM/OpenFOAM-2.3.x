@@ -75,6 +75,7 @@ F() const
 {
     return 
       - Ctd_
+       *pair_.dispersed()
        *pair_.continuous().rho()
        *pair_.continuous().turbulence().k()
        *fvc::grad(pair_.dispersed());

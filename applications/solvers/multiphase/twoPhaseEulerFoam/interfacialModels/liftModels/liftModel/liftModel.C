@@ -62,6 +62,7 @@ Foam::tmp<Foam::volVectorField> Foam::liftModel::F() const
 {
     return
         Cl()
+       *pair_.dispersed()
        *pair_.continuous().rho()
        *(
             pair_.Ur() ^ fvc::curl(pair_.continuous().U())
