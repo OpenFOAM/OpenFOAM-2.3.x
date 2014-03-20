@@ -138,11 +138,7 @@ Foam::tmp<Foam::volScalarField> Foam::dragModels::segregated::K() const
     (
         pair_.rho()
        *pair_.magUr()
-       /(
-           magGradI
-          *max(alpha1*alpha2, sqr(residualAlpha_))
-          *muI
-        )
+       /(magGradI*muI)
     );
 
     volScalarField lambda(m_*ReI + n_*muAlphaI/muI);

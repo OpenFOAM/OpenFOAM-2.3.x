@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -232,17 +232,6 @@ Foam::radiation::absorptionEmissionModel::bands(const label n) const
 bool Foam::radiation::absorptionEmissionModel::isGrey() const
 {
     return false;
-}
-
-
-Foam::tmp<Foam::volScalarField>
-Foam::radiation::absorptionEmissionModel::addIntensity
-(
-    const label rayI,
-    const volScalarField& ILambda
-) const
-{
-    return ILambda;
 }
 
 
