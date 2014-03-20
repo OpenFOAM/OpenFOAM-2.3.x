@@ -182,7 +182,7 @@ tmp<volScalarField> NicenoKEqn<BasicTurbulenceModel>::bubbleG() const
 
     tmp<volScalarField> bubbleG
     (
-        Cp_*gas*sqr(magUr)*fluid.drag(gas).K()/liquid.rho()
+        Cp_*sqr(magUr)*fluid.drag(gas).K()/liquid.rho()
     );
 
     return bubbleG;

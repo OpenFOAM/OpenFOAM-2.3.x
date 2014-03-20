@@ -380,7 +380,7 @@ tmp<volScalarField> mixtureKEpsilon<BasicTurbulenceModel>::Ct2() const
     volScalarField beta
     (
         (6*this->Cmu_/(4*sqrt(3.0/2.0)))
-       *alphag*fluid.drag(gas).K()/liquid.rho()
+       *fluid.drag(gas).K()/liquid.rho()
        *(liquidTurbulence.k_/liquidTurbulence.epsilon_)
     );
     volScalarField Ct0((3 + beta)/(1 + beta + 2*gas.rho()/liquid.rho()));
@@ -488,10 +488,10 @@ tmp<volScalarField> mixtureKEpsilon<BasicTurbulenceModel>::bubbleG() const
     tmp<volScalarField> bubbleG
     (
         Cp_
-       *sqr(liquid)*liquid.rho()
+       *liquid*liquid.rho()
        *(
             pow3(magUr)
-          + pow(fluid.drag(gas).K()*gas.d()/liquid.rho(), 4.0/3.0)
+          + pow(fluid.drag(gas).CdRe()*liquid.nu()/gas.d(), 4.0/3.0)
            *pow(magUr, 5.0/3.0)
         )
        *gas
@@ -501,7 +501,7 @@ tmp<volScalarField> mixtureKEpsilon<BasicTurbulenceModel>::bubbleG() const
     // Simple model
     // tmp<volScalarField> bubbleG
     // (
-    //     Cp_*sqr(liquid)*gas*fluid.drag(gas).K()*sqr(magUr)
+    //     Cp_*liquid*fluid.drag(gas).K()*sqr(magUr)
     // );
 
     return bubbleG;
