@@ -41,6 +41,7 @@ Description
 #include "fvIOoptionList.H"
 #include "IOporosityModelList.H"
 #include "IOMRFZoneList.H"
+#include "fixedFluxPressureFvPatchScalarField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
