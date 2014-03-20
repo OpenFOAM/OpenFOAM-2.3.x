@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -270,7 +270,7 @@ void Foam::radiation::radiativeIntensityRay::addIntensity()
 
     forAll(ILambda_, lambdaI)
     {
-        I_ += absorptionEmission_.addIntensity(lambdaI, ILambda_[lambdaI]);
+        I_ += ILambda_[lambdaI];
     }
 }
 
