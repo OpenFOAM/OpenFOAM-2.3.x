@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,9 +25,18 @@ License
 
 #include "loadOrCreateMesh.H"
 #include "processorPolyPatch.H"
+#include "processorCyclicPolyPatch.H"
 #include "Time.H"
+#include "IOPtrList.H"
 
 // * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //
+
+namespace Foam
+{
+    defineTemplateTypeNameAndDebug(IOPtrList<entry>, 0);
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // Read mesh if available. Otherwise create empty mesh with same non-proc
 // patches as proc0 mesh. Requires all processors to have all patches
@@ -48,11 +57,68 @@ Foam::autoPtr<Foam::fvMesh> Foam::loadOrCreateMesh
         meshSubDir = io.name()/polyMesh::meshSubDir;
     }
 
+
+    // Scatter master patches
+    PtrList<entry> patchEntries;
+    if (Pstream::master())
+    {
+        // Read PtrList of dictionary as dictionary.
+        const word oldTypeName = IOPtrList<entry>::typeName;
+        const_cast<word&>(IOPtrList<entry>::typeName) = word::null;
+        IOPtrList<entry> dictList
+        (
+            IOobject
+            (
+                "boundary",
+                io.time().findInstance
+                (
+                    meshSubDir,
+                    "boundary",
+                    IOobject::MUST_READ
+                ),
+                meshSubDir,
+                io.db(),
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE,
+                false
+            )
+        );
+        const_cast<word&>(IOPtrList<entry>::typeName) = oldTypeName;
+        // Fake type back to what was in field
+        const_cast<word&>(dictList.type()) = dictList.headerClassName();
+
+        patchEntries.transfer(dictList);
+
+        // Send patches
+        for
+        (
+            int slave=Pstream::firstSlave();
+            slave<=Pstream::lastSlave();
+            slave++
+        )
+        {
+            OPstream toSlave(Pstream::scheduled, slave);
+            toSlave << patchEntries;
+        }
+    }
+    else
+    {
+        // Receive patches
+        IPstream fromMaster(Pstream::scheduled, Pstream::masterNo());
+        fromMaster >> patchEntries;
+    }
+
+
+
     // Check who has a mesh
     const bool haveMesh = isDir(io.time().path()/io.instance()/meshSubDir);
 
     if (!haveMesh)
     {
+        bool oldParRun = Pstream::parRun();
+        Pstream::parRun() = false;
+
+
         // Create dummy mesh. Only used on procs that don't have mesh.
         IOobject noReadIO(io);
         noReadIO.readOpt() = IOobject::NO_READ;
@@ -65,6 +131,39 @@ Foam::autoPtr<Foam::fvMesh> Foam::loadOrCreateMesh
             xferCopy(labelList()),
             false
         );
+
+        // Add patches
+        List<polyPatch*> patches(patchEntries.size());
+        label nPatches = 0;
+
+        forAll(patchEntries, patchI)
+        {
+            const entry& e = patchEntries[patchI];
+            const word type(e.dict().lookup("type"));
+            const word& name = e.keyword();
+
+            if
+            (
+                type != processorPolyPatch::typeName
+             && type != processorCyclicPolyPatch::typeName
+            )
+            {
+                dictionary patchDict(e.dict());
+                patchDict.set("nFaces", 0);
+                patchDict.set("startFace", 0);
+
+                patches[patchI] = polyPatch::New
+                (
+                    name,
+                    patchDict,
+                    nPatches++,
+                    dummyMesh.boundaryMesh()
+                ).ptr();
+            }
+        }
+        patches.setSize(nPatches);
+        dummyMesh.addFvPatches(patches, false);  // no parallel comms
+
         // Add some dummy zones so upon reading it does not read them
         // from the undecomposed case. Should be done as extra argument to
         // regIOobject::readStream?
@@ -106,6 +205,8 @@ Foam::autoPtr<Foam::fvMesh> Foam::loadOrCreateMesh
         //Pout<< "Writing dummy mesh to " << dummyMesh.polyMesh::objectPath()
         //    << endl;
         dummyMesh.write();
+
+        Pstream::parRun() = oldParRun;
     }
 
     //Pout<< "Reading mesh from " << io.objectPath() << endl;
@@ -116,118 +217,57 @@ Foam::autoPtr<Foam::fvMesh> Foam::loadOrCreateMesh
     // Sync patches
     // ~~~~~~~~~~~~
 
-    if (Pstream::master())
+    if (!Pstream::master() && haveMesh)
     {
-        // Send patches
-        for
-        (
-            int slave=Pstream::firstSlave();
-            slave<=Pstream::lastSlave();
-            slave++
-        )
+        // Check master names against mine
+
+        const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
+        forAll(patchEntries, patchI)
         {
-            OPstream toSlave(Pstream::scheduled, slave);
-            toSlave << mesh.boundaryMesh();
-        }
-    }
-    else
-    {
-        // Receive patches
-        IPstream fromMaster(Pstream::scheduled, Pstream::masterNo());
-        PtrList<entry> patchEntries(fromMaster);
+            const entry& e = patchEntries[patchI];
+            const word type(e.dict().lookup("type"));
+            const word& name = e.keyword();
 
-        if (haveMesh)
-        {
-            // Check master names against mine
-
-            const polyBoundaryMesh& patches = mesh.boundaryMesh();
-
-            forAll(patchEntries, patchI)
+            if (type == processorPolyPatch::typeName)
             {
-                const entry& e = patchEntries[patchI];
-                const word type(e.dict().lookup("type"));
-                const word& name = e.keyword();
-
-                if (type == processorPolyPatch::typeName)
-                {
-                    break;
-                }
-
-                if (patchI >= patches.size())
-                {
-                    FatalErrorIn
-                    (
-                        "createMesh(const Time&, const fileName&, const bool)"
-                    )   << "Non-processor patches not synchronised."
-                        << endl
-                        << "Processor " << Pstream::myProcNo()
-                        << " has only " << patches.size()
-                        << " patches, master has "
-                        << patchI
-                        << exit(FatalError);
-                }
-
-                if
-                (
-                    type != patches[patchI].type()
-                 || name != patches[patchI].name()
-                )
-                {
-                    FatalErrorIn
-                    (
-                        "createMesh(const Time&, const fileName&, const bool)"
-                    )   << "Non-processor patches not synchronised."
-                        << endl
-                        << "Master patch " << patchI
-                        << " name:" << type
-                        << " type:" << type << endl
-                        << "Processor " << Pstream::myProcNo()
-                        << " patch " << patchI
-                        << " has name:" << patches[patchI].name()
-                        << " type:" << patches[patchI].type()
-                        << exit(FatalError);
-                }
+                break;
             }
-        }
-        else
-        {
-            // Add patch
-            List<polyPatch*> patches(patchEntries.size());
-            label nPatches = 0;
 
-            forAll(patchEntries, patchI)
+            if (patchI >= patches.size())
             {
-                const entry& e = patchEntries[patchI];
-                const word type(e.dict().lookup("type"));
-                const word& name = e.keyword();
-
-                if (type == processorPolyPatch::typeName)
-                {
-                    break;
-                }
-
-                //Pout<< "Adding patch:" << nPatches
-                //    << " name:" << name << " type:" << type << endl;
-
-                dictionary patchDict(e.dict());
-                patchDict.remove("nFaces");
-                patchDict.add("nFaces", 0);
-                patchDict.remove("startFace");
-                patchDict.add("startFace", 0);
-
-                patches[patchI] = polyPatch::New
+                FatalErrorIn
                 (
-                    name,
-                    patchDict,
-                    nPatches++,
-                    mesh.boundaryMesh()
-                ).ptr();
+                    "createMesh(const Time&, const fileName&, const bool)"
+                )   << "Non-processor patches not synchronised."
+                    << endl
+                    << "Processor " << Pstream::myProcNo()
+                    << " has only " << patches.size()
+                    << " patches, master has "
+                    << patchI
+                    << exit(FatalError);
             }
-            patches.setSize(nPatches);
-            mesh.addFvPatches(patches, false);  // no parallel comms
 
-            //// Write empty mesh now we have correct patches
-            //meshPtr().write();
+            if
+            (
+                type != patches[patchI].type()
+             || name != patches[patchI].name()
+            )
+            {
+                FatalErrorIn
+                (
+                    "createMesh(const Time&, const fileName&, const bool)"
+                )   << "Non-processor patches not synchronised."
+                    << endl
+                    << "Master patch " << patchI
+                    << " name:" << type
+                    << " type:" << type << endl
+                    << "Processor " << Pstream::myProcNo()
+                    << " patch " << patchI
+                    << " has name:" << patches[patchI].name()
+                    << " type:" << patches[patchI].type()
+                    << exit(FatalError);
+            }
         }
     }
 

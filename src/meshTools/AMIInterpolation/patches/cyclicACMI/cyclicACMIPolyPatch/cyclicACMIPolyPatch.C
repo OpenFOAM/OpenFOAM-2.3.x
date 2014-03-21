@@ -208,6 +208,8 @@ Foam::cyclicACMIPolyPatch::cyclicACMIPolyPatch
     tgtMask_(),
     updated_(false)
 {
+    AMIRequireMatch_ = false;
+
     // Non-overlapping patch might not be valid yet so cannot determine
     // associated patchID
 }
@@ -230,6 +232,8 @@ Foam::cyclicACMIPolyPatch::cyclicACMIPolyPatch
     tgtMask_(),
     updated_(false)
 {
+    AMIRequireMatch_ = false;
+
     if (nonOverlapPatchName_ == name)
     {
         FatalIOErrorIn
@@ -267,6 +271,8 @@ Foam::cyclicACMIPolyPatch::cyclicACMIPolyPatch
     tgtMask_(),
     updated_(false)
 {
+    AMIRequireMatch_ = false;
+
     // Non-overlapping patch might not be valid yet so cannot determine
     // associated patchID
 }
@@ -291,6 +297,8 @@ Foam::cyclicACMIPolyPatch::cyclicACMIPolyPatch
     tgtMask_(),
     updated_(false)
 {
+    AMIRequireMatch_ = false;
+
     if (nonOverlapPatchName_ == name())
     {
         FatalErrorIn
@@ -328,7 +336,9 @@ Foam::cyclicACMIPolyPatch::cyclicACMIPolyPatch
     srcMask_(),
     tgtMask_(),
     updated_(false)
-{}
+{
+    AMIRequireMatch_ = false;
+}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //

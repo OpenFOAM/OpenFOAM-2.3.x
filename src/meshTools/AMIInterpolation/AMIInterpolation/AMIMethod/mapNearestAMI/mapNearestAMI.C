@@ -183,7 +183,8 @@ Foam::mapNearestAMI<SourcePatch, TargetPatch>::mapNearestAMI
     const scalarField& srcMagSf,
     const scalarField& tgtMagSf,
     const faceAreaIntersect::triangulationMode& triMode,
-    const bool reverseTarget
+    const bool reverseTarget,
+    const bool requireMatch
 )
 :
     AMIMethod<SourcePatch, TargetPatch>
@@ -193,7 +194,8 @@ Foam::mapNearestAMI<SourcePatch, TargetPatch>::mapNearestAMI
         srcMagSf,
         tgtMagSf,
         triMode,
-        reverseTarget
+        reverseTarget,
+        requireMatch
     )
 {}
 
