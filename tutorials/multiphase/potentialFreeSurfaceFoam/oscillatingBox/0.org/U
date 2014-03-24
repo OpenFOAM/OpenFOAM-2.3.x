@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.0                                 |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -33,16 +33,25 @@ boundaryField
     }
     floatingObject
     {
-        type            oscillatingFixedValue;
-        refValue        uniform (0 1 0);
-        offset          (0 -1 0);
-        amplitude       table
-        (
-            (   0     0)
-            (  10 0.025)
-            (1000 0.025)
-        );
-        frequency       constant 1;
+        type            fixedNormalInletOutletVelocity;
+
+        fixTangentialInflow false;
+
+        normalVelocity
+        {
+            type            oscillatingFixedValue;
+            refValue        uniform (0 1 0);
+            offset          (0 -1 0);
+            amplitude       table
+            (
+                (   0     0)
+                (  10 0.025)
+                (1000 0.025)
+            );
+            frequency       constant 1;
+            value           uniform (0 0 0);
+        }
+
         value           uniform (0 0 0);
     }
     frontAndBack
