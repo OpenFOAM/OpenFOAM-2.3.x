@@ -12,7 +12,7 @@
         if (isA<wallFvPatch>(curPatch))
         {
             scalarField& mutw = mut.boundaryField()[patchi];
-            const scalarField& mucw = muc.boundaryField()[patchi];
+            const scalarField& mulw = mul.boundaryField()[patchi];
 
             forAll(curPatch, facei)
             {
@@ -20,12 +20,12 @@
 
                 scalar yPlus =
                     Cmu25*y[patchi][facei]*::sqrt(k[faceCelli])
-                   /(mucw[facei]/rho2.value());
+                   /(mulw[facei]/rho2.value());
 
                 if (yPlus > 11.6)
                 {
                     mutw[facei] =
-                        mucw[facei]*(yPlus*kappa_/::log(E_*yPlus) - 1);
+                        mulw[facei]*(yPlus*kappa_/::log(E_*yPlus) - 1);
                 }
                 else
                 {
