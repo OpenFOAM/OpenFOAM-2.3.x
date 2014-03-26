@@ -20,7 +20,7 @@
 
                 scalar yPlus =
                     Cmu25*y[patchi][facei]*::sqrt(k[faceCelli])
-                   /(mulw[facei]/rho2.value());
+                   /(mulw[facei]/rho[facei]);
 
                 if (yPlus > 11.6)
                 {
