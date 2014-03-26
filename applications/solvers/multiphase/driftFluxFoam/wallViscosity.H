@@ -13,6 +13,7 @@
         {
             scalarField& mutw = mut.boundaryField()[patchi];
             const scalarField& mulw = mul.boundaryField()[patchi];
+            const scalarField& rhow = rho.boundaryField()[patchi];
 
             forAll(curPatch, facei)
             {
@@ -20,7 +21,7 @@
 
                 scalar yPlus =
                     Cmu25*y[patchi][facei]*::sqrt(k[faceCelli])
-                   /(mulw[facei]/rho[facei]);
+                   /(mulw[facei]/rhow[facei]);
 
                 if (yPlus > 11.6)
                 {
