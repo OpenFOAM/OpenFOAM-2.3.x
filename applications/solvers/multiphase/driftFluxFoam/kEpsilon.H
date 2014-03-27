@@ -10,8 +10,6 @@ if (turbulence)
     dimensionedScalar epsilon0("epsilon0", epsilon.dimensions(), 0);
     dimensionedScalar epsilonMin("epsilonMin", epsilon.dimensions(), SMALL);
 
-    volScalarField divU(fvc::div(phi));
-
     tmp<volTensorField> tgradU = fvc::grad(U);
     volScalarField G(mut*(tgradU() && dev(twoSymm(tgradU()))));
     tgradU.clear();
@@ -21,7 +19,7 @@ if (turbulence)
         Cmu*k/sigmak*(g & fvc::grad(rho))/(epsilon + epsilonMin)
     );
 
-    volScalarField muc(twoPhaseProperties.nucModel().nu()*rho2);
+    volScalarField mul(twoPhaseProperties.mu());
 
     #include "wallFunctions.H"
 
@@ -32,12 +30,12 @@ if (turbulence)
       + fvm::div(rhoPhi, epsilon)
       - fvm::laplacian
         (
-            mut/sigmaEps + muc, epsilon,
+            mut/sigmaEps + mul, epsilon,
             "laplacian(DepsilonEff,epsilon)"
         )
      ==
         C1*G*epsilon/(k + kMin)
-      - fvm::SuSp(C1*(1.0 - C3)*Gcoef + (2.0/3.0*C1)*rho*divU, epsilon)
+      - fvm::SuSp(C1*(1.0 - C3)*Gcoef, epsilon)
       - fvm::Sp(C2*rho*epsilon/(k + kMin), epsilon)
     );
 
@@ -56,12 +54,12 @@ if (turbulence)
       + fvm::div(rhoPhi, k)
       - fvm::laplacian
         (
-            mut/sigmak + muc, k,
+            mut/sigmak + mul, k,
             "laplacian(DkEff,k)"
         )
      ==
         G
-      - fvm::SuSp(Gcoef + 2.0/3.0*rho*divU, k)
+      - fvm::SuSp(Gcoef, k)
       - fvm::Sp(rho*epsilon/(k + kMin), k)
     );
 
@@ -75,6 +73,10 @@ if (turbulence)
     mut = rho*Cmu*sqr(k)/(epsilon + epsilonMin);
 
     #include "wallViscosity.H"
-}
 
-muEff = mut + twoPhaseProperties.mu();
+    muEff = mut + mul;
+}
+else
+{
+    muEff = mut + twoPhaseProperties.mu();
+}
