@@ -311,7 +311,7 @@ void Foam::JohnsonJacksonParticleThetaFvPatchScalarField::write
     Ostream& os
 ) const
 {
-    mixedFvPatchScalarField::write(os);
+    fvPatchScalarField::write(os);
     os.writeKeyword("restitutionCoefficient")
         << restitutionCoefficient_ << token::END_STATEMENT << nl;
     os.writeKeyword("specularityCoefficient")
