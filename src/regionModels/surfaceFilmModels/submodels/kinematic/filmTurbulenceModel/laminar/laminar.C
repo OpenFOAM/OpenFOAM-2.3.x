@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -132,19 +132,18 @@ tmp<fvVectorMatrix> laminar::Su(volVectorField& U) const
     // local references to film fields
     const volScalarField& mu = film.mu();
     const volVectorField& Uw = film.Uw();
-    const volVectorField& Us = film.Us();
     const volScalarField& delta = film.delta();
     const volVectorField& Up = film.UPrimary();
     const volScalarField& rhop = film.rhoPrimary();
 
     // employ simple coeff-based model
-    volScalarField Cs("Cs", Cf_*rhop*mag(Up - Us));
+    volScalarField Cs("Cs", Cf_*rhop*mag(Up - U));
     volScalarField Cw("Cw", mu/(0.3333*(delta + film.deltaSmall())));
     Cw.min(5000.0);
 
     return
     (
-       - fvm::Sp(Cs, U) + Cs*Us // surface contribution
+       - fvm::Sp(Cs, U) + Cs*Up // surface contribution
        - fvm::Sp(Cw, U) + Cw*Uw // wall contribution
     );
 }
