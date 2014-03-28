@@ -70,8 +70,7 @@ void Foam::relativeVelocityModels::general::correct()
        *(
             exp(-a_*max(alphad_ - residualAlpha_, scalar(0)))
           - exp(-a1_*max(alphad_ - residualAlpha_, scalar(0)))
-        )
-       /max(alphac_, residualAlpha_);
+        );
 }
 
 
