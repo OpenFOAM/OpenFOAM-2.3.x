@@ -154,13 +154,13 @@ void Foam::cyclicAMIPolyPatch::calcTransforms
                 tensor RPos
                 (
                     T
-                  + cos(rotationAngle_)*(tensor::I + T)
+                  + cos(rotationAngle_)*(tensor::I - T)
                   + sin(rotationAngle_)*S
                 );
                 tensor RNeg
                 (
                     T
-                  + cos(-rotationAngle_)*(tensor::I + T)
+                  + cos(-rotationAngle_)*(tensor::I - T)
                   + sin(-rotationAngle_)*S
                 );
 
