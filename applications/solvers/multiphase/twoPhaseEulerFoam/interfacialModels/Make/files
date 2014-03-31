@@ -5,6 +5,7 @@ dragModels/Ergun/Ergun.C
 dragModels/Gibilaro/Gibilaro.C
 dragModels/GidaspowErgunWenYu/GidaspowErgunWenYu.C
 dragModels/GidaspowSchillerNaumann/GidaspowSchillerNaumann.C
+dragModels/Lain/Lain.C
 dragModels/SchillerNaumann/SchillerNaumann.C
 dragModels/SyamlalOBrien/SyamlalOBrien.C
 dragModels/TomiyamaCorrelated/TomiyamaCorrelated.C
@@ -20,6 +21,8 @@ liftModels/liftModel/liftModel.C
 liftModels/liftModel/newLiftModel.C
 liftModels/noLift/noLift.C
 liftModels/constantLiftCoefficient/constantLiftCoefficient.C
+liftModels/Moraga/Moraga.C
+liftModels/LegendreMagnaudet/LegendreMagnaudet.C
 liftModels/TomiyamaLift/TomiyamaLift.C
 
 heatTransferModels/heatTransferModel/heatTransferModel.C
@@ -36,16 +39,19 @@ wallLubricationModels/wallLubricationModel/wallLubricationModel.C
 wallLubricationModels/wallLubricationModel/newWallLubricationModel.C
 wallLubricationModels/noWallLubrication/noWallLubrication.C
 wallLubricationModels/Antal/Antal.C
+wallLubricationModels/Frank/Frank.C
 
 turbulentDispersionModels/turbulentDispersionModel/turbulentDispersionModel.C
 turbulentDispersionModels/turbulentDispersionModel/newTurbulentDispersionModel.C
 turbulentDispersionModels/noTurbulentDispersion/noTurbulentDispersion.C
 turbulentDispersionModels/constantTurbulentDispersionCoefficient/constantTurbulentDispersionCoefficient.C
+turbulentDispersionModels/Burns/Burns.C
 turbulentDispersionModels/Gosman/Gosman.C
 
 aspectRatioModels/aspectRatioModel/aspectRatioModel.C
 aspectRatioModels/aspectRatioModel/newAspectRatioModel.C
 aspectRatioModels/constantAspectRatio/constantAspectRatio.C
 aspectRatioModels/VakhrushevEfremov/VakhrushevEfremov.C
+aspectRatioModels/Wellek/Wellek.C
 
 LIB = $(FOAM_LIBBIN)/libcompressibleEulerianInterfacialModels
