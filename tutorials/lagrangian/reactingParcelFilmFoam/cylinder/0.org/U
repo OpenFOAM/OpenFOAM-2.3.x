@@ -23,7 +23,7 @@ boundaryField
 {
     "(sides|frontAndBack)"
     {
-        type            pressureInletOutletVelocity;
+        type            fixedValue;
         value           uniform (0 0 0);
     }
     region0_to_wallFilmRegion_wallFilmFaces
