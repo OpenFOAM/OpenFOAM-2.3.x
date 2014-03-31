@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+#   \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -169,7 +169,7 @@ myEcho()
 # Prints names of all 'solved for' variables in the log file.
 getSolvedVars()
 {
-    fgrep ' Solving for ' $1 | fgrep ',' | sed -e 's/.* Solving for \([^,]*\)[,:].*/\1/' | sort -u
+    fgrep ' Solving for ' $1 | fgrep ',' | sed -e 's/.* Solving for \([^,]*\)[,:].*/\1/' | sed -e 's/\./_/g' | sort -u
 }
 
 
