@@ -422,19 +422,12 @@ void Foam::RASModels::kineticTheoryModel::correct()
            *gs0_*(1.0/da)*ThetaSqrt/sqrtPi
         );
 
-        // NB, drag = K*alpha*alpha2,
-        // (the alpha and alpha2 has been extracted from the drag function for
-        // numerical reasons)
+        // Drag
         volScalarField magUr(mag(U - Uc_));
 
         volScalarField alpha2Prim
         (
-            max
-            (
-                alpha*(1.0 - alpha),
-                residualAlpha_
-            )
-           *phase_.fluid().drag(phase_).K()/rho
+            phase_.fluid().drag(phase_).K()/rho
         );
 
         // Eq. 3.25, p. 50 Js = J1 - J2

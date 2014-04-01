@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -64,19 +64,19 @@ void thixotropicViscosity::updateMu()
     const dimensionedScalar mSMALL("SMALL", dimMass, ROOTVSMALL);
     const volScalarField deltaMass("deltaMass", max(m0, film.deltaMass()));
     const volScalarField filmMass("filmMass", film.netMass() + mSMALL);
+    const volScalarField mask(pos(film.delta() - film.deltaSmall()));
 
     // weighting field to blend new and existing mass contributions
     const volScalarField w
     (
         "w",
-        max(scalar(0.0), min(scalar(1.0), deltaMass/filmMass))
+        max(scalar(0.0), min(scalar(1.0), deltaMass/(deltaMass + filmMass)))
     );
 
-    // evaluate thixotropic viscosity
-    volScalarField muThx("muThx", muInf_/(sqr(1.0 - K_*lambda_) + ROOTVSMALL));
-
-    // set new viscosity based on weight field
-    mu_ = w*muInf_ + (1.0 - w)*muThx;
+    // set new viscosity
+    mu_ =
+        mask*muInf_/(sqr(1.0 - K_*(1.0 - w)*lambda_) + ROOTVSMALL)
+      + (1 - mask)*muInf_;
     mu_.correctBoundaryConditions();
 }
 

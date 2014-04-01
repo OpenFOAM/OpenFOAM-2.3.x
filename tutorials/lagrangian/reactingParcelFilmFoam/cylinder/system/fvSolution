@@ -96,6 +96,8 @@ PIMPLE
     nCorrectors     2;
     nNonOrthogonalCorrectors 0;
     momentumPredictor yes;
+    pRefCell        0;
+    pRefValue       1e5;
 }
 
 
