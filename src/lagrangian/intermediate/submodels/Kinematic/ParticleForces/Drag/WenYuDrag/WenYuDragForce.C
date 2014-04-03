@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -105,7 +105,7 @@ Foam::forceSuSp Foam::WenYuDragForce<CloudType>::calcCoupled
     (
         vector::zero,
         (mass/p.rho())
-       *0.75*CdRe(alphac*Re)*muc*pow(alphac, -2.65)/sqr(p.d())
+       *0.75*CdRe(alphac*Re)*muc*pow(alphac, -2.65)/(alphac*sqr(p.d()))
     );
 }
 
