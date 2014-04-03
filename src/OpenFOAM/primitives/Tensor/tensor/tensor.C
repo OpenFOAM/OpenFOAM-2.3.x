@@ -119,7 +119,7 @@ Foam::vector Foam::eigenValues(const tensor& t)
             + t.xy()*t.yx()*t.zz() + t.xx()*t.yz()*t.zy();
 
         // If there is a zero root
-        if (mag(c) < ROOTVSMALL)
+        if (mag(c) < 1e-100)
         {
             scalar disc = sqr(a) - 4*b;
 
@@ -313,7 +313,7 @@ Foam::vector Foam::eigenValues(const symmTensor& t)
             + t.xy()*t.xy()*t.zz() + t.xx()*t.yz()*t.yz();
 
         // If there is a zero root
-        if (mag(c) < ROOTVSMALL)
+        if (mag(c) < 1e-100)
         {
             scalar disc = sqr(a) - 4*b;
 
