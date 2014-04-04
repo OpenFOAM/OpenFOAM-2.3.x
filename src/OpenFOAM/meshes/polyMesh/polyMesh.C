@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -1448,6 +1448,15 @@ Foam::label Foam::polyMesh::findCell
     const cellRepresentation decompMode
 ) const
 {
+    if (Pstream::parRun() && decompMode == FACEDIAGTETS)
+    {
+        // Force construction of face-diagonal decomposition before testing
+        // for zero cells. If parallel running a local domain might have zero
+        // cells so never construct the face-diagonal decomposition (which
+        // uses parallel transfers)
+        (void)tetBasePtIs();
+    }
+
     if (nCells() == 0)
     {
         return -1;
