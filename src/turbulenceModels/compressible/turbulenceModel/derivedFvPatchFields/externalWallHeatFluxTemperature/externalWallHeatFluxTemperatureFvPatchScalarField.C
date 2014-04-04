@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -269,7 +269,7 @@ void Foam::externalWallHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
                     }
                 }
             }
-            q = (Ta_ - Tp)*(1.0/h_ + totalSolidRes);
+            q = (Ta_ - Tp)/(1.0/h_ + totalSolidRes);
             break;
         }
         default:
@@ -287,7 +287,7 @@ void Foam::externalWallHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
     {
         if (q[i] > 0) //in
         {
-            this->refGrad()[i] = q[i]/KWall[i];
+            this->refGrad()[i] =  q[i]/KWall[i];
             this->refValue()[i] = 0.0;
             this->valueFraction()[i] = 0.0;
         }
