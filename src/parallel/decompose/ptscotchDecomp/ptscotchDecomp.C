@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -532,12 +532,23 @@ Foam::label Foam::ptscotchDecomp::decompose
 
     if (maxWeights > minWeights)
     {
-        // Convert to integers.
-        velotab.setSize(cWeights.size());
-
-        forAll(velotab, i)
+        if (cWeights.size())
         {
-            velotab[i] = int((cWeights[i]/minWeights - 1)*rangeScale) + 1;
+            // Convert to integers.
+            velotab.setSize(cWeights.size());
+
+            forAll(velotab, i)
+            {
+                velotab[i] = int((cWeights[i]/minWeights - 1)*rangeScale) + 1;
+            }
+        }
+        else
+        {
+            // Locally zero cells but not globally. Make sure we have
+            // some size so .begin() does not return null pointer. Data
+            // itself is never used.
+            velotab.setSize(1);
+            velotab[0] = 1;
         }
     }
 
