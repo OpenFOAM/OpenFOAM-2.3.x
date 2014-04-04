@@ -62,7 +62,7 @@ Foam::heatTransferModels::RanzMarshall::~RanzMarshall()
 Foam::tmp<Foam::volScalarField>
 Foam::heatTransferModels::RanzMarshall::K() const
 {
-    volScalarField Nu(scalar(2) + 0.6*pair_.Re()*cbrt(pair_.Pr()));
+    volScalarField Nu(scalar(2) + 0.6*sqrt(pair_.Re())*cbrt(pair_.Pr()));
 
     return
         6.0
