@@ -20,7 +20,7 @@ solution
     active          true;
     coupled         true;
     transient       yes;
-    cellValueSourceCorrection on;
+    cellValueSourceCorrection off;
 
     maxCo           1.0;
 
