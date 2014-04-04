@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,53 +23,51 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "RanzMarshall.H"
-#include "phasePair.H"
+#include "Wellek.H"
+#include "orderedPhasePair.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace heatTransferModels
+namespace aspectRatioModels
 {
-    defineTypeNameAndDebug(RanzMarshall, 0);
-    addToRunTimeSelectionTable(heatTransferModel, RanzMarshall, dictionary);
+    defineTypeNameAndDebug(Wellek, 0);
+    addToRunTimeSelectionTable
+    (
+        aspectRatioModel,
+        Wellek,
+        dictionary
+    );
 }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::RanzMarshall::RanzMarshall
+Foam::aspectRatioModels::Wellek::Wellek
 (
     const dictionary& dict,
-    const phasePair& pair
+    const orderedPhasePair& pair
 )
 :
-    heatTransferModel(dict, pair)
+    aspectRatioModel(dict, pair)
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::RanzMarshall::~RanzMarshall()
+Foam::aspectRatioModels::Wellek::~Wellek()
 {}
 
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
 Foam::tmp<Foam::volScalarField>
-Foam::heatTransferModels::RanzMarshall::K() const
+Foam::aspectRatioModels::Wellek::E() const
 {
-    volScalarField Nu(scalar(2) + 0.6*sqrt(pair_.Re())*cbrt(pair_.Pr()));
-
-    return
-        6.0
-       *max(pair_.dispersed(), residualAlpha_)
-       *pair_.continuous().kappa()
-       *Nu
-       /sqr(pair_.dispersed().d());
+    return scalar(1)/(scalar(1) + 0.163*pow(pair_.Eo(), 0.757));
 }
 
 

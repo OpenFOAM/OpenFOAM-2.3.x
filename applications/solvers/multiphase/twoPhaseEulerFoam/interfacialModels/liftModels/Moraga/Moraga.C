@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,53 +23,54 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "RanzMarshall.H"
+#include "Moraga.H"
 #include "phasePair.H"
+#include "fvc.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace heatTransferModels
+namespace liftModels
 {
-    defineTypeNameAndDebug(RanzMarshall, 0);
-    addToRunTimeSelectionTable(heatTransferModel, RanzMarshall, dictionary);
+    defineTypeNameAndDebug(Moraga, 0);
+    addToRunTimeSelectionTable(liftModel, Moraga, dictionary);
 }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::RanzMarshall::RanzMarshall
+Foam::liftModels::Moraga::Moraga
 (
     const dictionary& dict,
     const phasePair& pair
 )
 :
-    heatTransferModel(dict, pair)
+    liftModel(dict, pair)
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::RanzMarshall::~RanzMarshall()
+Foam::liftModels::Moraga::~Moraga()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::tmp<Foam::volScalarField>
-Foam::heatTransferModels::RanzMarshall::K() const
+Foam::tmp<Foam::volScalarField> Foam::liftModels::Moraga::Cl() const
 {
-    volScalarField Nu(scalar(2) + 0.6*sqrt(pair_.Re())*cbrt(pair_.Pr()));
+    volScalarField ReSqrSr
+    (
+        pair_.Re()
+       *sqr(pair_.dispersed().d())
+       /pair_.continuous().nu()
+       *mag(fvc::grad(pair_.continuous().U()))
+    );
 
-    return
-        6.0
-       *max(pair_.dispersed(), residualAlpha_)
-       *pair_.continuous().kappa()
-       *Nu
-       /sqr(pair_.dispersed().d());
+    return 0.2*exp(- ReSqrSr/3.6e5 - 0.12)*exp(ReSqrSr/3.0e7);
 }
 
 

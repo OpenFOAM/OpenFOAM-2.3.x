@@ -102,7 +102,7 @@ Foam::radiation::wideBandAbsorptionEmission::wideBandAbsorptionEmission
                         << nl << exit(FatalError);
                 }
             }
-            coeffs_[nSpec][nBand].initialise(specDicts.subDict(key));
+            coeffs_[nBand][nSpec].initialise(specDicts.subDict(key));
             nSpec++;
         }
         nBand++;

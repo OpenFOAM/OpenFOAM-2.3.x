@@ -20,7 +20,7 @@ solution
     active          true;
     coupled         true;
     transient       yes;
-    cellValueSourceCorrection on;
+    cellValueSourceCorrection off;
 
     maxCo           1.0;
 
@@ -69,26 +69,25 @@ subModels
         model1
         {
             type            patchInjection;
-            parcelBasisType fixed;
+            massTotal       40;
+            SOI             1;
+            parcelBasisType mass;
             patchName       inlet;
+            duration        4;
+            parcelsPerSecond 100644;
             U0              (-10 0 0);
-            nParticle       500000;
-            parcelsPerSecond 244462;
+            flowRateProfile constant 1;
             sizeDistribution
             {
                 type        normal;
                 normalDistribution
                 {
-                    expectation 50e-6;
-                    variance 20e-6;
-                    minValue 10e-6;
-                    maxValue 90e-6;
+                    expectation 100e-6;
+                    variance 25e-6;
+                    minValue 20e-6;
+                    maxValue 180e-6;
                 }
             }
-            flowRateProfile constant 1;
-            massTotal       0;
-            SOI             1;
-            duration        4;
         }
     }
 

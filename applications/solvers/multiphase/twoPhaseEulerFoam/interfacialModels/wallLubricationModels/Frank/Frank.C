@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,53 +23,75 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "RanzMarshall.H"
+#include "Frank.H"
 #include "phasePair.H"
+#include "fvc.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace heatTransferModels
+namespace wallLubricationModels
 {
-    defineTypeNameAndDebug(RanzMarshall, 0);
-    addToRunTimeSelectionTable(heatTransferModel, RanzMarshall, dictionary);
+    defineTypeNameAndDebug(Frank, 0);
+    addToRunTimeSelectionTable
+    (
+        wallLubricationModel,
+        Frank,
+        dictionary
+    );
 }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::RanzMarshall::RanzMarshall
+Foam::wallLubricationModels::Frank::Frank
 (
     const dictionary& dict,
     const phasePair& pair
 )
 :
-    heatTransferModel(dict, pair)
+    wallLubricationModel(dict, pair),
+    Cwd_("Cwd", dimless, dict.lookup("Cwd")),
+    Cwc_("Cwc", dimless, dict.lookup("Cwc")),
+    p_(readScalar(dict.lookup("p")))
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::RanzMarshall::~RanzMarshall()
+Foam::wallLubricationModels::Frank::~Frank()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::tmp<Foam::volScalarField>
-Foam::heatTransferModels::RanzMarshall::K() const
+Foam::tmp<Foam::volVectorField> Foam::wallLubricationModels::Frank::F() const
 {
-    volScalarField Nu(scalar(2) + 0.6*sqrt(pair_.Re())*cbrt(pair_.Pr()));
+    volVectorField Ur(pair_.Ur());
+    volVectorField nWall(- fvc::grad(yWall_));
+    nWall /= mag(nWall) + SMALL;
+
+    volScalarField Eo(pair_.Eo());
+    volScalarField yTilde(yWall_/(Cwc_*pair_.dispersed().d()));
 
     return
-        6.0
-       *max(pair_.dispersed(), residualAlpha_)
-       *pair_.continuous().kappa()
-       *Nu
-       /sqr(pair_.dispersed().d());
+        (
+            pos(Eo - 1.0)*neg(Eo - 5.0)*exp(-0.933*Eo + 0.179)
+          + pos(Eo - 5.0)*neg(Eo - 33.0)*(0.00599*Eo - 0.0187)
+          + pos(Eo - 33.0)*0.179
+        )
+       *max
+        (
+            dimensionedScalar("zero", dimless/dimLength, 0.0),
+            (1.0 - yTilde)/(Cwd_*yWall_*pow(yTilde, p_ - 1.0))
+        )
+       *pair_.dispersed()
+       *pair_.continuous().rho()
+       *magSqr(Ur - (Ur & nWall)*nWall)
+       *nWall;
 }
 
 

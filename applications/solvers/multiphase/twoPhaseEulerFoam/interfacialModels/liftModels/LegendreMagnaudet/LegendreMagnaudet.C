@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,53 +23,75 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "RanzMarshall.H"
+#include "LegendreMagnaudet.H"
 #include "phasePair.H"
+#include "fvc.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace heatTransferModels
+namespace liftModels
 {
-    defineTypeNameAndDebug(RanzMarshall, 0);
-    addToRunTimeSelectionTable(heatTransferModel, RanzMarshall, dictionary);
+    defineTypeNameAndDebug(LegendreMagnaudet, 0);
+    addToRunTimeSelectionTable(liftModel, LegendreMagnaudet, dictionary);
 }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::RanzMarshall::RanzMarshall
+Foam::liftModels::LegendreMagnaudet::LegendreMagnaudet
 (
     const dictionary& dict,
     const phasePair& pair
 )
 :
-    heatTransferModel(dict, pair)
+    liftModel(dict, pair),
+    residualRe_("residualRe", dimless, dict.lookup("residualRe"))
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::RanzMarshall::~RanzMarshall()
+Foam::liftModels::LegendreMagnaudet::~LegendreMagnaudet()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::tmp<Foam::volScalarField>
-Foam::heatTransferModels::RanzMarshall::K() const
+Foam::tmp<Foam::volScalarField> Foam::liftModels::LegendreMagnaudet::Cl() const
 {
-    volScalarField Nu(scalar(2) + 0.6*sqrt(pair_.Re())*cbrt(pair_.Pr()));
+    volScalarField Re(max(pair_.Re(), residualRe_));
 
-    return
-        6.0
-       *max(pair_.dispersed(), residualAlpha_)
-       *pair_.continuous().kappa()
-       *Nu
-       /sqr(pair_.dispersed().d());
+    volScalarField Sr
+    (
+        sqr(pair_.dispersed().d())
+       /(
+            Re
+           *pair_.continuous().nu()
+        )
+       *mag(fvc::grad(pair_.continuous().U()))
+    );
+
+    volScalarField ClLowSqr
+    (
+        sqr(6.0*2.255)
+       *sqr(Sr)
+       /(
+            pow4(constant::mathematical::pi)
+           *Re
+           *pow3(Sr + 0.2*Re)
+        )
+    );
+
+    volScalarField ClHighSqr
+    (
+        sqr(0.5*(Re + 16.0)/(Re + 29.0))
+    );
+
+    return sqrt(ClLowSqr + ClHighSqr);
 }
 
 

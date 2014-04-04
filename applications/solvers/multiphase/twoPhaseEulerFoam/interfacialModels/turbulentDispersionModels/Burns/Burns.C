@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,53 +23,79 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "RanzMarshall.H"
+#include "Burns.H"
 #include "phasePair.H"
+#include "fvc.H"
+#include "PhaseIncompressibleTurbulenceModel.H"
 #include "addToRunTimeSelectionTable.H"
+
+#include "dragModel.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace heatTransferModels
+namespace turbulentDispersionModels
 {
-    defineTypeNameAndDebug(RanzMarshall, 0);
-    addToRunTimeSelectionTable(heatTransferModel, RanzMarshall, dictionary);
+    defineTypeNameAndDebug(Burns, 0);
+    addToRunTimeSelectionTable
+    (
+        turbulentDispersionModel,
+        Burns,
+        dictionary
+    );
 }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::RanzMarshall::RanzMarshall
+Foam::turbulentDispersionModels::Burns::Burns
 (
     const dictionary& dict,
     const phasePair& pair
 )
 :
-    heatTransferModel(dict, pair)
+    turbulentDispersionModel(dict, pair),
+    sigma_("sigma", dimless, dict.lookup("sigma")),
+    residualAlpha_("residualAlpha", dimless, dict.lookup("residualAlpha"))
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::RanzMarshall::~RanzMarshall()
+Foam::turbulentDispersionModels::Burns::~Burns()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::tmp<Foam::volScalarField>
-Foam::heatTransferModels::RanzMarshall::K() const
+Foam::tmp<Foam::volVectorField>
+Foam::turbulentDispersionModels::Burns::F() const
 {
-    volScalarField Nu(scalar(2) + 0.6*sqrt(pair_.Re())*cbrt(pair_.Pr()));
+    const fvMesh& mesh(pair_.phase1().mesh());
+    const dragModel&
+        drag
+        (
+            mesh.lookupObject<dragModel>
+            (
+                IOobject::groupName(dragModel::typeName, pair_.name())
+            )
+        );
 
     return
-        6.0
-       *max(pair_.dispersed(), residualAlpha_)
-       *pair_.continuous().kappa()
-       *Nu
-       /sqr(pair_.dispersed().d());
+      - 0.75
+       *drag.CdRe()
+       *pair_.dispersed()
+       *pair_.continuous().nu()
+       *pair_.continuous().turbulence().nut()
+       /(
+            sigma_
+           *sqr(pair_.dispersed().d())
+        )
+       *pair_.continuous().rho()
+       *fvc::grad(pair_.continuous())
+       *(1.0 + pair_.dispersed()/max(pair_.continuous(), residualAlpha_));
 }
 
 

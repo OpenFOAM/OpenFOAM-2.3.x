@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "RanzMarshall.H"
+#include "Lain.H"
 #include "phasePair.H"
 #include "addToRunTimeSelectionTable.H"
 
@@ -31,45 +31,44 @@ License
 
 namespace Foam
 {
-namespace heatTransferModels
+namespace dragModels
 {
-    defineTypeNameAndDebug(RanzMarshall, 0);
-    addToRunTimeSelectionTable(heatTransferModel, RanzMarshall, dictionary);
+    defineTypeNameAndDebug(Lain, 0);
+    addToRunTimeSelectionTable(dragModel, Lain, dictionary);
 }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::RanzMarshall::RanzMarshall
+Foam::dragModels::Lain::Lain
 (
     const dictionary& dict,
-    const phasePair& pair
+    const phasePair& pair,
+    const bool registerObject
 )
 :
-    heatTransferModel(dict, pair)
+    dragModel(dict, pair, registerObject)
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::heatTransferModels::RanzMarshall::~RanzMarshall()
+Foam::dragModels::Lain::~Lain()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::tmp<Foam::volScalarField>
-Foam::heatTransferModels::RanzMarshall::K() const
+Foam::tmp<Foam::volScalarField> Foam::dragModels::Lain::CdRe() const
 {
-    volScalarField Nu(scalar(2) + 0.6*sqrt(pair_.Re())*cbrt(pair_.Pr()));
+    volScalarField Re(pair_.Re());
 
     return
-        6.0
-       *max(pair_.dispersed(), residualAlpha_)
-       *pair_.continuous().kappa()
-       *Nu
-       /sqr(pair_.dispersed().d());
+        neg(Re - 1.5)*16.0
+      + pos(Re - 1.5)*neg(Re - 80.0)*14.9*pow(Re, 0.22)
+      + pos(Re - 80.0)*neg(Re - 1500.0)*48*(1.0 - 2.21/sqrt(max(Re, SMALL)))
+      + pos(Re - 1500.0)*2.61*Re;
 }
 
 
