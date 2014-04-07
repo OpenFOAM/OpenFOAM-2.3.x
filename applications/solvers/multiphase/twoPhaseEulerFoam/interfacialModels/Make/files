@@ -40,6 +40,7 @@ wallLubricationModels/wallLubricationModel/newWallLubricationModel.C
 wallLubricationModels/noWallLubrication/noWallLubrication.C
 wallLubricationModels/Antal/Antal.C
 wallLubricationModels/Frank/Frank.C
+wallLubricationModels/TomiyamaWallLubrication/TomiyamaWallLubrication.C
 
 turbulentDispersionModels/turbulentDispersionModel/turbulentDispersionModel.C
 turbulentDispersionModels/turbulentDispersionModel/newTurbulentDispersionModel.C
@@ -51,6 +52,7 @@ turbulentDispersionModels/Gosman/Gosman.C
 aspectRatioModels/aspectRatioModel/aspectRatioModel.C
 aspectRatioModels/aspectRatioModel/newAspectRatioModel.C
 aspectRatioModels/constantAspectRatio/constantAspectRatio.C
+aspectRatioModels/TomiyamaAspectRatio/TomiyamaAspectRatio.C
 aspectRatioModels/VakhrushevEfremov/VakhrushevEfremov.C
 aspectRatioModels/Wellek/Wellek.C
 
