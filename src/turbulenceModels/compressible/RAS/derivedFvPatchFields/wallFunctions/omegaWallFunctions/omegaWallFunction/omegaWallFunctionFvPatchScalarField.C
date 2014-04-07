@@ -39,6 +39,10 @@ namespace Foam
 namespace compressible
 {
 
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+scalar omegaWallFunctionFvPatchScalarField::tolerance_ = 1e-5;
+
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
 void omegaWallFunctionFvPatchScalarField::checkType()
@@ -81,14 +85,14 @@ void omegaWallFunctionFvPatchScalarField::setMaster()
     {
         if (isA<omegaWallFunctionFvPatchScalarField>(bf[patchI]))
         {
-            omegaWallFunctionFvPatchScalarField& epf = omegaPatch(patchI);
+            omegaWallFunctionFvPatchScalarField& opf = omegaPatch(patchI);
 
             if (master == -1)
             {
                 master = patchI;
             }
 
-            epf.master() = master;
+            opf.master() = master;
         }
     }
 }
@@ -162,10 +166,10 @@ omegaWallFunctionFvPatchScalarField::omegaPatch(const label patchI)
 
     const volScalarField::GeometricBoundaryField& bf = omega.boundaryField();
 
-    const omegaWallFunctionFvPatchScalarField& epf =
+    const omegaWallFunctionFvPatchScalarField& opf =
         refCast<const omegaWallFunctionFvPatchScalarField>(bf[patchI]);
 
-    return const_cast<omegaWallFunctionFvPatchScalarField&>(epf);
+    return const_cast<omegaWallFunctionFvPatchScalarField&>(opf);
 }
 
 
@@ -181,11 +185,11 @@ void omegaWallFunctionFvPatchScalarField::calculateTurbulenceFields
     {
         if (!cornerWeights_[patchI].empty())
         {
-            omegaWallFunctionFvPatchScalarField& epf = omegaPatch(patchI);
+            omegaWallFunctionFvPatchScalarField& opf = omegaPatch(patchI);
 
             const List<scalar>& w = cornerWeights_[patchI];
 
-            epf.calculate(turbulence, w, epf.patch(), G0, omega0);
+            opf.calculate(turbulence, w, opf.patch(), G0, omega0);
         }
     }
 
@@ -194,9 +198,9 @@ void omegaWallFunctionFvPatchScalarField::calculateTurbulenceFields
     {
         if (!cornerWeights_[patchI].empty())
         {
-            omegaWallFunctionFvPatchScalarField& epf = omegaPatch(patchI);
+            omegaWallFunctionFvPatchScalarField& opf = omegaPatch(patchI);
 
-            epf == scalarField(omega0, epf.patch().faceCells());
+            opf == scalarField(omega0, opf.patch().faceCells());
         }
     }
 }
@@ -486,17 +490,17 @@ void omegaWallFunctionFvPatchScalarField::updateCoeffs
 
     scalarField& omegaf = *this;
 
-    // only set the values if the weights are < 1 - tolerance
+    // only set the values if the weights are > tolerance_
     forAll(weights, faceI)
     {
         scalar w = weights[faceI];
 
-        if (w < 1.0 - 1e-6)
+        if (w > tolerance_)
         {
             label cellI = patch().faceCells()[faceI];
 
-            G[cellI] = w*G[cellI] + (1.0 - w)*G0[cellI];
-            omega[cellI] = w*omega[cellI] + (1.0 - w)*omega0[cellI];
+            G[cellI] = (1.0 - w)*G[cellI] + w*G0[cellI];
+            omega[cellI] = (1.0 - w)*omega[cellI] + w*omega0[cellI];
             omegaf[faceI] = omega[cellI];
         }
     }
@@ -538,16 +542,16 @@ void omegaWallFunctionFvPatchScalarField::manipulateMatrix
     DynamicList<scalar> constraintomega(weights.size());
     const labelUList& faceCells = patch().faceCells();
 
-    const DimensionedField<scalar, volMesh>& omega
-        = dimensionedInternalField();
+    const DimensionedField<scalar, volMesh>& omega =
+        dimensionedInternalField();
 
     label nConstrainedCells = 0;
 
 
     forAll(weights, faceI)
     {
-        // only set the values if the weights are < 1 - tolerance
-        if (weights[faceI] < (1.0 - 1e-6))
+        // only set the values if the weights are > tolerance
+        if (weights[faceI] > tolerance_)
         {
             nConstrainedCells++;
 

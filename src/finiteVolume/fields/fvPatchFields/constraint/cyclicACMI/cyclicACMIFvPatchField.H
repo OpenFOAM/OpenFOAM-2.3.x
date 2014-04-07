@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -166,8 +166,29 @@ public:
         // Evaluation functions
 
             //- Return true if coupled. Note that the underlying patch
-            //  is not coupled() - the points don't align.
+            //  is not coupled() - the points don't align
             virtual bool coupled() const;
+
+            //- Return true if this patch field fixes a value
+            //  Needed to check if a level has to be specified while solving
+            //  Poissons equations
+            virtual bool fixesValue() const
+            {
+                const scalarField& mask =
+                    cyclicACMIPatch_.cyclicACMIPatch().mask();
+
+                if (gMax(mask) > 1e-5)
+                {
+                    // regions connected
+                    return false;
+                }
+                else
+                {
+                    // fully separated
+                    return nonOverlapPatchField().fixesValue();
+                }
+            }
+
 
             //- Return neighbour coupled internal cell data
             virtual tmp<Field<Type> > patchNeighbourField() const;
