@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -111,15 +111,28 @@ Foam::porosityModels::fixedCoeff::fixedCoeff
 )
 :
     porosityModel(name, modelType, mesh, dict, cellZoneName),
+    alphaXYZ_(coeffs_.lookup("alpha")),
+    betaXYZ_(coeffs_.lookup("beta")),
     alpha_(cellZoneIDs_.size()),
     beta_(cellZoneIDs_.size())
 {
-    dimensionedVector alpha(coeffs_.lookup("alpha"));
-    dimensionedVector beta(coeffs_.lookup("beta"));
+    adjustNegativeResistance(alphaXYZ_);
+    adjustNegativeResistance(betaXYZ_);
 
-    adjustNegativeResistance(alpha);
-    adjustNegativeResistance(beta);
+    calcTranformModelData();
+}
 
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+Foam::porosityModels::fixedCoeff::~fixedCoeff()
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void Foam::porosityModels::fixedCoeff::calcTranformModelData()
+{
     if (coordSys_.R().uniform())
     {
         forAll (cellZoneIDs_, zoneI)
@@ -127,14 +140,14 @@ Foam::porosityModels::fixedCoeff::fixedCoeff
             alpha_[zoneI].setSize(1, tensor::zero);
             beta_[zoneI].setSize(1, tensor::zero);
 
-            alpha_[zoneI][0].xx() = alpha.value().x();
-            alpha_[zoneI][0].yy() = alpha.value().y();
-            alpha_[zoneI][0].zz() = alpha.value().z();
+            alpha_[zoneI][0].xx() = alphaXYZ_.value().x();
+            alpha_[zoneI][0].yy() = alphaXYZ_.value().y();
+            alpha_[zoneI][0].zz() = alphaXYZ_.value().z();
             alpha_[zoneI][0] = coordSys_.R().transformTensor(alpha_[zoneI][0]);
 
-            beta_[zoneI][0].xx() = beta.value().x();
-            beta_[zoneI][0].yy() = beta.value().y();
-            beta_[zoneI][0].zz() = beta.value().z();
+            beta_[zoneI][0].xx() = betaXYZ_.value().x();
+            beta_[zoneI][0].yy() = betaXYZ_.value().y();
+            beta_[zoneI][0].zz() = betaXYZ_.value().z();
             beta_[zoneI][0] = coordSys_.R().transformTensor(beta_[zoneI][0]);
         }
     }
@@ -149,13 +162,13 @@ Foam::porosityModels::fixedCoeff::fixedCoeff
 
             forAll(cells, i)
             {
-                alpha_[zoneI][i].xx() = alpha.value().x();
-                alpha_[zoneI][i].yy() = alpha.value().y();
-                alpha_[zoneI][i].zz() = alpha.value().z();
+                alpha_[zoneI][i].xx() = alphaXYZ_.value().x();
+                alpha_[zoneI][i].yy() = alphaXYZ_.value().y();
+                alpha_[zoneI][i].zz() = alphaXYZ_.value().z();
 
-                beta_[zoneI][i].xx() = beta.value().x();
-                beta_[zoneI][i].yy() = beta.value().y();
-                beta_[zoneI][i].zz() = beta.value().z();
+                beta_[zoneI][i].xx() = betaXYZ_.value().x();
+                beta_[zoneI][i].yy() = betaXYZ_.value().y();
+                beta_[zoneI][i].zz() = betaXYZ_.value().z();
             }
 
             alpha_[zoneI] =
@@ -166,14 +179,6 @@ Foam::porosityModels::fixedCoeff::fixedCoeff
     }
 }
 
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-Foam::porosityModels::fixedCoeff::~fixedCoeff()
-{}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void Foam::porosityModels::fixedCoeff::calcForce
 (
