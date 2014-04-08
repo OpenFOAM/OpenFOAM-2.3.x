@@ -1047,6 +1047,18 @@ const Foam::pointField& Foam::polyMesh::points() const
 }
 
 
+bool Foam::polyMesh::upToDatePoints(const regIOobject& io) const
+{
+    return io.upToDate(points_);
+}
+
+
+void Foam::polyMesh::setUpToDatePoints(regIOobject& io) const
+{
+    io.eventNo() = points_.eventNo();
+}
+
+
 const Foam::faceList& Foam::polyMesh::faces() const
 {
     if (clearedPrimitives_)
@@ -1132,7 +1144,7 @@ Foam::tmp<Foam::scalarField> Foam::polyMesh::movePoints
 
     points_.writeOpt() = IOobject::AUTO_WRITE;
     points_.instance() = time().timeName();
-
+    points_.eventNo() = getEvent();
 
     tmp<scalarField> sweptVols = primitiveMesh::movePoints
     (
