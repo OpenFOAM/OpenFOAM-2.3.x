@@ -199,7 +199,10 @@ void Foam::JohnsonJacksonParticleSlipFvPatchVectorField::updateCoeffs()
 
     const scalarField nu
     (
-        phased.nu()->boundaryField()[patch().index()]
+        patch().lookupPatchField<volScalarField, scalar>
+        (
+            IOobject::groupName("nut", phased.name())
+        )
     );
 
     word ThetaName(IOobject::groupName("Theta", phased.name()));
