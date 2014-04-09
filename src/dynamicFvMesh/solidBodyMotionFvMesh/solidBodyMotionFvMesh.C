@@ -76,6 +76,7 @@ Foam::solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject& io)
         )
     ),
     pointIDs_(),
+    moveAllCells_(false),
     UName_(dynamicMeshCoeffs_.lookupOrDefault<word>("UName", "U"))
 {
     if (undisplacedPoints_.size() != nPoints())
@@ -142,7 +143,14 @@ Foam::solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject& io)
         cellIDs = set.toc();
     }
 
-    if (cellIDs.size())
+    label nCells = returnReduce(cellIDs.size(), sumOp<label>());
+    moveAllCells_ = nCells == 0;
+
+    if (moveAllCells_)
+    {
+        Info<< "Applying solid body motion to entire mesh" << endl;
+    }
+    else
     {
         // collect point IDs of points in cell zone
 
@@ -176,10 +184,6 @@ Foam::solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject& io)
 
         pointIDs_.transfer(ptIDs);
     }
-    else
-    {
-        Info<< "Applying solid body motion to entire mesh" << endl;
-    }
 }
 
 
@@ -195,7 +199,18 @@ bool Foam::solidBodyMotionFvMesh::update()
 {
     static bool hasWarned = false;
 
-    if (pointIDs_.size())
+    if (moveAllCells_)
+    {
+        fvMesh::movePoints
+        (
+            transform
+            (
+                SBMFPtr_().transformation(),
+                undisplacedPoints_
+            )
+        );
+    }
+    else
     {
         pointField transformedPts(undisplacedPoints_);
 
@@ -207,17 +222,6 @@ bool Foam::solidBodyMotionFvMesh::update()
             );
 
         fvMesh::movePoints(transformedPts);
-    }
-    else
-    {
-        fvMesh::movePoints
-        (
-            transform
-            (
-                SBMFPtr_().transformation(),
-                undisplacedPoints_
-            )
-        );
     }
 
 

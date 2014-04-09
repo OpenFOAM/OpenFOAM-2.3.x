@@ -68,6 +68,9 @@ class solidBodyMotionFvMesh
         //- Points to move when cell zone is supplied
         labelList pointIDs_;
 
+        //- Flag to indicate whether all cells should move
+        bool moveAllCells_;
+
         //- Name of velocity field
         word UName_;
 
