@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -65,6 +65,12 @@ Foam::porosityModels::powerLaw::~powerLaw()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void Foam::porosityModels::powerLaw::calcTranformModelData()
+{
+    // nothing to be transformed
+}
+
 
 void Foam::porosityModels::powerLaw::calcForce
 (

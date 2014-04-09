@@ -28,6 +28,7 @@ License
 #include "volFields.H"
 #include "transformField.H"
 #include "cellZoneMesh.H"
+#include "cellSet.H"
 #include "boolList.H"
 #include "syncTools.H"
 
@@ -74,8 +75,9 @@ Foam::solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject& io)
             false
         )
     ),
-    zoneID_(-1),
-    pointIDs_()
+    pointIDs_(),
+    moveAllCells_(false),
+    UName_(dynamicMeshCoeffs_.lookupOrDefault<word>("UName", "U"))
 {
     if (undisplacedPoints_.size() != nPoints())
     {
@@ -92,14 +94,31 @@ Foam::solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject& io)
     word cellZoneName =
         dynamicMeshCoeffs_.lookupOrDefault<word>("cellZone", "none");
 
+    word cellSetName =
+        dynamicMeshCoeffs_.lookupOrDefault<word>("cellSet", "none");
+
+    if ((cellZoneName != "none") && (cellSetName != "none"))
+    {
+        FatalIOErrorIn
+        (
+            "solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject&)",
+            dynamicMeshCoeffs_
+        )
+            << "Either cellZone OR cellSet can be supplied, but not both. "
+            << "If neither is supplied, all cells will be included"
+            << exit(FatalIOError);
+    }
+
+
+    labelList cellIDs;
     if (cellZoneName != "none")
     {
         Info<< "Applying solid body motion to cellZone " << cellZoneName
             << endl;
 
-        zoneID_ = cellZones().findZoneID(cellZoneName);
+        label zoneID = cellZones().findZoneID(cellZoneName);
 
-        if (zoneID_ == -1)
+        if (zoneID == -1)
         {
             FatalErrorIn
             (
@@ -111,16 +130,35 @@ Foam::solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject& io)
                 << exit(FatalError);
         }
 
-        const cellZone& cz = cellZones()[zoneID_];
+        cellIDs = cellZones()[zoneID];
+    }
 
+    if (cellSetName != "none")
+    {
+        Info<< "Applying solid body motion to cellSet " << cellSetName
+            << endl;
 
+        cellSet set(*this, cellSetName);
+
+        cellIDs = set.toc();
+    }
+
+    label nCells = returnReduce(cellIDs.size(), sumOp<label>());
+    moveAllCells_ = nCells == 0;
+
+    if (moveAllCells_)
+    {
+        Info<< "Applying solid body motion to entire mesh" << endl;
+    }
+    else
+    {
         // collect point IDs of points in cell zone
 
         boolList movePts(nPoints(), false);
 
-        forAll(cz, i)
+        forAll(cellIDs, i)
         {
-            label cellI = cz[i];
+            label cellI = cellIDs[i];
             const cell& c = cells()[cellI];
             forAll(c, j)
             {
@@ -146,10 +184,6 @@ Foam::solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject& io)
 
         pointIDs_.transfer(ptIDs);
     }
-    else
-    {
-        Info<< "Applying solid body motion to entire mesh" << endl;
-    }
 }
 
 
@@ -165,7 +199,18 @@ bool Foam::solidBodyMotionFvMesh::update()
 {
     static bool hasWarned = false;
 
-    if (zoneID_ != -1)
+    if (moveAllCells_)
+    {
+        fvMesh::movePoints
+        (
+            transform
+            (
+                SBMFPtr_().transformation(),
+                undisplacedPoints_
+            )
+        );
+    }
+    else
     {
         pointField transformedPts(undisplacedPoints_);
 
@@ -178,31 +223,22 @@ bool Foam::solidBodyMotionFvMesh::update()
 
         fvMesh::movePoints(transformedPts);
     }
-    else
-    {
-        fvMesh::movePoints
-        (
-            transform
-            (
-                SBMFPtr_().transformation(),
-                undisplacedPoints_
-            )
-        );
-    }
 
 
-    if (foundObject<volVectorField>("U"))
+    if (foundObject<volVectorField>(UName_))
     {
-        const_cast<volVectorField&>(lookupObject<volVectorField>("U"))
-            .correctBoundaryConditions();
+        const volVectorField& U = lookupObject<volVectorField>(UName_);
+
+        const_cast<volVectorField&>(U).correctBoundaryConditions();
     }
     else if (!hasWarned)
     {
         hasWarned = true;
 
         WarningIn("solidBodyMotionFvMesh::update()")
-            << "Did not find volVectorField U."
-            << " Not updating U boundary conditions." << endl;
+            << "Did not find volVectorField " << UName_
+            << " Not updating " << UName_ << "boundary conditions."
+            << endl;
     }
 
     return true;

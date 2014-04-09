@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,93 +22,83 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::solidBodyMotionFvMesh
+    Foam::aspectRatioModels::TomiyamaAspectRatio
 
 Description
-    Solid-body motion of the mesh specified by a run-time selectable
-    motion function.
+    Aspect ratio model of Tomiyama.
+
+    Reference:
+    \verbatim
+        "Implementation and Comparison of Correlations for interfacial Forces
+        in a Gas-Liquid System within an Euler-Euler Framework"
+        M Otromke
+        PhD Thesis
+        April 2013
+    \endverbatim
 
 SourceFiles
-    solidBodyMotionFvMesh.C
+    TomiyamaAspectRatio.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef solidBodyMotionFvMesh_H
-#define solidBodyMotionFvMesh_H
+#ifndef TomiyamaAspectRatio_H
+#define TomiyamaAspectRatio_H
 
-#include "dynamicFvMesh.H"
-#include "dictionary.H"
-#include "pointIOField.H"
-#include "solidBodyMotionFunction.H"
+#include "aspectRatioModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
+namespace aspectRatioModels
+{
 
 /*---------------------------------------------------------------------------*\
-                   Class solidBodyMotionFvMesh Declaration
+                       Class TomiyamaAspectRatio Declaration
 \*---------------------------------------------------------------------------*/
 
-class solidBodyMotionFvMesh
+class TomiyamaAspectRatio
 :
-    public dynamicFvMesh
+    public aspectRatioModel
 {
+private:
+
     // Private data
 
-        //- Dictionary of motion control parameters
-        const dictionary dynamicMeshCoeffs_;
-
-        //- The motion control function
-        autoPtr<solidBodyMotionFunction> SBMFPtr_;
-
-        //- The reference points which are transformed
-        pointIOField undisplacedPoints_;
-
-        //- Points to move when cell zone is supplied
-        labelList pointIDs_;
-
-        //- Flag to indicate whether all cells should move
-        bool moveAllCells_;
-
-        //- Name of velocity field
-        word UName_;
-
-
-    // Private Member Functions
-
-        //- Disallow default bitwise copy construct
-        solidBodyMotionFvMesh(const solidBodyMotionFvMesh&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const solidBodyMotionFvMesh&);
+        //- Wall distance
+        const volScalarField& yWall_;
 
 
 public:
 
     //- Runtime type information
-    TypeName("solidBodyMotionFvMesh");
+    TypeName("Tomiyama");
 
 
     // Constructors
 
-        //- Construct from IOobject
-        solidBodyMotionFvMesh(const IOobject& io);
+        //- Construct from a dictionary and an ordered phase pair
+        TomiyamaAspectRatio
+        (
+            const dictionary& dict,
+            const orderedPhasePair& pair
+        );
 
 
     //- Destructor
-    ~solidBodyMotionFvMesh();
+    virtual ~TomiyamaAspectRatio();
 
 
     // Member Functions
 
-        //- Update the mesh for both mesh motion and topology change
-        virtual bool update();
+        //- Aspect ratio
+        virtual tmp<volScalarField> E() const;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace aspectRatioModels
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

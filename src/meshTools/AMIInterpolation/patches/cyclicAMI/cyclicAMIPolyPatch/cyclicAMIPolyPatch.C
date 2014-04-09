@@ -151,13 +151,14 @@ void Foam::cyclicAMIPolyPatch::calcTransforms
                     -rotationAxis_.y(), rotationAxis_.x(), 0
                 );
 
-                tensor RPos
+                tensor revTPos
                 (
                     T
                   + cos(rotationAngle_)*(tensor::I - T)
                   + sin(rotationAngle_)*S
                 );
-                tensor RNeg
+
+                tensor revTNeg
                 (
                     T
                   + cos(-rotationAngle_)*(tensor::I - T)
@@ -166,28 +167,27 @@ void Foam::cyclicAMIPolyPatch::calcTransforms
 
                 // check - assume correct angle when difference in face areas
                 // is the smallest
-                vector transformedAreaPos = sum(half0Areas & RPos);
-                vector transformedAreaNeg = sum(half0Areas & RNeg);
-                vector area1 = sum(half1Areas);
-                reduce(transformedAreaPos, sumOp<vector>());
-                reduce(transformedAreaNeg, sumOp<vector>());
-                reduce(area1, sumOp<vector>());
+                vector transformedAreaPos = gSum(half1Areas & revTPos);
+                vector transformedAreaNeg = gSum(half1Areas & revTNeg);
+                vector area0 = gSum(half0Areas);
 
-                scalar errorPos = mag(transformedAreaPos - area1);
-                scalar errorNeg = mag(transformedAreaNeg - area1);
+                // areas have opposite sign, so sum should be zero when
+                // correct rotation applied
+                scalar errorPos = mag(transformedAreaPos + area0);
+                scalar errorNeg = mag(transformedAreaNeg + area0);
 
                 if (errorPos < errorNeg)
                 {
-                    revT = RPos;
+                    revT = revTPos;
                 }
                 else
                 {
-                    revT = RNeg;
+                    revT = revTNeg;
                     rotationAngle_ *= -1;
                 }
 
                 scalar areaError =
-                    min(errorPos, errorNeg)/(mag(area1) + ROOTVSMALL);
+                    min(errorPos, errorNeg)/(mag(area0) + ROOTVSMALL);
 
                 if (areaError > matchTolerance())
                 {

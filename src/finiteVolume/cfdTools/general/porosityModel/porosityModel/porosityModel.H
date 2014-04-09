@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -98,6 +98,10 @@ protected:
 
 
     // Protected Member Functions
+
+
+        //- Transform the model data wrt mesh changes
+        virtual void calcTranformModelData() = 0;
 
         //- Adjust negative resistance values to be multiplier of max value
         void adjustNegativeResistance(dimensionedVector& resist);
@@ -221,16 +225,19 @@ public:
         //- Return const access to the cell zone IDs
         inline const labelList& cellZoneIDs() const;
 
+        //- Transform the model data wrt mesh changes
+        virtual void transformModelData();
+
         //- Return the force over the cell zone(s)
         virtual tmp<vectorField> force
         (
             const volVectorField& U,
             const volScalarField& rho,
             const volScalarField& mu
-        ) const;
+        );
 
         //- Add resistance
-        virtual void addResistance(fvVectorMatrix& UEqn) const;
+        virtual void addResistance(fvVectorMatrix& UEqn);
 
         //- Add resistance
         virtual void addResistance
@@ -238,7 +245,7 @@ public:
             fvVectorMatrix& UEqn,
             const volScalarField& rho,
             const volScalarField& mu
-        ) const;
+        );
 
         //- Add resistance
         virtual void addResistance
@@ -246,16 +253,7 @@ public:
             const fvVectorMatrix& UEqn,
             volTensorField& AU,
             bool correctAUprocBC
-        ) const;
-
-
-    // Topology change
-
-        //- Move points
-        virtual bool movePoints();
-
-        //- Update on meshUpdate
-        virtual void updateMesh(const mapPolyMesh& mpm);
+        );
 
 
     // I-O

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -64,10 +64,16 @@ private:
 
     // Private data
 
-        //- Model alpha coefficient [1/s]
+        //- alpha coefficient XYZ components (user-supplied) [1/s]
+        dimensionedVector alphaXYZ_;
+
+        //- beta coefficient XYZ components (user-supplied) [1/m]
+        dimensionedVector betaXYZ_;
+
+        //- Model alpha coefficient - converted from alphaXYZ [1/s]
         List<tensorField> alpha_;
 
-        //- Model beta coefficient [1/m]
+        //- Model beta coefficient - converted from betaXYZ [1/m]
         List<tensorField> beta_;
 
 
@@ -118,6 +124,9 @@ public:
 
 
     // Member Functions
+
+        //- Transform the model data wrt mesh changes
+        virtual void calcTranformModelData();
 
         //- Calculate the porosity force
         virtual void calcForce

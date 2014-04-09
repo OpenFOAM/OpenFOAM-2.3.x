@@ -52,19 +52,31 @@ Foam::porosityModels::DarcyForchheimer::DarcyForchheimer
 )
 :
     porosityModel(name, modelType, mesh, dict, cellZoneName),
+    dXYZ_(coeffs_.lookup("d")),
+    fXYZ_(coeffs_.lookup("f")),
     D_(cellZoneIDs_.size()),
     F_(cellZoneIDs_.size()),
     rhoName_(coeffs_.lookupOrDefault<word>("rho", "rho")),
     muName_(coeffs_.lookupOrDefault<word>("mu", "thermo:mu")),
     nuName_(coeffs_.lookupOrDefault<word>("nu", "nu"))
 {
+    adjustNegativeResistance(dXYZ_);
+    adjustNegativeResistance(fXYZ_);
 
-    dimensionedVector d(coeffs_.lookup("d"));
-    dimensionedVector f(coeffs_.lookup("f"));
+    calcTranformModelData();
+}
 
-    adjustNegativeResistance(d);
-    adjustNegativeResistance(f);
 
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+Foam::porosityModels::DarcyForchheimer::~DarcyForchheimer()
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void Foam::porosityModels::DarcyForchheimer::calcTranformModelData()
+{
     if (coordSys_.R().uniform())
     {
         forAll (cellZoneIDs_, zoneI)
@@ -72,20 +84,19 @@ Foam::porosityModels::DarcyForchheimer::DarcyForchheimer
             D_[zoneI].setSize(1, tensor::zero);
             F_[zoneI].setSize(1, tensor::zero);
 
-            D_[zoneI][0].xx() = d.value().x();
-            D_[zoneI][0].yy() = d.value().y();
-            D_[zoneI][0].zz() = d.value().z();
+            D_[zoneI][0].xx() = dXYZ_.value().x();
+            D_[zoneI][0].yy() = dXYZ_.value().y();
+            D_[zoneI][0].zz() = dXYZ_.value().z();
 
             D_[zoneI][0] = coordSys_.R().transformTensor(D_[zoneI][0]);
 
             // leading 0.5 is from 1/2*rho
-            F_[zoneI][0].xx() = 0.5*f.value().x();
-            F_[zoneI][0].yy() = 0.5*f.value().y();
-            F_[zoneI][0].zz() = 0.5*f.value().z();
+            F_[zoneI][0].xx() = 0.5*fXYZ_.value().x();
+            F_[zoneI][0].yy() = 0.5*fXYZ_.value().y();
+            F_[zoneI][0].zz() = 0.5*fXYZ_.value().z();
 
             F_[zoneI][0] = coordSys_.R().transformTensor(F_[zoneI][0]);
         }
-
     }
     else
     {
@@ -98,14 +109,14 @@ Foam::porosityModels::DarcyForchheimer::DarcyForchheimer
 
             forAll(cells, i)
             {
-                D_[zoneI][i].xx() = d.value().x();
-                D_[zoneI][i].yy() = d.value().y();
-                D_[zoneI][i].zz() = d.value().z();
+                D_[zoneI][i].xx() = dXYZ_.value().x();
+                D_[zoneI][i].yy() = dXYZ_.value().y();
+                D_[zoneI][i].zz() = dXYZ_.value().z();
 
                 // leading 0.5 is from 1/2*rho
-                F_[zoneI][i].xx() = 0.5*f.value().x();
-                F_[zoneI][i].yy() = 0.5*f.value().y();
-                F_[zoneI][i].zz() = 0.5*f.value().z();
+                F_[zoneI][i].xx() = 0.5*fXYZ_.value().x();
+                F_[zoneI][i].yy() = 0.5*fXYZ_.value().y();
+                F_[zoneI][i].zz() = 0.5*fXYZ_.value().z();
             }
 
             D_[zoneI] = coordSys_.R().transformTensor(D_[zoneI], cells);
@@ -114,14 +125,6 @@ Foam::porosityModels::DarcyForchheimer::DarcyForchheimer
     }
 }
 
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-Foam::porosityModels::DarcyForchheimer::~DarcyForchheimer()
-{}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void Foam::porosityModels::DarcyForchheimer::calcForce
 (

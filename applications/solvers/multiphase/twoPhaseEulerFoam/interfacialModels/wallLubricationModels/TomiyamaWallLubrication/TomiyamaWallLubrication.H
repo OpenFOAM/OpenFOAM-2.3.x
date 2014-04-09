@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,93 +22,93 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::solidBodyMotionFvMesh
+    Foam::wallLubricationModels::TomiyamaWallLubrication
 
 Description
-    Solid-body motion of the mesh specified by a run-time selectable
-    motion function.
+    Wall lubrication model of Tomiyama.
+
+    References:
+    \verbatim
+        "Implementation and Comparison of Correlations for interfacial Forces
+        in a Gas-Liquid System within an Euler-Euler Framework"
+        M Otromke
+        PhD Thesis
+        April 2013
+    \endverbatim
+
+    \verbatim
+        "Struggle with Computational Bubble Dynamics"
+        A Tomiyama
+        Multiphase Science and Technology
+        Volume 10, Issue 4, Pages 369-405, 1998
+    \endverbatim
 
 SourceFiles
-    solidBodyMotionFvMesh.C
+    TomiyamaWallLubrication.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef solidBodyMotionFvMesh_H
-#define solidBodyMotionFvMesh_H
+#ifndef TomiyamaWallLubrication_H
+#define TomiyamaWallLubrication_H
 
-#include "dynamicFvMesh.H"
-#include "dictionary.H"
-#include "pointIOField.H"
-#include "solidBodyMotionFunction.H"
+#include "wallLubricationModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
+class phasePair;
+
+namespace wallLubricationModels
+{
+
 /*---------------------------------------------------------------------------*\
-                   Class solidBodyMotionFvMesh Declaration
+                            Class TomiyamaWallLubrication Declaration
 \*---------------------------------------------------------------------------*/
 
-class solidBodyMotionFvMesh
+class TomiyamaWallLubrication
 :
-    public dynamicFvMesh
+    public wallLubricationModel
 {
+private:
+
     // Private data
 
-        //- Dictionary of motion control parameters
-        const dictionary dynamicMeshCoeffs_;
-
-        //- The motion control function
-        autoPtr<solidBodyMotionFunction> SBMFPtr_;
-
-        //- The reference points which are transformed
-        pointIOField undisplacedPoints_;
-
-        //- Points to move when cell zone is supplied
-        labelList pointIDs_;
-
-        //- Flag to indicate whether all cells should move
-        bool moveAllCells_;
-
-        //- Name of velocity field
-        word UName_;
-
-
-    // Private Member Functions
-
-        //- Disallow default bitwise copy construct
-        solidBodyMotionFvMesh(const solidBodyMotionFvMesh&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const solidBodyMotionFvMesh&);
+        //- Characteristic channel dimension
+        const dimensionedScalar D_;
 
 
 public:
 
     //- Runtime type information
-    TypeName("solidBodyMotionFvMesh");
+    TypeName("Tomiyama");
 
 
     // Constructors
 
-        //- Construct from IOobject
-        solidBodyMotionFvMesh(const IOobject& io);
+        //- Construct from components
+        TomiyamaWallLubrication
+        (
+            const dictionary& dict,
+            const phasePair& pair
+        );
 
 
     //- Destructor
-    ~solidBodyMotionFvMesh();
+    virtual ~TomiyamaWallLubrication();
 
 
     // Member Functions
 
-        //- Update the mesh for both mesh motion and topology change
-        virtual bool update();
+        //- Wall lubrication force
+        tmp<volVectorField> F() const;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace wallLubricationModels
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

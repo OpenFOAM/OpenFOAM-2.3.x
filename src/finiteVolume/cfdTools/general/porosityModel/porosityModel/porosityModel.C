@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -147,13 +147,27 @@ Foam::porosityModel::~porosityModel()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+void Foam::porosityModel::transformModelData()
+{
+    if (!mesh_.upToDatePoints(*this))
+    {
+        calcTranformModelData();
+
+        // set model up-to-date wrt points
+        mesh_.setUpToDatePoints(*this);
+    }
+}
+
+
 Foam::tmp<Foam::vectorField> Foam::porosityModel::porosityModel::force
 (
     const volVectorField& U,
     const volScalarField& rho,
     const volScalarField& mu
-) const
+)
 {
+    transformModelData();
+
     tmp<vectorField> tforce(new vectorField(U.size(), vector::zero));
 
     if (!cellZoneIDs_.empty())
@@ -165,16 +179,14 @@ Foam::tmp<Foam::vectorField> Foam::porosityModel::porosityModel::force
 }
 
 
-void Foam::porosityModel::addResistance
-(
-    fvVectorMatrix& UEqn
-) const
+void Foam::porosityModel::addResistance(fvVectorMatrix& UEqn)
 {
     if (cellZoneIDs_.empty())
     {
         return;
     }
 
+    transformModelData();
     this->correct(UEqn);
 }
 
@@ -184,13 +196,14 @@ void Foam::porosityModel::addResistance
     fvVectorMatrix& UEqn,
     const volScalarField& rho,
     const volScalarField& mu
-) const
+)
 {
     if (cellZoneIDs_.empty())
     {
         return;
     }
 
+    transformModelData();
     this->correct(UEqn, rho, mu);
 }
 
@@ -200,13 +213,14 @@ void Foam::porosityModel::addResistance
     const fvVectorMatrix& UEqn,
     volTensorField& AU,
     bool correctAUprocBC
-) const
+)
 {
     if (cellZoneIDs_.empty())
     {
         return;
     }
 
+    transformModelData();
     this->correct(UEqn, AU);
 
     if (correctAUprocBC)
@@ -219,23 +233,11 @@ void Foam::porosityModel::addResistance
 }
 
 
-bool Foam::porosityModel::movePoints()
-{
-    // no updates necessary; all member data independent of mesh
-    return true;
-}
-
-
-void Foam::porosityModel::updateMesh(const mapPolyMesh& mpm)
-{
-    // no updates necessary; all member data independent of mesh
-}
-
-
 bool Foam::porosityModel::writeData(Ostream& os) const
 {
     return true;
 }
+
 
 bool Foam::porosityModel::read(const dictionary& dict)
 {
