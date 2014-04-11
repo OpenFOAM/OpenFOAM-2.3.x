@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -74,8 +74,8 @@ class localAxesRotation
 
     // Private members
 
-        //- Init transformation tensor
-        void init(const dictionary& dict, const objectRegistry& obr);
+        //- Init transformation tensor field
+        void init(const objectRegistry& obr);
 
 
 public:
@@ -107,6 +107,9 @@ public:
 
         //- Reset rotation to an identity rotation
         virtual void clear();
+
+        //- Update the rotation for a list of cells
+        virtual void updateCells(const polyMesh& mesh, const labelList& cells);
 
         //- Return local-to-global transformation tensor
         virtual const tensor& R() const

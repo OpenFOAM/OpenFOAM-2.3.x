@@ -81,9 +81,10 @@ void Foam::porosityModels::DarcyForchheimer::calcTranformModelData()
     {
         forAll (cellZoneIDs_, zoneI)
         {
-            D_[zoneI].setSize(1, tensor::zero);
-            F_[zoneI].setSize(1, tensor::zero);
+            D_[zoneI].setSize(1);
+            F_[zoneI].setSize(1);
 
+            D_[zoneI][0] = tensor::zero;
             D_[zoneI][0].xx() = dXYZ_.value().x();
             D_[zoneI][0].yy() = dXYZ_.value().y();
             D_[zoneI][0].zz() = dXYZ_.value().z();
@@ -91,6 +92,7 @@ void Foam::porosityModels::DarcyForchheimer::calcTranformModelData()
             D_[zoneI][0] = coordSys_.R().transformTensor(D_[zoneI][0]);
 
             // leading 0.5 is from 1/2*rho
+            F_[zoneI][0] = tensor::zero;
             F_[zoneI][0].xx() = 0.5*fXYZ_.value().x();
             F_[zoneI][0].yy() = 0.5*fXYZ_.value().y();
             F_[zoneI][0].zz() = 0.5*fXYZ_.value().z();
@@ -104,24 +106,64 @@ void Foam::porosityModels::DarcyForchheimer::calcTranformModelData()
         {
             const labelList& cells = mesh_.cellZones()[cellZoneIDs_[zoneI]];
 
-            D_[zoneI].setSize(cells.size(), tensor::zero);
-            F_[zoneI].setSize(cells.size(), tensor::zero);
+            D_[zoneI].setSize(cells.size());
+            F_[zoneI].setSize(cells.size());
 
             forAll(cells, i)
             {
+                D_[zoneI][i] = tensor::zero;
                 D_[zoneI][i].xx() = dXYZ_.value().x();
                 D_[zoneI][i].yy() = dXYZ_.value().y();
                 D_[zoneI][i].zz() = dXYZ_.value().z();
 
                 // leading 0.5 is from 1/2*rho
+                F_[zoneI][i] = tensor::zero;
                 F_[zoneI][i].xx() = 0.5*fXYZ_.value().x();
                 F_[zoneI][i].yy() = 0.5*fXYZ_.value().y();
                 F_[zoneI][i].zz() = 0.5*fXYZ_.value().z();
             }
 
-            D_[zoneI] = coordSys_.R().transformTensor(D_[zoneI], cells);
-            F_[zoneI] = coordSys_.R().transformTensor(F_[zoneI], cells);
+            const coordinateRotation& R = coordSys_.R(mesh_, cells);
+
+            D_[zoneI] = R.transformTensor(D_[zoneI], cells);
+            F_[zoneI] = R.transformTensor(F_[zoneI], cells);
         }
+    }
+
+    if (debug && mesh_.time().outputTime())
+    {
+        volTensorField Dout
+        (
+            IOobject
+            (
+                typeName + ":D",
+                mesh_.time().timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            mesh_,
+            dimensionedTensor("0", dXYZ_.dimensions(), tensor::zero)
+        );
+        volTensorField Fout
+        (
+            IOobject
+            (
+                typeName + ":F",
+                mesh_.time().timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            mesh_,
+            dimensionedTensor("0", fXYZ_.dimensions(), tensor::zero)
+        );
+
+        UIndirectList<tensor>(Dout, mesh_.cellZones()[cellZoneIDs_[0]]) = D_[0];
+        UIndirectList<tensor>(Fout, mesh_.cellZones()[cellZoneIDs_[0]]) = F_[0];
+
+        Dout.write();
+        Fout.write();
     }
 }
 

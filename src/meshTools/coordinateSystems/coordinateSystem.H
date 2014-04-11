@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,10 +25,9 @@ Class
     Foam::coordinateSystem
 
 Description
-    Base class for other coordinate
-    system specifications.
+    Base class for other coordinate system specifications.
 
-    All systems are defined by an origin point and a coordinateRotation.
+    All systems are defined by an origin point and a co-ordinate rotation.
 
     \verbatim
         coordinateSystem
@@ -37,8 +36,8 @@ Description
             origin  (0 0 0);
             coordinateRotation
             {
-                type        STARCDRotation;
-                rotation    (0 0 90);
+                type        localAxesRotation;
+                e3          (0 0 1);
             }
         }
     \endverbatim
@@ -49,16 +48,17 @@ Description
     3) localAxesRotation
     4) EulerCoordinateRotation
 
-    Type of coordinates:
+    Type of co-ordinates:
     1) cartesian
-    2) cylindricalCS
+    2) cylindrical
 
 See Also
     coordinateSystem and coordinateSystem::New
 
 SourceFiles
     coordinateSystem.C
-    newCoordinateSystem.C
+    coordinateSystemNew.C
+
 \*---------------------------------------------------------------------------*/
 
 #ifndef coordinateSystem_H
@@ -231,7 +231,6 @@ public:
 
     // Member Functions
 
-
         // Access
 
             //- Return name
@@ -258,18 +257,28 @@ public:
                 return origin_;
             }
 
-            //- Return const reference to coordinate rotation
+            //- Return const reference to co-ordinate rotation
             const coordinateRotation& R() const
             {
                 return R_();
             }
 
-            //- Return non const reference to coordinate rotation
+            //- Return non const reference to co-ordinate rotation
             coordinateRotation& R()
             {
                 return R_();
             }
 
+            //- Update and return the co-ordinate roation for a list of cells
+            const coordinateRotation& R
+            (
+                const polyMesh& mesh,
+                const labelList& cells
+            )
+            {
+                R_->updateCells(mesh, cells);
+                return R_();
+            }
 
             //- Return as dictionary of entries
             //  \param [in] ignoreType drop type (cartesian, cylindrical, etc)

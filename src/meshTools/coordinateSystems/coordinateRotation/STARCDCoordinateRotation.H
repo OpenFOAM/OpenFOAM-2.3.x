@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -124,6 +124,12 @@ public:
         {
             R_ = sphericalTensor::I;
             Rtr_ = sphericalTensor::I;
+        }
+
+        //- Update the rotation for a list of cells
+        virtual void updateCells(const polyMesh&, const labelList&)
+        {
+            // do nothing
         }
 
         //- Return local-to-global transformation tensor

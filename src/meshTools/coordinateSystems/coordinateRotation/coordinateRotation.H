@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -55,6 +55,7 @@ Description
 #include "dictionary.H"
 #include "runTimeSelectionTables.H"
 #include "objectRegistry.H"
+#include "polyMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -134,6 +135,13 @@ public:
 
         //- Reset rotation to an identity rotation
         virtual void clear() = 0;
+
+        //- Update the rotation for a list of cells
+        virtual void updateCells
+        (
+            const polyMesh& mesh,
+            const labelList& cells
+        ) = 0;
 
         //- Return local-to-global transformation tensor
         virtual const tensor& R() const = 0;

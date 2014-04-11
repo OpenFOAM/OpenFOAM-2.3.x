@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -99,11 +99,7 @@ public:
         axesRotation();
 
         //- Construct from 2 axes
-        axesRotation
-        (
-            const vector& axis,
-            const vector& dir
-        );
+        axesRotation(const vector& axis, const vector& dir);
 
         //- Construct from dictionary
         axesRotation(const dictionary&);
@@ -133,6 +129,12 @@ public:
         {
             R_ = sphericalTensor::I;
             Rtr_ = sphericalTensor::I;
+        }
+
+        //- Update the rotation for a list of cells
+        virtual void updateCells(const polyMesh&, const labelList&)
+        {
+            // do nothing
         }
 
         //- Return local-to-global transformation tensor

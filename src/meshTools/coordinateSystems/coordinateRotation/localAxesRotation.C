@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -48,12 +48,33 @@ namespace Foam
     );
 }
 
+
+// * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
+
+void Foam::localAxesRotation::init(const objectRegistry& obr)
+{
+    const polyMesh& mesh = refCast<const polyMesh>(obr);
+    const vectorField& cc = mesh.cellCentres();
+
+    tensorField& R = Rptr_();
+    forAll(cc, cellI)
+    {
+        vector dir = cc[cellI] - origin_;
+        dir /= mag(dir) + VSMALL;
+
+        const axesRotation ar(e3_, dir);
+
+        R[cellI] = ar.R();
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::localAxesRotation::localAxesRotation
 (
     const dictionary& dict,
-    const objectRegistry& orb
+    const objectRegistry& obr
 )
 :
     Rptr_(),
@@ -69,27 +90,21 @@ Foam::localAxesRotation::localAxesRotation
     // rotation axis
     dict.lookup("e3") >> e3_;
 
-    const polyMesh& mesh = refCast<const polyMesh>(orb);
+    const polyMesh& mesh = refCast<const polyMesh>(obr);
 
-    Rptr_.reset
-    (
-        new tensorField(mesh.nCells())
-    );
-    init(dict, orb);
+    Rptr_.reset(new tensorField(mesh.nCells()));
+    init(obr);
 }
 
 
-Foam::localAxesRotation::localAxesRotation
-(
-    const dictionary& dict
-)
+Foam::localAxesRotation::localAxesRotation(const dictionary& dict)
 :
     Rptr_(),
     origin_(),
     e3_()
 {
     FatalErrorIn("localAxesRotation(const dictionary&)")
-        << " localAxesRotation can not be constructed from  dictionary "
+        << " localAxesRotation can not be constructed from dictionary "
         << " use the construtctor : "
            "("
            "    const dictionary&, const objectRegistry&"
@@ -105,6 +120,23 @@ void Foam::localAxesRotation::clear()
     if (!Rptr_.empty())
     {
         Rptr_.clear();
+    }
+}
+
+
+void Foam::localAxesRotation::updateCells
+(
+    const polyMesh& mesh,
+    const labelList& cells
+)
+{
+    forAll(cells, i)
+    {
+        label cellI = cells[i];
+        vector dir = mesh.cellCentres()[cellI] - origin_;
+        dir /= mag(dir) + VSMALL;
+
+        Rptr_()[cellI] = axesRotation(e3_, dir).R();
     }
 }
 
@@ -212,14 +244,16 @@ Foam::tmp<Foam::tensorField> Foam::localAxesRotation::transformTensor
             << abort(FatalError);
     }
 
-    const tensorField Rtr(Rptr_().T());
+    const tensorField& R = Rptr_();
+    const tensorField Rtr(R.T());
     tmp<tensorField> tt(new tensorField(cellMap.size()));
     tensorField& t = tt();
     forAll(cellMap, i)
     {
         const label cellI = cellMap[i];
-        t[i] = Rptr_()[cellI] & st[i] & Rtr[cellI];
+        t[i] = R[cellI] & st[i] & Rtr[cellI];
     }
+
     return tt;
 }
 
@@ -239,9 +273,10 @@ Foam::tmp<Foam::symmTensorField> Foam::localAxesRotation::transformVector
     tmp<symmTensorField> tfld(new symmTensorField(Rptr_->size()));
     symmTensorField& fld = tfld();
 
+    const tensorField& R = Rptr_();
     forAll(fld, i)
     {
-        fld[i] = transformPrincipal(Rptr_()[i], st[i]);
+        fld[i] = transformPrincipal(R[i], st[i]);
     }
     return tfld;
 }
@@ -257,25 +292,6 @@ Foam::symmTensor Foam::localAxesRotation::transformVector
         "tensor localAxesRotation::transformVector(const vector&) const"
     );
     return symmTensor::zero;
-}
-
-
-// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
-
-void Foam::localAxesRotation::init
-(
-    const dictionary& dict,
-    const objectRegistry& obr
-)
-{
-    const polyMesh& mesh = refCast<const polyMesh>(obr);
-    forAll(mesh.cellCentres(), cellI)
-    {
-        vector dir = mesh.cellCentres()[cellI] - origin_;
-        dir /= mag(dir) + VSMALL;
-
-        Rptr_()[cellI] = axesRotation(e3_, dir).R();
-    }
 }
 
 
