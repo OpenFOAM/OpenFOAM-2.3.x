@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -50,10 +50,9 @@ void Foam::axesRotation::calcTransform
     const axisOrder& order
 )
 {
-    vector a = axis1 / mag(axis1);
+    vector a = axis1/mag(axis1);
     vector b = axis2;
 
-    // Absorb minor nonorthogonality into axis2
     b = b - (b & a)*a;
 
     if (mag(b) < SMALL)
@@ -64,36 +63,49 @@ void Foam::axesRotation::calcTransform
             << abort(FatalError);
     }
 
-    b = b / mag(b);
-    vector c = a ^ b;
+    b = b/mag(b);
+    vector c = a^b;
 
     tensor Rtr;
     switch (order)
     {
         case e1e2:
+        {
             Rtr = tensor(a, b, c);
             break;
-
+        }
         case e2e3:
+        {
             Rtr = tensor(c, a, b);
             break;
-
+        }
         case e3e1:
+        {
             Rtr = tensor(b, c, a);
             break;
-
+        }
         default:
-            FatalErrorIn("axesRotation::calcTransform()")
-                << "programmer error" << endl
+        {
+            FatalErrorIn
+            (
+                "axesRotation::calcTransform"
+                "("
+                    "const vector&,"
+                    "const vector&,"
+                    "const axisOrder&"
+                ")"
+            )
+                << "Unhandled axes specifictation" << endl
                 << abort(FatalError);
 
             Rtr = tensor::zero;
             break;
+        }
     }
 
-    // the global -> local transformation
+    // the global->local transformation
     Rtr_ = Rtr;
-    // the local -> global transformation
+    // the local->global transformation
     R_ = Rtr.T();
 }
 
@@ -154,15 +166,13 @@ Foam::axesRotation::axesRotation(const tensor& R)
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-Foam::vector Foam::axesRotation::transform(const vector& st) const
+const Foam::tensorField& Foam::axesRotation::Tr() const
 {
-    return (R_ & st);
-}
-
-
-Foam::vector Foam::axesRotation::invTransform(const vector& st) const
-{
-    return (Rtr_ & st);
+    notImplemented
+    (
+        "const Foam::tensorField& axesRotation::Tr() const"
+    );
+    return *reinterpret_cast<const tensorField*>(0);
 }
 
 
@@ -170,6 +180,12 @@ Foam::tmp<Foam::vectorField> Foam::axesRotation::transform
 (
     const vectorField& st
 ) const
+{
+    return (R_ & st);
+}
+
+
+Foam::vector Foam::axesRotation::transform(const vector& st) const
 {
     return (R_ & st);
 }
@@ -184,13 +200,9 @@ Foam::tmp<Foam::vectorField> Foam::axesRotation::invTransform
 }
 
 
-const Foam::tensorField& Foam::axesRotation::Tr() const
+Foam::vector Foam::axesRotation::invTransform(const vector& st) const
 {
-    notImplemented
-    (
-        "const Foam::tensorField& axesRotation::Tr() const"
-    );
-    return *reinterpret_cast<const tensorField*>(0);
+    return (Rtr_ & st);
 }
 
 
@@ -225,12 +237,14 @@ Foam::tmp<Foam::tensorField> Foam::axesRotation::transformTensor
     notImplemented
     (
         "tmp<Foam::tensorField> axesRotation::transformTensor "
-        " const tensorField& st,"
-        " const labelList& cellMap "
+        "("
+            "const tensorField&,"
+            "const labelList&"
         ") const"
     );
     return tmp<tensorField>(NULL);
 }
+
 
 Foam::tmp<Foam::symmTensorField> Foam::axesRotation::transformVector
 (

@@ -15,13 +15,15 @@
       + phig
     );
 
+    fvOptions.makeRelative(phiHbyA);
+
     // Update the fixedFluxPressure BCs to ensure flux consistency
     setSnGrad<fixedFluxPressureFvPatchScalarField>
     (
         p_rgh.boundaryField(),
         (
             phiHbyA.boundaryField()
-          - (mesh.Sf().boundaryField() & U.boundaryField())
+          - fvOptions.relative(mesh.Sf().boundaryField() & U.boundaryField())
         )/(mesh.magSf().boundaryField()*rAUf.boundaryField())
     );
 

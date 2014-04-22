@@ -137,14 +137,16 @@ void Foam::porosityModels::fixedCoeff::calcTranformModelData()
     {
         forAll (cellZoneIDs_, zoneI)
         {
-            alpha_[zoneI].setSize(1, tensor::zero);
-            beta_[zoneI].setSize(1, tensor::zero);
+            alpha_[zoneI].setSize(1);
+            beta_[zoneI].setSize(1);
 
+            alpha_[zoneI][0] = tensor::zero;
             alpha_[zoneI][0].xx() = alphaXYZ_.value().x();
             alpha_[zoneI][0].yy() = alphaXYZ_.value().y();
             alpha_[zoneI][0].zz() = alphaXYZ_.value().z();
             alpha_[zoneI][0] = coordSys_.R().transformTensor(alpha_[zoneI][0]);
 
+            beta_[zoneI][0] = tensor::zero;
             beta_[zoneI][0].xx() = betaXYZ_.value().x();
             beta_[zoneI][0].yy() = betaXYZ_.value().y();
             beta_[zoneI][0].zz() = betaXYZ_.value().z();
@@ -157,24 +159,26 @@ void Foam::porosityModels::fixedCoeff::calcTranformModelData()
         {
             const labelList& cells = mesh_.cellZones()[cellZoneIDs_[zoneI]];
 
-            alpha_[zoneI].setSize(cells.size(), tensor::zero);
-            beta_[zoneI].setSize(cells.size(), tensor::zero);
+            alpha_[zoneI].setSize(cells.size());
+            beta_[zoneI].setSize(cells.size());
 
             forAll(cells, i)
             {
+                alpha_[zoneI][i] = tensor::zero;
                 alpha_[zoneI][i].xx() = alphaXYZ_.value().x();
                 alpha_[zoneI][i].yy() = alphaXYZ_.value().y();
                 alpha_[zoneI][i].zz() = alphaXYZ_.value().z();
 
+                beta_[zoneI][i] = tensor::zero;
                 beta_[zoneI][i].xx() = betaXYZ_.value().x();
                 beta_[zoneI][i].yy() = betaXYZ_.value().y();
                 beta_[zoneI][i].zz() = betaXYZ_.value().z();
             }
 
-            alpha_[zoneI] =
-                coordSys_.R().transformTensor(alpha_[zoneI], cells);
+            const coordinateRotation& R = coordSys_.R(mesh_, cells);
 
-            beta_[zoneI] = coordSys_.R().transformTensor(beta_[zoneI], cells);
+            alpha_[zoneI] = R.transformTensor(alpha_[zoneI], cells);
+            beta_[zoneI] = R.transformTensor(beta_[zoneI], cells);
         }
     }
 }
