@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -62,11 +62,14 @@ class trackedParticle
         //- level of this particle
         label level_;
 
-        //- passive label
+        //- passive label (used to store feature edge mesh)
         label i_;
 
-        //- passive label
+        //- passive label (used to store feature edge point)
         label j_;
+
+        //- passive label (used to store feature edge label)
+        label k_;
 
 
 public:
@@ -78,26 +81,27 @@ public:
     :
         public particle::TrackingData<Cloud<trackedParticle> >
     {
+    public:
+
         labelList& maxLevel_;
 
-    public:
+        List<PackedBoolList>& featureEdgeVisited_;
 
 
         // Constructors
 
-            trackingData(Cloud<trackedParticle>& cloud, labelList& maxLevel)
+            trackingData
+            (
+                Cloud<trackedParticle>& cloud,
+                labelList& maxLevel,
+                List<PackedBoolList>& featureEdgeVisited
+            )
             :
                 particle::TrackingData<Cloud<trackedParticle> >(cloud),
-                maxLevel_(maxLevel)
+                maxLevel_(maxLevel),
+                featureEdgeVisited_(featureEdgeVisited)
             {}
 
-
-        // Member functions
-
-            labelList& maxLevel()
-            {
-                return maxLevel_;
-            }
     };
 
 
@@ -115,7 +119,8 @@ public:
             const point& end,
             const label level,
             const label i,
-            const label j
+            const label j,
+            const label k
         );
 
         //- Construct from Istream
@@ -185,6 +190,18 @@ public:
         label& j()
         {
             return j_;
+        }
+
+        //- transported label
+        label k() const
+        {
+            return k_;
+        }
+
+        //- transported label
+        label& k()
+        {
+            return k_;
         }
 
 
@@ -258,6 +275,10 @@ public:
                 const polyPatch&,
                 trackingData& td
             );
+
+            //- Convert processor patch addressing to the global equivalents
+            //  and set the cellI to the face-neighbour
+            void correctAfterParallelTransfer(const label, trackingData&);
 
 
     // Ostream Operator

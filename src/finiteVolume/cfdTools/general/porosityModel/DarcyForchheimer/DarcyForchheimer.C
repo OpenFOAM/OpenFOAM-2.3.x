@@ -191,26 +191,40 @@ void Foam::porosityModels::DarcyForchheimer::correct
     fvVectorMatrix& UEqn
 ) const
 {
-    const vectorField& U = UEqn.psi();
+    const volVectorField& U = UEqn.psi();
     const scalarField& V = mesh_.V();
     scalarField& Udiag = UEqn.diag();
     vectorField& Usource = UEqn.source();
 
+    word rhoName(IOobject::groupName(rhoName_, U.group()));
+    word muName(IOobject::groupName(muName_, U.group()));
+    word nuName(IOobject::groupName(nuName_, U.group()));
+
     if (UEqn.dimensions() == dimForce)
     {
-        const volScalarField& rho =
-            mesh_.lookupObject<volScalarField>(rhoName_);
-        const volScalarField& mu =
-            mesh_.lookupObject<volScalarField>(muName_);
+        const volScalarField& rho = mesh_.lookupObject<volScalarField>(rhoName);
+        const volScalarField& mu = mesh_.lookupObject<volScalarField>(muName);
 
         apply(Udiag, Usource, V, rho, mu, U);
     }
     else
     {
-        const volScalarField& nu =
-            mesh_.lookupObject<volScalarField>(nuName_);
+        if (mesh_.foundObject<volScalarField>(nuName))
+        {
+            const volScalarField& nu =
+                mesh_.lookupObject<volScalarField>(nuName);
 
-        apply(Udiag, Usource, V, geometricOneField(), nu, U);
+            apply(Udiag, Usource, V, geometricOneField(), nu, U);
+        }
+        else
+        {
+            const volScalarField& rho =
+                mesh_.lookupObject<volScalarField>(rhoName);
+            const volScalarField& mu =
+                mesh_.lookupObject<volScalarField>(muName);
+
+            apply(Udiag, Usource, V, geometricOneField(), mu/rho, U);
+        }
     }
 }
 
@@ -237,23 +251,37 @@ void Foam::porosityModels::DarcyForchheimer::correct
     volTensorField& AU
 ) const
 {
-    const vectorField& U = UEqn.psi();
+    const volVectorField& U = UEqn.psi();
+
+    word rhoName(IOobject::groupName(rhoName_, U.group()));
+    word muName(IOobject::groupName(muName_, U.group()));
+    word nuName(IOobject::groupName(nuName_, U.group()));
 
     if (UEqn.dimensions() == dimForce)
     {
-        const volScalarField& rho =
-            mesh_.lookupObject<volScalarField>(rhoName_);
-        const volScalarField& mu =
-            mesh_.lookupObject<volScalarField>(muName_);
+        const volScalarField& rho = mesh_.lookupObject<volScalarField>(rhoName);
+        const volScalarField& mu = mesh_.lookupObject<volScalarField>(muName);
 
         apply(AU, rho, mu, U);
     }
     else
     {
-        const volScalarField& nu =
-            mesh_.lookupObject<volScalarField>(nuName_);
+        if (mesh_.foundObject<volScalarField>(nuName))
+        {
+            const volScalarField& nu =
+                mesh_.lookupObject<volScalarField>(nuName);
 
-        apply(AU, geometricOneField(), nu, U);
+            apply(AU, geometricOneField(), nu, U);
+        }
+        else
+        {
+            const volScalarField& rho =
+                mesh_.lookupObject<volScalarField>(rhoName);
+            const volScalarField& mu =
+                mesh_.lookupObject<volScalarField>(muName);
+
+            apply(AU, geometricOneField(), mu/rho, U);
+        }
     }
 }
 

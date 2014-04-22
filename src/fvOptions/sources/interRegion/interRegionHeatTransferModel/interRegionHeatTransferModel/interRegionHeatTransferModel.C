@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -170,7 +170,7 @@ void Foam::fv::interRegionHeatTransferModel::addSup
 
     correct();
 
-    const volScalarField& h = eqn.psi();
+    const volScalarField& he = eqn.psi();
 
     const volScalarField& T = mesh_.lookupObject<volScalarField>(TName_);
 
@@ -214,19 +214,21 @@ void Foam::fv::interRegionHeatTransferModel::addSup
 
     if (semiImplicit_)
     {
-        if (h.dimensions() == dimEnergy/dimMass)
+        if (he.dimensions() == dimEnergy/dimMass)
         {
             if (mesh_.foundObject<fluidThermo>("thermophysicalProperties"))
             {
                 const basicThermo& thermo =
                    mesh_.lookupObject<basicThermo>("thermophysicalProperties");
 
-                eqn += htc_*Tmapped - fvm::SuSp(htc_/thermo.Cp(), h);
+                volScalarField htcByCpv(htc_/thermo.Cpv());
+
+                eqn += htc_*(Tmapped - T) + htcByCpv*he - fvm::Sp(htcByCpv, he);
 
                 if (debug)
                 {
                     const dimensionedScalar energy =
-                        fvc::domainIntegrate(htc_*(h/thermo.Cp() - Tmapped));
+                        fvc::domainIntegrate(htc_*(he/thermo.Cp() - Tmapped));
 
                     Info<< "Energy exchange from region " << nbrMesh.name()
                         << " To " << mesh_.name() << " : " <<  energy.value()
@@ -251,9 +253,9 @@ void Foam::fv::interRegionHeatTransferModel::addSup
                     << exit(FatalError);
             }
         }
-        else if (h.dimensions() == dimTemperature)
+        else if (he.dimensions() == dimTemperature)
         {
-            eqn += htc_*Tmapped - fvm::SuSp(htc_, h);
+            eqn += htc_*Tmapped - fvm::Sp(htc_, he);
         }
     }
     else

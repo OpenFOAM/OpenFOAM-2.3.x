@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,6 +25,7 @@ License
 
 #include "trackedParticle.H"
 
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::trackedParticle::trackedParticle
@@ -37,14 +38,16 @@ Foam::trackedParticle::trackedParticle
     const point& end,
     const label level,
     const label i,
-    const label j
+    const label j,
+    const label k
 )
 :
     particle(mesh, position, cellI, tetFaceI, tetPtI),
     end_(end),
     level_(level),
     i_(i),
-    j_(j)
+    j_(j),
+    k_(k)
 {}
 
 
@@ -65,13 +68,15 @@ Foam::trackedParticle::trackedParticle
             level_ = readLabel(is);
             i_ = readLabel(is);
             j_ = readLabel(is);
+            k_ = readLabel(is);
         }
         else
         {
             is.read
             (
                 reinterpret_cast<char*>(&end_),
-                sizeof(end_) + sizeof(level_) + sizeof(i_) + sizeof(j_)
+                sizeof(end_) + sizeof(level_)
+              + sizeof(i_) + sizeof(j_) + sizeof(k_)
             );
         }
     }
@@ -113,7 +118,7 @@ bool Foam::trackedParticle::move
             scalar dt = min(dtMax, tEnd);
 
             // mark visited cell with max level.
-            td.maxLevel()[cell()] = max(td.maxLevel()[cell()], level_);
+            td.maxLevel_[cell()] = max(td.maxLevel_[cell()], level_);
 
             dt *= trackToFace(end_, td);
 
@@ -217,6 +222,26 @@ void Foam::trackedParticle::hitPatch
 }
 
 
+void Foam::trackedParticle::correctAfterParallelTransfer
+(
+    const label patchI,
+    trackingData& td
+)
+{
+    particle::correctAfterParallelTransfer(patchI, td);
+
+    label edgeI = k();
+    if (edgeI != -1)
+    {
+        label featI = i();
+
+        // Mark edge we're currently on (was set on sending processor but not
+        // receiving sender)
+        td.featureEdgeVisited_[featI].set(edgeI, 1u);
+    }
+}
+
+
 // * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
 
 Foam::Ostream& Foam::operator<<(Ostream& os, const trackedParticle& p)
@@ -227,7 +252,8 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const trackedParticle& p)
             << token::SPACE << p.end_
             << token::SPACE << p.level_
             << token::SPACE << p.i_
-            << token::SPACE << p.j_;
+            << token::SPACE << p.j_
+            << token::SPACE << p.k_;
     }
     else
     {
@@ -235,7 +261,8 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const trackedParticle& p)
         os.write
         (
             reinterpret_cast<const char*>(&p.end_),
-            sizeof(p.end_) + sizeof(p.level_) + sizeof(p.i_) + sizeof(p.j_)
+            sizeof(p.end_) + sizeof(p.level_)
+          + sizeof(p.i_) + sizeof(p.j_) + sizeof(p.k_)
         );
     }
 
