@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -1385,25 +1385,12 @@ int main(int argc, char *argv[])
         label sz = bFaces.size();
         labelList meshFaces(sz,-1);
 
-
-        //make face set and write (seperate from rest for clarity)
-        //internal and external Fluent boundaries
+        // Search faces by point matching
+        forAll(bFaces, j)
         {
-            faceSet pFaceSet(pShapeMesh, patchNames[patchI], sz);
-
-            forAll(bFaces, j)
-            {
-                const face& f = bFaces[j];
-                label cMeshFace = findFace(pShapeMesh, f);
-                meshFaces[j] = cMeshFace;
-                pFaceSet.insert(cMeshFace);
-            }
-            if (writeSets)
-            {
-                Info<< "Writing patch " << patchNames[patchI]
-                    << " of size " << sz << " to faceSet." << endl;
-                pFaceSet.write();
-            }
+            const face& f = bFaces[j];
+            label cMeshFace = findFace(pShapeMesh, f);
+            meshFaces[j] = cMeshFace;
         }
 
 
@@ -1544,6 +1531,31 @@ int main(int argc, char *argv[])
 
     // Set the precision of the points data to 10
     IOstream::defaultPrecision(max(10u, IOstream::defaultPrecision()));
+
+
+    // Re-do face matching to write sets
+    if (writeSets)
+    {
+        forAll(patches, patchI)
+        {
+            const faceList& bFaces = patches[patchI];
+            label sz = bFaces.size();
+
+            faceSet pFaceSet(pShapeMesh, patchNames[patchI], sz);
+
+            forAll(bFaces, j)
+            {
+                const face& f = bFaces[j];
+                label cMeshFace = findFace(pShapeMesh, f);
+                pFaceSet.insert(cMeshFace);
+            }
+            Info<< "Writing patch " << patchNames[patchI]
+                << " of size " << sz << " to faceSet" << endl;
+
+            pFaceSet.instance() = pShapeMesh.instance();
+            pFaceSet.write();
+        }
+    }
 
 
     // Zones
