@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -49,10 +49,6 @@ surfaceVectorField rhoUf
     fvc::interpolate(rho*U)
 );
 
-{
-    surfaceVectorField n(mesh.Sf()/mesh.magSf());
-    rhoUf += n*(phi/mesh.magSf() - (n & rhoUf));
-}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
