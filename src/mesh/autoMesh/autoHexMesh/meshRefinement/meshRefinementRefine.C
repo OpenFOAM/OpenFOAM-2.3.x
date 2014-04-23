@@ -39,6 +39,7 @@ License
 //#include "globalIndex.H"
 #include "OBJstream.H"
 #include "cellSet.H"
+#include "treeDataCell.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -353,7 +354,14 @@ void Foam::meshRefinement::markFeatureCellLevel
         label tetFaceI = -1;
         label tetPtI = -1;
 
-        mesh_.findCellFacePt(keepPoint, cellI, tetFaceI, tetPtI);
+
+        // Force construction of search tree even if processor holds no
+        // cells
+        (void)mesh_.cellTree();
+        if (mesh_.nCells())
+        {
+            mesh_.findCellFacePt(keepPoint, cellI, tetFaceI, tetPtI);
+        }
 
         if (cellI != -1)
         {
@@ -402,7 +410,8 @@ void Foam::meshRefinement::markFeatureCellLevel
                                 featureMesh.points()[pointI],   // endpos
                                 featureLevel,                   // level
                                 featI,                          // featureMesh
-                                pointI                          // end point
+                                pointI,                         // end point
+                                -1                              // feature edge
                             )
                         );
 
@@ -446,7 +455,8 @@ void Foam::meshRefinement::markFeatureCellLevel
                                 featureMesh.points()[pointI],   // endpos
                                 featureLevel,                   // level
                                 featI,                          // featureMesh
-                                pointI                          // end point
+                                pointI,                         // end point
+                                -1                              // feature edge
                             )
                         );
                     }
@@ -459,8 +469,22 @@ void Foam::meshRefinement::markFeatureCellLevel
     // Largest refinement level of any feature passed through
     maxFeatureLevel = labelList(mesh_.nCells(), -1);
 
+    // Whether edge has been visited.
+    List<PackedBoolList> featureEdgeVisited(features_.size());
+
+    forAll(features_, featI)
+    {
+        featureEdgeVisited[featI].setSize(features_[featI].edges().size());
+        featureEdgeVisited[featI] = 0u;
+    }
+
     // Database to pass into trackedParticle::move
-    trackedParticle::trackingData td(startPointCloud, maxFeatureLevel);
+    trackedParticle::trackingData td
+    (
+        startPointCloud,
+        maxFeatureLevel,
+        featureEdgeVisited
+    );
 
 
     // Track all particles to their end position (= starting feature point)
@@ -477,15 +501,10 @@ void Foam::meshRefinement::markFeatureCellLevel
     startPointCloud.move(td, maxTrackLen);
 
 
-    // Reset level
+    // Reset levels
     maxFeatureLevel = -1;
-
-    // Whether edge has been visited.
-    List<PackedBoolList> featureEdgeVisited(features_.size());
-
     forAll(features_, featI)
     {
-        featureEdgeVisited[featI].setSize(features_[featI].edges().size());
         featureEdgeVisited[featI] = 0u;
     }
 
@@ -528,6 +547,7 @@ void Foam::meshRefinement::markFeatureCellLevel
                 trackedParticle* tp(new trackedParticle(startTp));
                 tp->end() = featureMesh.points()[otherPointI];
                 tp->j() = otherPointI;
+                tp->k() = edgeI;
 
                 if (debug&meshRefinement::FEATURESEEDS)
                 {
@@ -587,6 +607,7 @@ void Foam::meshRefinement::markFeatureCellLevel
 
                     tp.end() = featureMesh.points()[otherPointI];
                     tp.j() = otherPointI;
+                    tp.k() = edgeI;
                     keepParticle = true;
                     break;
                 }

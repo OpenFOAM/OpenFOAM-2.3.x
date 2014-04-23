@@ -33,6 +33,9 @@ timeActivatedFileUpdate/timeActivatedFileUpdateFunctionObject.C
 turbulenceFields/turbulenceFields.C
 turbulenceFields/turbulenceFieldsFunctionObject.C
 
+vorticity/vorticity.C
+vorticity/vorticityFunctionObject.C
+
 wallShearStress/wallShearStress.C
 wallShearStress/wallShearStressFunctionObject.C
 
