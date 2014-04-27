@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,34 +21,26 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
-Global
-    createRhoUf
+Typedef
+    Foam::IOvorticity
 
 Description
-    Creates and initialises the velocity velocity field rhoUf.
+    Instance of the generic IOOutputFilter for vorticity.
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef createRhoUf_H
-#define createRhoUf_H
+#ifndef IOvorticity_H
+#define IOvorticity_H
+
+#include "vorticity.H"
+#include "IOOutputFilter.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-Info<< "Reading/calculating face velocity rhoUf\n" << endl;
-
-surfaceVectorField rhoUf
-(
-    IOobject
-    (
-        "rhoUf",
-        runTime.timeName(),
-        mesh,
-        IOobject::READ_IF_PRESENT,
-        IOobject::AUTO_WRITE
-    ),
-    fvc::interpolate(rho*U)
-);
-
+namespace Foam
+{
+    typedef IOOutputFilter<vorticity> IOvorticity;
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

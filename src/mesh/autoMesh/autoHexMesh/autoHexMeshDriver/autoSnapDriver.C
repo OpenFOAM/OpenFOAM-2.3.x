@@ -135,7 +135,7 @@ Foam::pointField Foam::autoSnapDriver::smoothPatchDisplacement
         pp.localPoints(),
         nonManifoldPoint
     );
-    Info<< "Found " << nNonManifoldPoints << " non-mainfold point(s)."
+    Info<< "Found " << nNonManifoldPoints << " non-manifold point(s)."
         << endl;
 
 

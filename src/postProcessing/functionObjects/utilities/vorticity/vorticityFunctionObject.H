@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,34 +21,30 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
-Global
-    createRhoUf
+Typedef
+    Foam::vorticityFunctionObject
 
 Description
-    Creates and initialises the velocity velocity field rhoUf.
+    FunctionObject wrapper around vorticity to allow it to be created
+    via the functions entry within controlDict.
+
+SourceFiles
+    vorticityFunctionObject.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef createRhoUf_H
-#define createRhoUf_H
+#ifndef vorticityFunctionObject_H
+#define vorticityFunctionObject_H
+
+#include "vorticity.H"
+#include "OutputFilterFunctionObject.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-Info<< "Reading/calculating face velocity rhoUf\n" << endl;
-
-surfaceVectorField rhoUf
-(
-    IOobject
-    (
-        "rhoUf",
-        runTime.timeName(),
-        mesh,
-        IOobject::READ_IF_PRESENT,
-        IOobject::AUTO_WRITE
-    ),
-    fvc::interpolate(rho*U)
-);
-
+namespace Foam
+{
+    typedef OutputFilterFunctionObject<vorticity> vorticityFunctionObject;
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
