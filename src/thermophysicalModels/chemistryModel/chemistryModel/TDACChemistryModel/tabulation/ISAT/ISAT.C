@@ -43,7 +43,7 @@ Foam::ISAT<CompType, ThermoType>::ISAT
 )
 :
     tabulation<CompType,ThermoType>(chemistryProperties, chemistry),
-    chemisTree_(this->coeffsDict_),
+    chemisTree_(chemistry,this->coeffsDict_),
     scaleFactor_(chemistry.nEqns(),1.0),
     runTime_(&chemistry.time()),
     chPMaxLifeTime_
@@ -56,10 +56,31 @@ Foam::ISAT<CompType, ThermoType>::ISAT
         )
     ),
     maxGrowth_(this->coeffsDict_.lookupOrDefault("maxGrowth", INT_MAX)),
+    checkEntireTreeInterval_
+    (
+        this->coeffsDict_.lookupOrDefault("checkEntireTreeInterval", INT_MAX)
+    ),
+    maxDepthFactor_
+    (
+        this->coeffsDict_.lookupOrDefault
+        (
+            "maxDepthFactor",
+            (chemisTree_.maxElements()-1)
+                /(std::log(chemisTree_.maxElements())/std::log(2.0))
+        )
+    ),
     MRURetrieve_(this->coeffsDict_.lookupOrDefault("MRURetrieve", false)),
     MRUSize_(this->coeffsDict_.lookupOrDefault("MRUSize", 0)),
     lastSearch_(NULL),
-    growPoints_(this->coeffsDict_.lookupOrDefault("growPoints", true))
+    growPoints_(this->coeffsDict_.lookupOrDefault("growPoints", true)),
+    nRetrieved_(0),
+    nGrowth_(0),
+    nAdd_(0),
+    nRetrievedFile_(chemistryProperties.name().path() + "/../found_isat.out"),
+    nGrowthFile_(chemistryProperties.name().path() + "/../growth_isat.out"),
+    nAddFile_(chemistryProperties.name().path() + "/../add_isat.out"),
+    sizeFile_(chemistryProperties.name().path() + "/../size_isat.out")
+
 {
     if (this->active_)
     {
@@ -75,7 +96,10 @@ Foam::ISAT<CompType, ThermoType>::ISAT
             else
             {
                 scaleFactor_[i] =
-                    readScalar(scaleDict.lookup(this->chemistry_->Y()[i].name()));
+                    readScalar
+                    (
+                        scaleDict.lookup(this->chemistry_->Y()[i].name())
+                    );
             }
         }
         scaleFactor_[Ysize] = readScalar(scaleDict.lookup("Temperature"));
@@ -99,7 +123,7 @@ void Foam::ISAT<CompType, ThermoType>::addToMRU
     chemPointISAT<CompType, ThermoType>* phi0
 )
 {
-    if (MRUSize_ > 0)
+    if (MRUSize_ > 0 && MRURetrieve_)
     {
         //first search if the chemPoint is already in the list
         bool isInList = false;
@@ -116,24 +140,24 @@ void Foam::ISAT<CompType, ThermoType>::addToMRU
         //if it is in the list, then move it to front
         if (isInList)
         {
-            if (iter()!=MRUList_.last())
+            if (iter()!=MRUList_.first())
             {
                 //iter hold the position of the element to move
                 MRUList_.remove(iter);
                 //insert the element in front of the list
-                MRUList_.append(phi0);
+                MRUList_.insert(phi0);
             }
         }
         else //chemPoint not yet in the list
         {
             if (MRUList_.size()==MRUSize_)
             {
-                MRUList_.removeHead();
-                MRUList_.append(phi0);
+                MRUList_.remove(MRUList_.last());
+                MRUList_.insert(phi0);
             }
             else
             {
-                MRUList_.append(phi0);
+                MRUList_.insert(phi0);
             }
         }
     }
@@ -152,10 +176,11 @@ void Foam::ISAT<CompType, ThermoType>::calcNewC
     bool mechRedActive = this->chemistry_->mechRed()->active();
     Rphiq = phi0->Rphi();
     scalarField dphi=phiq-phi0->phi();
-    const List<List<scalar> >& Avar = phi0->A();
+    const scalarSquareMatrix& gradientsMatrix = phi0->A();
     List<label>& completeToSimplified(phi0->completeToSimplifiedIndex());
 
     //Rphiq[i]=Rphi0[i]+A[i][j]dphi[j]
+    //where Aij is dRi/dphi_j
     for (label i=0; i<nEqns-2; i++)
     {
         if (mechRedActive)
@@ -169,12 +194,12 @@ void Foam::ISAT<CompType, ThermoType>::calcNewC
                     label sj=completeToSimplified[j];
                     if (sj!=-1)
                     {
-                        Rphiq[i] += Avar[si][sj]*dphi[j];
+                        Rphiq[i] += gradientsMatrix[si][sj]*dphi[j];
                     }
                 }
-                Rphiq[i] += Avar[si][phi0->NsDAC()]*dphi[nEqns-2];
-                Rphiq[i] += Avar[si][phi0->NsDAC()+1]*dphi[nEqns-1];
-                //As we use an approximation of A, Rphiq should be ckecked for
+                Rphiq[i] += gradientsMatrix[si][phi0->NsDAC()]*dphi[nEqns-2];
+                Rphiq[i] += gradientsMatrix[si][phi0->NsDAC()+1]*dphi[nEqns-1];
+                //As we use an approximation of A, Rphiq should be checked for
                 //negative values
                 Rphiq[i] = max(0.0,Rphiq[i]);
             }
@@ -189,10 +214,10 @@ void Foam::ISAT<CompType, ThermoType>::calcNewC
         {
             for (label j=0; j<nEqns; j++)
             {
-                Rphiq[i] += Avar[i][j]*dphi[j];
+                Rphiq[i] += gradientsMatrix[i][j]*dphi[j];
             }
-            //As we use an approximation of A, Rphiq should be ckecked for
-            //negative values
+            //As we use a first order gradient matrix, Rphiq should be checked
+            //for negative values
             Rphiq[i] = max(0.0,Rphiq[i]);
         }
     }
@@ -207,34 +232,28 @@ bool Foam::ISAT<CompType, ThermoType>::grow
     const scalarField& Rphiq
 )
 {
+    //if the pointer to the chemPoint is NULL, the function stops
     if (!phi0)
     {
         return false;
     }
 
-    if ((phi0->nGrowth() < maxGrowth_) && !phi0->toRemove())
-    {
-        return (phi0->checkSolution(phiq,Rphiq));
-    }
-    else if (!phi0->toRemove())
+    //raise a flag when the chemPoint used has been grown more than the
+    //allowed number of time
+    if (!phi0->toRemove() && phi0->nGrown() > checkGrown())
     {
         cleaningRequired_ = true;
         phi0->toRemove() = true;
-        bool inList(false);
-        forAll(toRemoveList_,tRi)
-        {
-            if (toRemoveList_[tRi]==phi0)
-            {
-                inList=true;
-                break;
-            }
-        }
-        if (!inList)
-        {
-            toRemoveList_.append(phi0);
-        }
-        return false;
     }
+
+    //if the solution RphiQ is still within the tolerance we try to grow it
+    //in some cases this might result in a failure and the grow function of
+    //the chemPoint returns false
+    if (phi0->checkSolution(phiq,Rphiq))
+    {
+        return phi0->grow(phiq);
+    }
+    //the actual solution and the approximation given by ISAT are too different
     else
     {
         return false;
@@ -246,38 +265,40 @@ template<class CompType, class ThermoType>
 bool Foam::ISAT<CompType, ThermoType>::cleanAndBalance()
 {
     bool treeModified(false);
-    //1- check if the tree should be cleaned (flag from nUsed or nGrowth)
-    if (cleaningRequired_)
-    {
-        cleaningRequired_=false;
-        MRUList_.clear();
-        //2- remove the points that have raised a flag because of number of
-        // growth or used (they are stored in the toRemoveList)
-        forAll(toRemoveList_,trli)
-        {
-            chemisTree_.deleteLeaf(toRemoveList_[trli]);
-        }
-        //set size to 0, the pointers have been deleted in deleteLeaf function
-        toRemoveList_.clear();
-        treeModified=true;
-    }
 
+    //check all chemPoints to see if we need to delete some of the chemPoints
+    //according to the ellapsed time and number of growths
     chemPointISAT<CompType, ThermoType>* x = chemisTree_.treeMin();
     while(x!=NULL)
     {
         chemPointISAT<CompType, ThermoType>* xtmp =
             chemisTree_.treeSuccessor(x);
+        //timeOutputValue returns timeToUserTime(value()), therefore, it should
+        //be compare with timeToUserTime(deltaT)
         scalar elapsedTime = runTime_->timeOutputValue() - x->timeTag();
         scalar maxElapsedTime =
             chPMaxLifeTime_
           * runTime_->timeToUserTime(runTime_->deltaTValue());
 
-        if (elapsedTime > maxElapsedTime)
+        if ((elapsedTime > maxElapsedTime) || (phi0->nGrowth() > maxGrowth_))
         {
             chemisTree_.deleteLeaf(x);
             treeModified=true;
         }
         x = xtmp;
+    }
+
+    //check if the tree should be balanced according to criterion:
+    //  -the depth of the tree bigger than a*log2(size), log2(size) being the
+    //      ideal depth (e.g. 4 leafs can be stored in a tree of depth 2)
+    if
+    (
+        chemisTree_.size() > 0
+     && chemisTree_.depth() >
+            maxDepthFactor_*std::log(chemisTree_.size())/std::log(2.0)
+    )
+    {
+        treeModified = chemisTree_.balance();
     }
 
     if (treeModified)
@@ -298,7 +319,7 @@ void Foam::ISAT<CompType, ThermoType>::computeA
  const scalar rhoi
  )
 {
-    scalar dt = runTime_->deltaT().value();
+    scalar dt = runTime_->deltaTValue();
     bool mechRedActive = this->chemistry_->mechRed()->active();
     label speciesNumber=this->chemistry_->nSpecie();
 
@@ -309,10 +330,19 @@ void Foam::ISAT<CompType, ThermoType>::computeA
         Rcq[i] = rho*Rphiq[s2c]/this->chemistry_->specieThermo()[s2c].W();
     }
 
+    // Aaa is computed implicitely,
+    // A is given by A=C(psi0,t0+dt), where C is obtained through solving
+    // d/dt C(psi0,t) = J(psi(t))C(psi0,t)
+    // If we solve it implicitely:
+    // (C(psi0, t0+dt) - C(psi0,t0))/dt = J(psi(t0+dt))C(psi0,t0+dt)
+    // The Jacobian is thus computed according to the mapping
+    // C(psi0,t0+dt)*(I-dt*J(psi(t0+dt))) = C(psi0, t0)
+    // A = C(psi0,t0)/(I-dt*J(psi(t0+dt)))
+    // where C(psi0,t0)=I
     this->chemistry_->jacobian(runTime_->value(), Rcq, A);
 
     //the jacobian is computed according to the molar concentration
-    //the following conversion allow to use A with mass fraction
+    //the following conversion allows the code to use A with mass fraction
     for (label i=0; i<speciesNumber; i++)
     {
         label si=i;
@@ -338,24 +368,19 @@ void Foam::ISAT<CompType, ThermoType>::computeA
         A[i][speciesNumber+1] *=
             -dt*this->chemistry_->specieThermo()[si].W()/rhoi;
     }
-    //Before inversion
-    A[speciesNumber][speciesNumber] += 1;
-    A[speciesNumber+1][speciesNumber+1] += 1;
+    //For temperature and pressure, only unity on the diagonal
+    A[speciesNumber][speciesNumber] = 1;
+    A[speciesNumber+1][speciesNumber+1] = 1;
+    //inverse of (I-dt*J(psi(t0+dt)))
     gaussj(A, speciesNumber+2);
-
-    //After inversion the last two lines of A are set to 0
-    // only A[this->nSpecie()][this->nSpecie()]
-    //    and A[this->nSpecie()+1][this->nSpecie()+1] !=0
-    A[speciesNumber][speciesNumber] = 0.0;
-    A[speciesNumber+1][speciesNumber+1] = 0.0;
 } //end computeA function
 
 
 template<class CompType, class ThermoType>
 void Foam::ISAT<CompType, ThermoType>::gaussj
 (
- List<List<scalar> >& A,
- List<List<scalar> >& B,
+ scalarSquareMatrix& A,
+ scalarSquareMatrix& B,
  label n
  )
 {
@@ -449,12 +474,12 @@ void Foam::ISAT<CompType, ThermoType>::gaussj
 template<class CompType, class ThermoType>
 void Foam::ISAT<CompType, ThermoType>::gaussj
 (
- List<List<scalar> >& A,
+ scalarSquareMatrix& A,
  label n
  )
 {
-    List<List<scalar> > B(n,List<scalar>(n, 0.0));
-    gaussj(A,B, n);
+    scalarSquareMatrix B(n,n, 0.0);
+    gaussj(A, B, n);
 }
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -465,76 +490,25 @@ bool Foam::ISAT<CompType, ThermoType>::retrieve
     scalarField& Rphiq
 )
 {
+    bool retrieved(false);
     if (chemisTree_.size())//if the tree is not empty
     {
         chemPointISAT<CompType, ThermoType>* phi0 =
             chemisTree_.binaryTreeSearch(phiq, chemisTree_.root());
+
+        //lastSearch keeps track of the chemPoint we obtain by the regular
+        //binary tree search
+        lastSearch_ = phi0;
+
         if (phi0->inEOA(phiq))
         {
-            scalar elapsedTime = runTime_->timeOutputValue() - phi0->timeTag();
-            scalar maxElapsedTime =
-                chPMaxLifeTime_
-              * runTime_->timeToUserTime(runTime_->deltaTValue());
-
-            if (elapsedTime > maxElapsedTime && !phi0->toRemove())
-            {
-                cleaningRequired_ = true;
-                phi0->toRemove() = true;
-                bool inList(false);
-                forAll(toRemoveList_,tRi)
-                {
-                    if (toRemoveList_[tRi]==phi0)
-                    {
-                        inList=true;
-                        break;
-                    }
-                }
-                if (!inList)
-                {
-                    toRemoveList_.append(phi0);
-                }
-            }
-            addToMRU(phi0);
-            totRetrieve_++;
-            calcNewC(phi0,phiq,Rphiq);
-            lastSearch_ = phi0;
-            nFound_++;
-            return true;
+            retrieved = true;
         }
+        //after a successful secondarySearch, phi0 store a pointer to the
+        //found chemPoint
         else if (chemisTree_.secondaryBTSearch(phiq, phi0))
         {
-            scalar elapsedTime = runTime_->timeOutputValue() - phi0->timeTag();
-            scalar maxElapsedTime =
-            chPMaxLifeTime_
-            * runTime_->timeToUserTime(runTime_->deltaTValue());
-
-            if (elapsedTime > maxElapsedTime && !phi0->toRemove())
-            {
-                cleaningRequired_ = true;
-                phi0->toRemove() = true;
-                bool inList(false);
-                forAll(toRemoveList_,tRi)
-                {
-                    if (toRemoveList_[tRi]==phi0)
-                    {
-                        inList=true;
-                        break;
-                    }
-                }
-                if (!inList)
-                {
-                    toRemoveList_.append(phi0);
-                }
-            }
-            closest = phi0;
-            phi0->lastTimeUsed()=runTime_->timeOutputValue();
-            addToMRU(phi0);
-            nFailedFirst_++;
-            totRetrieve_++;
-            calcNewC(phi0,phiq,Rphiq);
-            lastSearch_ = phi0;
-            nFound_++;
-            return true;
+            retrieved = true;
         }
         else if (MRURetrieve_)
         {
@@ -548,46 +522,46 @@ bool Foam::ISAT<CompType, ThermoType>::retrieve
                 phi0=iter();
                 if (phi0->inEOA(phiq))
                 {
-                    scalar elapsedTime =
-                        runTime_->timeOutputValue() - phi0->timeTag();
-                    scalar maxElapsedTime =
-                        chPMaxLifeTime_
-                      * runTime_->timeToUserTime(runTime_->deltaTValue());
-
-                    if (elapsedTime > maxElapsedTime && !phi0->toRemove())
-                    {
-                        cleaningRequired_ = true;
-                        phi0->toRemove() = true;
-                        bool inList(false);
-                        forAll(toRemoveList_,tRi)
-                        {
-                            if (toRemoveList_[tRi]==phi0)
-                            {
-                                inList=true;
-                                break;
-                            }
-                        }
-                        if (!inList)
-                        {
-                            toRemoveList_.append(phi0);
-                        }
-                    }
-                    phi0->lastTimeUsed()=runTime_->timeOutputValue();
-                    addToMRU(phi0);
-                    nFailedFirst_++;
-                    totRetrieve_++;
-                    calcNewC(phi0,phiq,Rphiq);
-                    lastSearch_ = phi0;
-                    nFound_++;
-                    return true;
+                    retrieved = true:
+                    break;
                 }
             }
         }
     }
-    //this point is reached when every retrieve trials have failed
-    //or if the tree is empty
-    lastSearch_ = NULL;
-    return false;
+    //the tree is empty, retrieved is still false
+    else
+    {
+        //there is no chempoints that we can try to grow
+        lastSearch_ = NULL;
+    }
+
+    if (retrieved)
+    {
+        scalar elapsedTime =
+            runTime_->timeOutputValue() - phi0->timeTag();
+        scalar maxElapsedTime =
+            chPMaxLifeTime_
+          * runTime_->timeToUserTime(runTime_->deltaTValue());
+
+        //raise a flag when the chemPoint has been used more than the allowed
+        //number of time steps
+        if (elapsedTime > maxElapsedTime && !phi0->toRemove())
+        {
+            cleaningRequired_ = true;
+            phi0->toRemove() = true;
+        }
+        phi0->lastTimeUsed()=runTime_->timeOutputValue();
+        addToMRU(phi0);
+        calcNewC(phi0,phiq,Rphiq);
+        nRetrieved_++;
+        return true;
+    }
+    else
+    {
+        //this point is reached when every retrieve trials have failed
+        //or if the tree is empty
+        return false;
+    }
 }
 
 
@@ -599,13 +573,14 @@ bool Foam::ISAT<CompType, ThermoType>::add
     const scalar rho
 )
 {
-    //If lastSearch_ holds a valid pointer to a chem point AND the growPoints_
+    //If lastSearch_ holds a valid pointer to a chemPoint AND the growPoints_
     //option is on, the code first tries to grow the point hold by lastSearch_
     if (lastSearch_ && growPoints_)
     {
         if (grow(lastSearch_,phiq,Rphiq))
         {
             nGrowth_++;
+            //the structure of the tree is not modified, return false
             return false;
         }
     }
@@ -624,7 +599,8 @@ bool Foam::ISAT<CompType, ThermoType>::add
             DynamicList<chemPointISAT<CompType, ThermoType>*> tempList;
             if (MRUSize_>0)
             {
-                //create a copy of each chemPointISAT of the MRUList_
+                //create a copy of each chemPointISAT of the MRUList_ before
+                //they are deleted
                 typename SLList
                 <
                     chemPointISAT<CompType, ThermoType>*
@@ -638,9 +614,11 @@ bool Foam::ISAT<CompType, ThermoType>::add
                 }
             }
             chemisTree().clear();
-            toRemoveList_.clear();
+            //pointers to chemPoint are not valid anymore, clear the list
             MRUList_.clear();
 
+            //construct the tree without giving a reference to attach to it
+            //since the structure has been completely discarded
             chemPointISAT<CompType, ThermoType>* nulPhi=0;
             forAll(tempList,i)
             {
@@ -650,7 +628,7 @@ bool Foam::ISAT<CompType, ThermoType>::add
                      tempList[i]->Rphi(),
                      tempList[i]->A(),
                      scaleFactor(),
-                     tolerance(),
+                     this->tolerance(),
                      scaleFactor_.size(),
                      nulPhi
                 );
@@ -658,11 +636,15 @@ bool Foam::ISAT<CompType, ThermoType>::add
             }
         }
 
+        //the structure has been changed, it will force the binary tree to
+        //perform a new search and find the most appropriate point still stored
         lastSearch_ = NULL;
+        //either cleanAndBalance has changed the tree or it has been cleared
+        //in any case treeCleanedOrCleared should be set to true
         treeCleanedOrCleared = true;
     }
 
-    //Compute the A matrix needed to store the chem point.
+    //Compute the A matrix needed to store the chemPoint.
     label ASize = this->chemistry_->nEqns(); //reduced when mechRed is active
     scalarSquareMatrix A(ASize, ASize,0.0);
     computeA(A, Rphiq, rho);
@@ -673,7 +655,7 @@ bool Foam::ISAT<CompType, ThermoType>::add
         Rphiq,
         A,
         scaleFactor(),
-        tolerance(),
+        this->tolerance(),
         scaleFactor_.size(),
         lastSearch_ //lastSearch_ may be NULL (handled by binaryTree)
     );
@@ -685,19 +667,20 @@ bool Foam::ISAT<CompType, ThermoType>::add
 
 
 template<class CompType, class ThermoType>
-void Foam::ISAT<CompType, ThermoType>::writePerformance(fileName path)
+void Foam::ISAT<CompType, ThermoType>::writePerformance()
 {
-    OFstream nFound(path + "found_isat.out");
-    nFound << runTime_->timeOutputValue() << "    " <<  nFound_ <<endl;
-    nFound_ = 0;
 
-    OFstream nGrowth(path + "growth_isat.out");
-    nGrowth << runTime_->timeOutputValue() << "    " <<  nGrowth_ <<endl;
+    nRetrievedFile_
+        << runTime_->timeOutputValue() << "    " <<  nRetrieved_ <<endl;
+    nRetrieved_ = 0;
+
+    nGrowthFile_ << runTime_->timeOutputValue() << "    " <<  nGrowth_ <<endl;
     nGrowth_ = 0;
 
-    OFstream nAdd(path + "add_isat.out");
-    nAdd << runTime_->timeOutputValue() << "    " <<  nAdd_ <<endl;
+    nAddFile_ << runTime_->timeOutputValue() << "    " <<  nAdd_ <<endl;
     nAdd_ = 0;
+
+    sizeFile_ << runTime_->timeOutputValue() << "    " <<  this->size() <<endl;
 }
 
 

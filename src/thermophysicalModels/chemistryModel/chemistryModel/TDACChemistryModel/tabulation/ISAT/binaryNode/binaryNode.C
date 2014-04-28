@@ -2,8 +2,8 @@
 =========                 |
 \\      /  F ield         | Unsupported Contributions for OpenFOAM
  \\    /   O peration     |
-  \\  /    A nd           | Copyright (C) <year> <author name(s)>
-   \\/     M anipulation  |
+  \\  /    A nd           | Copyright (C) 2014 Francesco Contino,
+   \\/     M anipulation  |                    Tommaso Lucchini
 -------------------------------------------------------------------------------
 License
     This file is a derivative work of OpenFOAM.
@@ -39,10 +39,10 @@ binaryNode<CompType, ThermoType>::binaryNode
 (
 )
 :
-    elementLeft_(NULL),
-    elementRight_(NULL),
-    left_(NULL), 
-    right_(NULL),
+    leafLeft_(NULL),
+    leafRight_(NULL),
+    nodeLeft_(NULL), 
+    nodeRight_(NULL),
     parent_(NULL)
 {}
 
@@ -55,10 +55,10 @@ binaryNode<CompType, ThermoType>::binaryNode
     binaryNode<CompType, ThermoType>* parent
 )
 :
-    elementLeft_(elementLeft),
-    elementRight_(elementRight),
-    left_(NULL),
-    right_(NULL),
+    leafLeft_(elementLeft),
+    leafRight_(elementRight),
+    nodeLeft_(NULL),
+    nodeRight_(NULL),
     parent_(parent),
     v_(elementLeft->spaceSize(),0.0)
 {
@@ -72,10 +72,10 @@ binaryNode<CompType, ThermoType>::binaryNode
     binaryNode<CompType, ThermoType> *bn
 )
 :
-    elementLeft_(bn->elementLeft()),
-    elementRight_(bn->elementRight()),
-    left_(bn->left()), 
-    right_(bn->right()),
+    leafLeft_(bn->elementLeft()),
+    leafRight_(bn->elementRight()),
+    nodeLeft_(bn->left()), 
+    nodeRight_(bn->right()),
     parent_(bn->parent()),
     v_(bn->v()),
     a_(bn->a())
@@ -96,11 +96,14 @@ binaryNode<CompType, ThermoType>::calcV
 {
     //LT is the transpose of the L matrix
     List<List<scalar> >& LT = elementLeft->LT();
-    label dim = elementLeft->spaceSize();
-    if (elementLeft->DAC()) dim = elementLeft->NsDAC()+2;
+    bool mechReductionActive = elementLeft->chemistry()->mechRed()->active();
+    //difference of composition in the full species domain
     scalarField phiDif = elementRight->phi() - elementLeft->phi();
     const scalarField& scaleFactor = elementLeft->scaleFactor();
-    const scalar epsTol = elementLeft->epsTol();
+    scalar epsTol = elementLeft->epsTol();
+
+    //v = LT.T()*LT*phiDif
+    // how to handle disabled species? first multiply in the reduced set
 
     for (label i=0; i<elementLeft->spaceSize(); i++)
     {

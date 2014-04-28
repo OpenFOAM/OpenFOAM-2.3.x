@@ -53,16 +53,16 @@ class binaryNode
 public:
 
     //- Element on the left
-    chemPointISAT<CompType, ThermoType>* elementLeft_;
+    chemPointISAT<CompType, ThermoType>* leafLeft_;
 
     //- Element on the right
-    chemPointISAT<CompType, ThermoType>* elementRight_;
+    chemPointISAT<CompType, ThermoType>* leafRight_;
 
     //- Node which follows on the left
-    binaryNode<CompType, ThermoType>* left_;
+    binaryNode<CompType, ThermoType>* nodeLeft_;
 
     //- Node which follows on the right
-    binaryNode<CompType, ThermoType>* right_;
+    binaryNode<CompType, ThermoType>* nodeRight_;
 
     //- Parent node
     binaryNode<CompType, ThermoType>* parent_;
@@ -141,24 +141,24 @@ public:
 
         //- Access
         
-        inline chemPointISAT<CompType, ThermoType>*& elementLeft()
+        inline chemPointISAT<CompType, ThermoType>*& leafLeft()
         {
-            return elementLeft_;
+            return leafLeft_;
         }
 
-        inline chemPointISAT<CompType, ThermoType>*& elementRight()
+        inline chemPointISAT<CompType, ThermoType>*& leafRight()
         {
-            return elementRight_;
+            return leafRight_;
         }
 
-        inline binaryNode<CompType, ThermoType>*& left()
+        inline binaryNode<CompType, ThermoType>*& nodeLeft()
         {
-            return left_;
+            return nodeLeft_;
         }
 
-        inline binaryNode<CompType, ThermoType>*& right()
+        inline binaryNode<CompType, ThermoType>*& nodeRight()
         {
-            return right_;
+            return nodeRight_;
         }
 
         inline binaryNode<CompType, ThermoType>*& parent()

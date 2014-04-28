@@ -811,6 +811,7 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
         {
             if (mechRed_->active())
             {
+                //reduce mechanism change the number of species (only active)
                 mechRed_->reduceMechanism(c,Ti,pi);
             }
             // Calculate the chemical source terms
@@ -861,6 +862,9 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
             deltaTMin = min(this->deltaTChem_[celli], deltaTMin);
         }
 
+//!!!!!!clean and balance to be include somewhere
+tabulation_->clean
+//!!!!!!
         // Set the RR vector (used in the solver)
         for (label i=0; i<this->nSpecie_; i++)
         {
@@ -871,7 +875,7 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
 
     if (tabulation_->active())
     {
-        tabulation->writePerformance(this->path + "/../");
+        tabulation->writePerformance();
     }
 
     return deltaTMin;

@@ -143,7 +143,8 @@ public:
         virtual bool add
         (
             const scalarField& phiQ,
-            const scalarField& RphiQ
+            const scalarField& RphiQ,
+            const scalar rho
         ) = 0;
 
 };

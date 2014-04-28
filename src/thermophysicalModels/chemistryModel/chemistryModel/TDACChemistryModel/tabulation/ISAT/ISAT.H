@@ -26,8 +26,9 @@ Class
 
 Description
     Implementation of the ISAT (In-situ adaptive tabulation), for chemistry
-    calculation. For forward information:
-
+    calculation. 
+ 
+    For information:
     S.B. Pope (1997)
     ``Computationally efficient implementation of combustion chemistry using
     in situ adaptive tabulation,''
@@ -69,12 +70,19 @@ private:
         //- List of scale factors for species, temperature and pressure
         scalarField scaleFactor_;
 
-        //- Life time of a stored point
+        //- Lifetime (number of time steps) of a stored point
         const Time* runTime_;
         label chPMaxLifeTime_;
 
         //- Maximum number of growths before removing from the tree
         label maxGrowth_;
+
+        //- Check the binary tree for leafs to remove every interval
+        checkEntireTreeInterval_;
+
+        //- Factor that multiply the ideal depth of a binary tree to decide
+        //wheter to try to balance of not
+        maxDepthFactor_;
 
         //- After a failed primary retrieve, look in the MRU list
         Switch MRURetrieve_;
@@ -91,6 +99,16 @@ private:
         //- Switch to allow growth (on by default)
         Switch growPoints_;
 
+        //- Statistics on ISAT usage
+        label nRetrieved_;
+        label nGrowth_;
+        label nAdd_;
+        OFstream nRetrievedFile_;
+        OFstream nGrowthFile_;
+        OFstream nAddFile_;
+        OFstream sizeFile_;
+
+
 
     // Private Member Functions
 
@@ -98,21 +116,16 @@ private:
         ISAT(const ISAT&);
 
         //- Add a chemPoint to the MRU list
-        //Input : cp the chemPoint to add
-        //Output: void
-        //Description: If cp is not in the list, insert it in front of it.
-        //If cp is in the list, move it to the front.
-        //Note : tested with entry of type label
         void addToMRU(chemPointISAT<CompType, ThermoType>* phi0);
 
 
-        //Compute and return the mapping of the composition phiq
-        //Input : phi0 the nearest chemPoint used in the linear interpolation
-        //phiq the composition of the query point for which we want to
-        //compute the mapping
-        //Rphiq the mapping of the new composition point (given as empty)
-        //Output: void (the mapping is stored in the Rphiq array)
-        //Rphiq = Rphi0 + A * (phiq-phi0)
+        //- Compute and return the mapping of the composition phiq
+        //  Input : phi0 the nearest chemPoint used in the linear interpolation
+        //  phiq the composition of the query point for which we want to
+        //  compute the mapping
+        //  Rphiq the mapping of the new composition point (given as empty)
+        //  Output: void (the mapping is stored in the Rphiq array)
+        //  Rphiq = Rphi0 + A * (phiq-phi0)
         void calcNewC
         (
             chemPointISAT<CompType, ThermoType>* phi0,
@@ -121,13 +134,13 @@ private:
         );
 
 
-        //Check if the composition of the query point phiq lies in the ellipsoid
-        //of accuracy approximating the region of accuracy of the stored
-        //chemPoint phi0
-        //Input : phi0 the nearest chemPoint used in the linear interpolation
-        //phiq the composition of the query point for which we want to
-        //compute the mapping
-        //Output: true if phiq is in the EOA, false if not
+        //- Check if the composition of the query point phiq lies in the
+        //- ellipsoid of accuracy approximating the region of accuracy of the
+        //- stored chemPoint phi0
+        //  Input : phi0 the nearest chemPoint used in the linear interpolation
+        //  phiq the composition of the query point for which we want to
+        //  compute the mapping
+        //  Output: true if phiq is in the EOA, false if not
         bool grow
         (
             chemPointISAT<CompType, ThermoType>* phi0,
@@ -138,14 +151,27 @@ private:
         //- Clean and balance the tree
         bool cleanAndBalance();
 
-        //- Functions to construct the A matrix
-    void computeA
-    (
-        List<List<scalar> >& A,
-        const scalarField& Rphiq,
-        const scalar rho
-    )
+        //- Functions to construct the gradients matrix
+        //  When mecanism reduction is active, the A matrix is given by
+        //        Aaa Aad
+        //  A = ( Ada Add ), where the sub gradient matrices are:
+        //  (Aaa) active species according to active species, (Aad) active
+        //  species according to disabled species, (Ada) disabled species
+        //  according to active species, and (Add) disabled species according to
+        //  disabled species.
+        //  The current implementation computes Aaa with the Jacobian of the
+        //  reduced set of species. Aad = 0, Ada = 0, and Add = I.
+        //  To be implemented: add options to compute the A matrix for different
+        //  strategies
+        void computeA
+        (
+            scalarSquareMatrix& A,
+            const scalarField& Rphiq,
+            const scalar rho
+        )
 
+        void gaussj(scalarSquareMatrix& A, scalarSquareMatrix& B, label n);
+        void gaussj(scalarSquareMatrix& A, label n);
 
 public:
 
@@ -196,7 +222,7 @@ public:
                 return chemisTree_.size();
             }
 
-            void writePerformance(fileName path);
+            void writePerformance();
 
         // Edit
 

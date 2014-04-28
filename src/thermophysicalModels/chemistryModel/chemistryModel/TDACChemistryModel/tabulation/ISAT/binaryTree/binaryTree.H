@@ -29,16 +29,16 @@ Description
     Data storage of the chemistryOnLineLibrary according to a binary 
     tree structure.
 
-    0 (root node)
-    /   \
-    0      0
-    /   \  /   \
-    L    R L     0
-    /   \
-    L     R
+            0 (root node)
+         /     \
+        0       0
+      /   \   /   \
+     L     R L     0
+    / \
+   L   R
 
-    L: elementLeft_
-    R: elementRight_
+    L: leafLeft_
+    R: leafRight_
 
     The binaryTree class manages two DynamicList: nodeList_ and chemPointList_
     which store pointer to the nodes and leafs (chemPoint) in the binary tree.
@@ -80,7 +80,7 @@ private:
     bn *root_;
     
     //- Maximum number of elements in the binary tree
-    label maxElements_;
+    label maxNLeafs_;
     
     //- Size of the BST (= number of chemPoint stored)
     label size_;
@@ -88,7 +88,8 @@ private:
     //- Secondary retrieve search variables
     label n2ndSearch_;
     label max2ndSearch_;
-    
+
+    //- Variables to balance the tree
     label minBalanceThreshold_;
     label maxNbBalanceTest_;
     scalar balanceProp_;
@@ -162,9 +163,9 @@ public:
             return root_;
         }
         
-        inline label maxElements()
+        inline label maxNLeafs()
         {
-            return maxElements_;
+            return maxNLeafs_;
         }
         
         //Insert a new leaf starting from the parent node of phi0

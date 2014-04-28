@@ -36,6 +36,8 @@ License
 
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+//Defined as static to be able to dynamicly change it during simulations
+//(all chemPoints refer to the same object)
 template<class CompType, class ThermoType>
 Foam::scalar Foam::chemPointISAT<CompType, ThermoType>::tolerance_;
 
@@ -100,19 +102,18 @@ binaryNode<CompType, ThermoType>* node
     LT_ = scalarSquareMatrix(dim, dim, 0.0);
     
     //SVD decomposition A= U*D*V^T 
-    scalarSquareMatrix Atilde(A);
+    scalarSquareMatrix Atilde(A);//A computed in ISAT.C
     scalarSquareMatrix B(dim,dim,0.0);
     scalarField diag(dim,0.0);
-    svd(Atilde, dim-2, dim, diag, B);
+    svd(Atilde, dim, dim, diag, B);
 
-    //replace the value of vector diag by max(diag, 1/2)
+    //replace the value of vector diag by max(diag, 1/2), first ISAT paper, Pope
     for (label i=0; i<dim; i++)
     {
         diag[i]=max(diag[i], 0.5);
     }
-    
-    //reconstruct Atilde = U*D'*V (ellipsoid in with length d'[i] and principal
-    //semi-axes in the direction of the column of )
+
+    //rebuild A with max length, tol and scale factor before QR decomposition
     for (label i=0; i<dim-2; i++)
     {
         scalarField AtildeI(dim);
@@ -127,7 +128,6 @@ binaryNode<CompType, ThermoType>* node
             {
                 Atilde[i][j] += AtildeI[k]*diag[k]*B[j][k];
             }
-            //added to use qrDecompose on the reduced composition space
             label si=i;
             if (isMechRedActive)
             {
@@ -136,7 +136,13 @@ binaryNode<CompType, ThermoType>* node
             Atilde[i][j] /= (tolerance*scaleFactor[si]);
         }
     }
+    //Temperature
+    Atilde[dim-2][dim-2] = diag[dim-2]/(tolerance*scaleFactor[spaceSize_-2]);
+    //Pressure
+    Atilde[dim-1][dim-1] = diag[dim-1]/(tolerance*scaleFactor[spaceSize_-1]);
 
+    //The object LT_ (the transpose of the Q) describe the EOA and is set in the
+    //qrDecompose function
     qrDecompose(dim,Atilde);
     word inertSpecieName(chemistry.thermo().lookup("inertSpecie"));
     forAll(chemistry.Y(),Yi)
@@ -187,10 +193,7 @@ bool Foam::chemPointISAT<CompType, ThermoType>::inEOA(const scalarField& phiq)
     label dim = (isMechRedActive) ? nActiveSpecies_ : spaceSize()-2;
     scalar epsTemp=0.0;
     
-    if (dphi[spaceSize()-2]/phiq[spaceSize()-2]>0.05)
-    {    
-        return false;
-    }
+
 
     for (label i=0; i<spaceSize()-2; i++)
     {
@@ -203,7 +206,7 @@ bool Foam::chemPointISAT<CompType, ThermoType>::inEOA(const scalarField& phiq)
         //When mechanism reduction is inactive OR on active species
         //multiply L by dphi to get the distance in the active species direction
         //else (for inactive species), just multiply the diagonal
-        // element and dphi
+        //element and dphi
         if
         (
             !(isMechRedActive)
@@ -214,27 +217,28 @@ bool Foam::chemPointISAT<CompType, ThermoType>::inEOA(const scalarField& phiq)
             for (label j=si; j<dim; j++)//LT is upper triangular
             {
                 label sj=(isMechRedActive) ? simplifiedToCompleteIndex_[j] : j;
-                epsTemp += LT_[si][j]*dphi[sj];
+                epsTemp += sqr(LT_[si][j]*dphi[sj]);
             }
-            epsTemp += LT_[si][nActiveSpecies_]*dphi[spaceSize()-2];
-            epsTemp += LT_[si][nActiveSpecies_+1]*dphi[spaceSize()-1];
+            epsTemp += sqr(LT_[si][nActiveSpecies_]*dphi[spaceSize()-2]);
+            epsTemp += sqr(LT_[si][nActiveSpecies_+1]*dphi[spaceSize()-1]);
         }
         else
         {
-            epsTemp += dphi[i]/(tolerance_*scaleFactor_[i]);
+            epsTemp += sqr(dphi[i]/(tolerance_*scaleFactor_[i]));
         }
     }
-    
+    //Temperature
+    epsTemp += sqr(dphi[spaceSize_-2]/(tolerance_*scaleFactor_[spaceSize_-2]));
+    //Pressure
+    epsTemp += sqr(dphi[spaceSize_-1]/(tolerance_*scaleFactor_[spaceSize_-1]));
+
     if (epsTemp > 1.0)
     {    
         return false;
     }
     else
-    {   
-        if (nUsed_ < INT_MAX)
-        {
-            nUsed_++;
-        }
+    {
+        nUsed_++;
         return true;
     }
 }
@@ -259,7 +263,8 @@ bool Foam::chemPointISAT<CompType, ThermoType>::checkSolution
     {
         dim = nActiveSpecies_;
     }
-    
+
+    //Since we build only the solution for the species, T and p are not included
     for (label i=0; i<spaceSize()-2; i++)
     {
         if (i==inertSpecie_)
@@ -271,18 +276,15 @@ bool Foam::chemPointISAT<CompType, ThermoType>::checkSolution
         if (isMechRedActive)
         {
             label si = completeToSimplifiedIndex_[i];
+            //If this species is not active
             if (si!=-1)
             {
                 for (label j=0; j<dim; j++)
                 {
-                    label sj;
+                    label sj=j;
                     if (isMechRedActive)
                     {
                         sj =simplifiedToCompleteIndex_[j];
-                    }
-                    else
-                    {
-                        sj=j;
                     }
                     dRl += Avar[si][j]*dphi[sj];
                 }
@@ -303,6 +305,7 @@ bool Foam::chemPointISAT<CompType, ThermoType>::checkSolution
         }
         eps2 += sqr((dR[i]-dRl)/scaleFactorV[i]);
     }
+
     eps2 = sqrt(eps2);
     if (eps2 > tolerance())
     {
@@ -311,16 +314,7 @@ bool Foam::chemPointISAT<CompType, ThermoType>::checkSolution
     else
     {
         // if the solution is in the ellipsoid of accuracy
-        // GROW operation performed
-        if (grow(phiq)) //phiq is on the boundary of the EOA or grow has failed
-        {
-            nGrown_++;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return true;
     }
 }
 
@@ -467,6 +461,7 @@ bool Foam::chemPointISAT<CompType, ThermoType>::grow(const scalarField& phiq)
         }
     }
     qrUpdate(dim, u, v);
+    nGrown_++;
     return true;
 }
 

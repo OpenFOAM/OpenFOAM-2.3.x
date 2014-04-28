@@ -147,10 +147,6 @@ private:
     //use List of Lists to be able to change size if DAC is used
     scalarSquareMatrix LT_;
     
-    //QT the matrix obtained during QR decomposition
-    //(used to update LT after a grow)
-    scalarSquareMatrix QT_;
-    
     //- A the mapping gradient matrix
     scalarSquareMatrix A_;
     
@@ -269,7 +265,11 @@ public:
 
     //- Member functions
         //- Access
-        
+        inline TDACChemistryModel<CompType, ThermoType>* chemistry()
+        {
+            return chemistry_;
+        }
+    
         inline label nGrowth()
         {
             return nGrowth_;
@@ -300,7 +300,7 @@ public:
             return tolerance_;
         }
         
-        static void changeEpsTol(scalar newTol)
+        static void changeTolerance(scalar newTol)
         {
             tolerance_ = newTol;
         }
