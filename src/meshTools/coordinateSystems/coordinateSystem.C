@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -127,7 +127,6 @@ Foam::coordinateSystem::coordinateSystem
     origin_(point::zero),
     R_()
 {
-
     const entry* entryPtr = dict.lookupEntryPtr(typeName_(), false, false);
 
     // non-dictionary entry is a lookup into global coordinateSystems
@@ -141,7 +140,7 @@ Foam::coordinateSystem::coordinateSystem
         if (debug)
         {
             Info<< "coordinateSystem::coordinateSystem"
-                "(const dictionary&, const objectRegistry&):"
+                "(const objectRegistry&, const dictionary&):"
                 << nl << "using global coordinate system: "
                 << key << "=" << index << endl;
         }
@@ -151,7 +150,7 @@ Foam::coordinateSystem::coordinateSystem
             FatalErrorIn
             (
                 "coordinateSystem::coordinateSystem"
-                "(const dictionary&, const objectRegistry&)"
+                "(const objectRegistry&, const dictionary&):"
             )   << "could not find coordinate system: " << key << nl
                 << "available coordinate systems: " << lst.toc() << nl << nl
                 << exit(FatalError);
@@ -344,7 +343,11 @@ void Foam::coordinateSystem::init
 {
     if (debug)
     {
-        Pout<< "coordinateSystem::operator=(const dictionary&) : "
+        Pout<< "coordinateSystem::operator="
+                "("
+                    "const dictionary&, "
+                    "const objectRegistry&"
+                ") : "
             << "assign from " << rhs << endl;
     }
 

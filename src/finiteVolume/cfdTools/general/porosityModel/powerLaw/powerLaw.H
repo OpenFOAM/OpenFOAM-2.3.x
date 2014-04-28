@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -126,6 +126,9 @@ public:
 
 
     // Member Functions
+
+        //- Transform the model data wrt mesh changes
+        virtual void calcTranformModelData();
 
         //- Calculate the porosity force
         virtual void calcForce

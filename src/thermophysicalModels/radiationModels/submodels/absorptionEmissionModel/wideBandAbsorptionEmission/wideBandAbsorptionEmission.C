@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -102,7 +102,7 @@ Foam::radiation::wideBandAbsorptionEmission::wideBandAbsorptionEmission
                         << nl << exit(FatalError);
                 }
             }
-            coeffs_[nSpec][nBand].initialise(specDicts.subDict(key));
+            coeffs_[nBand][nSpec].initialise(specDicts.subDict(key));
             nSpec++;
         }
         nBand++;
@@ -291,16 +291,6 @@ Foam::radiation::wideBandAbsorptionEmission::ECont(const label bandI) const
     }
 
     return E;
-}
-
-Foam::tmp<Foam::volScalarField>
-Foam::radiation::wideBandAbsorptionEmission::addIntensity
-(
-    const label i,
-    const volScalarField& ILambda
-) const
-{
-    return ILambda*(iBands_[i][1] - iBands_[i][0])/totalWaveLength_;
 }
 
 

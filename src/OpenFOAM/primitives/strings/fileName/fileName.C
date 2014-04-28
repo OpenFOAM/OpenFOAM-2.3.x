@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -57,6 +57,20 @@ Foam::fileName::Type Foam::fileName::type() const
 bool Foam::fileName::isAbsolute() const
 {
     return !empty() && operator[](0) == '/';
+}
+
+
+Foam::fileName& Foam::fileName::toAbsolute()
+{
+    fileName& f = *this;
+
+    if (!f.isAbsolute())
+    {
+        f = cwd()/f;
+        f.clean();
+    }
+
+    return f;
 }
 
 

@@ -4,6 +4,5 @@ set -x
 
 wmake libso multiphaseMixture
 wmake
-wmake MRFMultiphaseInterFoam
 
 # ----------------------------------------------------------------- end-of-file

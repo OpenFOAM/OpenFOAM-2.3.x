@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -88,46 +88,60 @@ uniformTotalPressureFvPatchScalarField
     const fvPatchFieldMapper& mapper
 )
 :
-    fixedValueFvPatchScalarField(ptf, p, iF, mapper),
+    fixedValueFvPatchScalarField(p, iF),  // bypass mapper
     UName_(ptf.UName_),
     phiName_(ptf.phiName_),
     rhoName_(ptf.rhoName_),
     psiName_(ptf.psiName_),
     gamma_(ptf.gamma_),
     pressure_(ptf.pressure_().clone().ptr())
-{}
+{
+    // Evaluate since value not mapped
+    const scalar t = this->db().time().timeOutputValue();
+    fvPatchScalarField::operator==(pressure_->value(t));
+}
 
 
 Foam::uniformTotalPressureFvPatchScalarField::
 uniformTotalPressureFvPatchScalarField
 (
-    const uniformTotalPressureFvPatchScalarField& tppsf
+    const uniformTotalPressureFvPatchScalarField& ptf
 )
 :
-    fixedValueFvPatchScalarField(tppsf),
-    UName_(tppsf.UName_),
-    phiName_(tppsf.phiName_),
-    rhoName_(tppsf.rhoName_),
-    psiName_(tppsf.psiName_),
-    gamma_(tppsf.gamma_),
-    pressure_(tppsf.pressure_().clone().ptr())
+    fixedValueFvPatchScalarField(ptf),
+    UName_(ptf.UName_),
+    phiName_(ptf.phiName_),
+    rhoName_(ptf.rhoName_),
+    psiName_(ptf.psiName_),
+    gamma_(ptf.gamma_),
+    pressure_
+    (
+        ptf.pressure_.valid()
+      ? ptf.pressure_().clone().ptr()
+      : NULL
+    )
 {}
 
 
 Foam::uniformTotalPressureFvPatchScalarField::
 uniformTotalPressureFvPatchScalarField
 (
-    const uniformTotalPressureFvPatchScalarField& tppsf,
+    const uniformTotalPressureFvPatchScalarField& ptf,
     const DimensionedField<scalar, volMesh>& iF
 )
 :
-    fixedValueFvPatchScalarField(tppsf, iF),
-    UName_(tppsf.UName_),
-    phiName_(tppsf.phiName_),
-    rhoName_(tppsf.rhoName_),
-    psiName_(tppsf.psiName_),
-    gamma_(tppsf.gamma_),
-    pressure_(tppsf.pressure_().clone().ptr())
+    fixedValueFvPatchScalarField(ptf, iF),
+    UName_(ptf.UName_),
+    phiName_(ptf.phiName_),
+    rhoName_(ptf.rhoName_),
+    psiName_(ptf.psiName_),
+    gamma_(ptf.gamma_),
+    pressure_
+    (
+        ptf.pressure_.valid()
+      ? ptf.pressure_().clone().ptr()
+      : NULL
+    )
 {}
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -85,6 +85,10 @@ protected:
         //  that the orientation of the target patch should be reversed
         const bool reverseTarget_;
 
+        //- Flag to indicate that the two patches must be matched/an overlap
+        //  exists between them
+        const bool requireMatch_;
+
         //- Source face areas
         const scalarField& srcMagSf_;
 
@@ -166,9 +170,18 @@ public:
             const scalarField& srcMagSf,
             const scalarField& tgtMagSf,
             const faceAreaIntersect::triangulationMode& triMode,
-            const bool reverseTarget
+            const bool reverseTarget,
+            const bool requireMatch
         ),
-        (srcPatch, tgtPatch, srcMagSf, tgtMagSf, triMode, reverseTarget)
+        (
+            srcPatch,
+            tgtPatch,
+            srcMagSf,
+            tgtMagSf,
+            triMode,
+            reverseTarget,
+            requireMatch
+        )
     );
 
     //- Construct from components
@@ -179,7 +192,8 @@ public:
         const scalarField& srcMagSf,
         const scalarField& tgtMagSf,
         const faceAreaIntersect::triangulationMode& triMode,
-        const bool reverseTarget
+        const bool reverseTarget,
+        const bool requireMatch
     );
 
     //- Selector
@@ -191,7 +205,8 @@ public:
         const scalarField& srcMagSf,
         const scalarField& tgtMagSf,
         const faceAreaIntersect::triangulationMode& triMode,
-        const bool reverseTarget
+        const bool reverseTarget,
+        const bool requireMatch
     );
 
 

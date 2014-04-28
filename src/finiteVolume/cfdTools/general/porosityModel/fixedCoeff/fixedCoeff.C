@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -111,59 +111,15 @@ Foam::porosityModels::fixedCoeff::fixedCoeff
 )
 :
     porosityModel(name, modelType, mesh, dict, cellZoneName),
+    alphaXYZ_(coeffs_.lookup("alpha")),
+    betaXYZ_(coeffs_.lookup("beta")),
     alpha_(cellZoneIDs_.size()),
     beta_(cellZoneIDs_.size())
 {
-    dimensionedVector alpha(coeffs_.lookup("alpha"));
-    dimensionedVector beta(coeffs_.lookup("beta"));
+    adjustNegativeResistance(alphaXYZ_);
+    adjustNegativeResistance(betaXYZ_);
 
-    adjustNegativeResistance(alpha);
-    adjustNegativeResistance(beta);
-
-    if (coordSys_.R().uniform())
-    {
-        forAll (cellZoneIDs_, zoneI)
-        {
-            alpha_[zoneI].setSize(1, tensor::zero);
-            beta_[zoneI].setSize(1, tensor::zero);
-
-            alpha_[zoneI][0].xx() = alpha.value().x();
-            alpha_[zoneI][0].yy() = alpha.value().y();
-            alpha_[zoneI][0].zz() = alpha.value().z();
-            alpha_[zoneI][0] = coordSys_.R().transformTensor(alpha_[zoneI][0]);
-
-            beta_[zoneI][0].xx() = beta.value().x();
-            beta_[zoneI][0].yy() = beta.value().y();
-            beta_[zoneI][0].zz() = beta.value().z();
-            beta_[zoneI][0] = coordSys_.R().transformTensor(beta_[zoneI][0]);
-        }
-    }
-    else
-    {
-        forAll(cellZoneIDs_, zoneI)
-        {
-            const labelList& cells = mesh_.cellZones()[cellZoneIDs_[zoneI]];
-
-            alpha_[zoneI].setSize(cells.size(), tensor::zero);
-            beta_[zoneI].setSize(cells.size(), tensor::zero);
-
-            forAll(cells, i)
-            {
-                alpha_[zoneI][i].xx() = alpha.value().x();
-                alpha_[zoneI][i].yy() = alpha.value().y();
-                alpha_[zoneI][i].zz() = alpha.value().z();
-
-                beta_[zoneI][i].xx() = beta.value().x();
-                beta_[zoneI][i].yy() = beta.value().y();
-                beta_[zoneI][i].zz() = beta.value().z();
-            }
-
-            alpha_[zoneI] =
-                coordSys_.R().transformTensor(alpha_[zoneI], cells);
-
-            beta_[zoneI] = coordSys_.R().transformTensor(beta_[zoneI], cells);
-        }
-    }
+    calcTranformModelData();
 }
 
 
@@ -174,6 +130,59 @@ Foam::porosityModels::fixedCoeff::~fixedCoeff()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void Foam::porosityModels::fixedCoeff::calcTranformModelData()
+{
+    if (coordSys_.R().uniform())
+    {
+        forAll (cellZoneIDs_, zoneI)
+        {
+            alpha_[zoneI].setSize(1);
+            beta_[zoneI].setSize(1);
+
+            alpha_[zoneI][0] = tensor::zero;
+            alpha_[zoneI][0].xx() = alphaXYZ_.value().x();
+            alpha_[zoneI][0].yy() = alphaXYZ_.value().y();
+            alpha_[zoneI][0].zz() = alphaXYZ_.value().z();
+            alpha_[zoneI][0] = coordSys_.R().transformTensor(alpha_[zoneI][0]);
+
+            beta_[zoneI][0] = tensor::zero;
+            beta_[zoneI][0].xx() = betaXYZ_.value().x();
+            beta_[zoneI][0].yy() = betaXYZ_.value().y();
+            beta_[zoneI][0].zz() = betaXYZ_.value().z();
+            beta_[zoneI][0] = coordSys_.R().transformTensor(beta_[zoneI][0]);
+        }
+    }
+    else
+    {
+        forAll(cellZoneIDs_, zoneI)
+        {
+            const labelList& cells = mesh_.cellZones()[cellZoneIDs_[zoneI]];
+
+            alpha_[zoneI].setSize(cells.size());
+            beta_[zoneI].setSize(cells.size());
+
+            forAll(cells, i)
+            {
+                alpha_[zoneI][i] = tensor::zero;
+                alpha_[zoneI][i].xx() = alphaXYZ_.value().x();
+                alpha_[zoneI][i].yy() = alphaXYZ_.value().y();
+                alpha_[zoneI][i].zz() = alphaXYZ_.value().z();
+
+                beta_[zoneI][i] = tensor::zero;
+                beta_[zoneI][i].xx() = betaXYZ_.value().x();
+                beta_[zoneI][i].yy() = betaXYZ_.value().y();
+                beta_[zoneI][i].zz() = betaXYZ_.value().z();
+            }
+
+            const coordinateRotation& R = coordSys_.R(mesh_, cells);
+
+            alpha_[zoneI] = R.transformTensor(alpha_[zoneI], cells);
+            beta_[zoneI] = R.transformTensor(beta_[zoneI], cells);
+        }
+    }
+}
+
 
 void Foam::porosityModels::fixedCoeff::calcForce
 (

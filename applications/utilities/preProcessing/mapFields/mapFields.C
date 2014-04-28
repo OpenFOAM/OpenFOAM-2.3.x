@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
     (
         "mapMethod",
         "word",
-        "specify the mapping method"
+        "specify the mapping method (direct|mapNearest|cellVolumeWeight)"
     );
     argList::addBoolOption
     (

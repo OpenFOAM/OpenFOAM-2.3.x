@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -65,11 +65,14 @@ class solidBodyMotionFvMesh
         //- The reference points which are transformed
         pointIOField undisplacedPoints_;
 
-        //- Specified cellZone or -1 for whole-body
-        label zoneID_;
-
         //- Points to move when cell zone is supplied
         labelList pointIDs_;
+
+        //- Flag to indicate whether all cells should move
+        bool moveAllCells_;
+
+        //- Name of velocity field
+        word UName_;
 
 
     // Private Member Functions

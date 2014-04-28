@@ -22,7 +22,7 @@ boundaryField
 {
     SYMP3
     {
-        type            zeroGradient;
+        type            slip;
     }
 
     INLE1

@@ -9,13 +9,17 @@ EXE_INC = \
     -I$(LIB_SRC)/transportModels/twoPhaseMixture/lnInclude \
     -I$(LIB_SRC)/transportModels/incompressible/lnInclude \
     -I$(LIB_SRC)/transportModels/interfaceProperties/lnInclude \
+    -I$(LIB_SRC)/TurbulenceModels/turbulenceModels/lnInclude \
+    -I$(LIB_SRC)/TurbulenceModels/compressible/lnInclude \
     -I./relativeVelocityModels/lnInclude
 
 EXE_LIBS = \
+    -ldriftFluxTransportModels \
+    -ldriftFluxRelativeVelocityModels \
     -lfiniteVolume \
     -lmeshTools \
     -lsampling \
     -lfvOptions \
     -lincompressibleTransportModels \
-    -ldriftFluxTransportModels \
-    -ldriftFluxRelativeVelocityModels
+    -lturbulenceModels \
+    -lcompressibleTurbulenceModels

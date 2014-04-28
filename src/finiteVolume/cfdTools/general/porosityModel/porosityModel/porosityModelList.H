@@ -94,7 +94,7 @@ public:
         void reset(const dictionary& dict);
 
         //- Add resistance
-        void addResistance(fvVectorMatrix& UEqn) const;
+        void addResistance(fvVectorMatrix& UEqn);
 
         //- Add resistance
         void addResistance
@@ -102,7 +102,7 @@ public:
             fvVectorMatrix& UEqn,
             const volScalarField& rho,
             const volScalarField& mu
-        ) const;
+        );
 
         //- Add resistance
         void addResistance
@@ -110,7 +110,7 @@ public:
             const fvVectorMatrix& UEqn,
             volTensorField& AU,
             bool correctAUprocBC = true
-        ) const;
+        );
 
 
         // I-O

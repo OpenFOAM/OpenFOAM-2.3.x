@@ -133,21 +133,36 @@ public:
             return mu_;
         }
 
+        //- Return the dynamic mixture viscosity for patch
+        virtual tmp<scalarField> mu(const label patchi) const
+        {
+            return mu_.boundaryField()[patchi];
+        }
+
+        //- Return the mixture density
+        virtual tmp<volScalarField> rho() const
+        {
+            return alpha1_*rhod_ + alpha2_*rhoc_;
+        }
+
+        //- Return the mixture density for patch
+        virtual tmp<scalarField> rho(const label patchi) const
+        {
+            return
+                alpha1_.boundaryField()[patchi]*rhod_.value()
+              + alpha2_.boundaryField()[patchi]*rhoc_.value();
+        }
+
         //- Return the mixture viscosity
         virtual tmp<volScalarField> nu() const
         {
-            notImplemented("incompressibleTwoPhaseInteractingMixture::nu()");
-            return volScalarField::null();
+            return mu_/rho();
         }
 
         //- Return the mixture viscosity for patch
         virtual tmp<scalarField> nu(const label patchi) const
         {
-            notImplemented
-            (
-                "incompressibleTwoPhaseInteractingMixture::nu(const label)"
-            );
-            return scalarField::null();
+            return mu_.boundaryField()[patchi]/rho(patchi);
         }
 
         //- Correct the laminar viscosity

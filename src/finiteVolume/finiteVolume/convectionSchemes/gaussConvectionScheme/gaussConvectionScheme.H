@@ -125,7 +125,7 @@ public:
                        "steady-state solver, use 'bounded Gauss' "
                        "to ensure boundedness.\n"
                     << "    To remove this warning switch off "
-                    << "'boundedGauss' in "
+                    << "'warnUnboundedGauss' in "
                     << controlDictFiles[controlDictFiles.size()-1]
                     << endl;
             }

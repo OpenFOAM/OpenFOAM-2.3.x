@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -144,6 +144,7 @@ public:
             const scalarField& tgtMagSf,
             const faceAreaIntersect::triangulationMode& triMode,
             const bool reverseTarget = false,
+            const bool requireMatch = true,
             const bool restartUncoveredSourceFace = true
         );
 

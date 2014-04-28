@@ -124,9 +124,17 @@ void continuousGasKEpsilon<BasicTurbulenceModel>::correctNut()
     const transportModel& liquid = fluid.otherPhase(gas);
 
     volScalarField thetal(liquidTurbulence.k()/liquidTurbulence.epsilon());
-    volScalarField thetag((1.0/(18*liquid.nu()))*sqr(gas.d()));
-    volScalarField expThetar(exp(min(thetal/thetag, scalar(50))));
-    volScalarField omega(sqr(expThetar - 1)/(sqr(expThetar) - 1));
+    volScalarField rhodv(gas.rho() + fluid.virtualMass(gas).Cvm()*liquid.rho());
+    volScalarField thetag((rhodv/(18*liquid.rho()*liquid.nu()))*sqr(gas.d()));
+    volScalarField expThetar
+    (
+        min
+        (
+            exp(min(thetal/thetag, scalar(50))),
+            scalar(1)
+        )
+    );
+    volScalarField omega((1 - expThetar)/(1 + expThetar));
 
     nutEff_ = omega*liquidTurbulence.nut();
 }

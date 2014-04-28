@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -393,6 +393,12 @@ public:
 
             //- Return raw points
             virtual const pointField& points() const;
+
+            //- Return true if io is up-to-date with points
+            virtual bool upToDatePoints(const regIOobject& io) const;
+
+            //- Set io to be up-to-date with points
+            virtual void setUpToDatePoints(regIOobject& io) const;
 
             //- Return raw faces
             virtual const faceList& faces() const;

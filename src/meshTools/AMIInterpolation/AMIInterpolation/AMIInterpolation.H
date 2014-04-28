@@ -116,6 +116,10 @@ private:
         //  that the orientation of the target patch should be reversed
         const bool reverseTarget_;
 
+        //- Flag to indicate that the two patches must be matched/an overlap
+        //  exists between them
+        const bool requireMatch_;
+
         //- Index of processor that holds all of both sides. -1 in all other
         //  cases
         label singlePatchProc_;
@@ -276,6 +280,7 @@ public:
             const SourcePatch& srcPatch,
             const TargetPatch& tgtPatch,
             const faceAreaIntersect::triangulationMode& triMode,
+            const bool requireMatch = true,
             const interpolationMethod& method = imFaceAreaWeight,
             const scalar lowWeightCorrection = -1,
             const bool reverseTarget = false
@@ -288,6 +293,7 @@ public:
             const TargetPatch& tgtPatch,
             const autoPtr<searchableSurface>& surf,
             const faceAreaIntersect::triangulationMode& triMode,
+            const bool requireMatch = true,
             const interpolationMethod& method = imFaceAreaWeight,
             const scalar lowWeightCorrection = -1,
             const bool reverseTarget = false

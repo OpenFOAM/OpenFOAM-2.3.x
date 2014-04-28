@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -74,11 +74,16 @@ private:
 
     // Private data
 
+        //- Darcy coeffient XYZ components (user-supplied) [1/m2]
+        dimensionedVector dXYZ_;
 
-        //- Darcy coefficient [1/m2]
+        //- Forchheimer coeffient XYZ components (user-supplied) [1/m]
+        dimensionedVector fXYZ_;
+
+        //- Darcy coefficient - converted from dXYZ [1/m2]
         List<tensorField> D_;
 
-        //- Forchheimer coefficient [1/m]
+        //- Forchheimer coefficient - converted from fXYZ [1/m]
         List<tensorField> F_;
 
         //- Name of density field
@@ -142,6 +147,9 @@ public:
 
 
     // Member Functions
+
+        //- Transform the model data wrt mesh changes
+        virtual void calcTranformModelData();
 
         //- Calculate the porosity force
         virtual void calcForce

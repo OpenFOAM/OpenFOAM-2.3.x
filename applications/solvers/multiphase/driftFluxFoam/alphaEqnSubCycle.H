@@ -55,7 +55,7 @@
         fvScalarMatrix alpha1Eqn
         (
             fvm::ddt(alpha1) - fvc::ddt(alpha1)
-          - fvm::laplacian(mut/rho, alpha1)
+          - fvm::laplacian(turbulence->nut(), alpha1)
         );
 
         alpha1Eqn.solve(mesh.solver("alpha1Diffusion"));
@@ -71,5 +71,5 @@
     }
 
     rhoPhi = phiAlpha*(rho1 - rho2) + phi*rho2;
-    rho == alpha1*rho1 + alpha2*rho2;
+    rho = mixture.rho();
 }

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -202,20 +202,6 @@ Foam::label Foam::metisDecomp::decompose
 
     // output: number of cut edges
     int edgeCut = 0;
-
-    // Vertex weight info
-    int* vwgtPtr = NULL;
-    int* adjwgtPtr = NULL;
-
-    if (cellWeights.size())
-    {
-        vwgtPtr = cellWeights.begin();
-    }
-    if (faceWeights.size())
-    {
-        adjwgtPtr = faceWeights.begin();
-    }
-
 
     if (method == "recursive")
     {

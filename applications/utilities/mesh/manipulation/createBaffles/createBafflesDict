@@ -19,7 +19,17 @@ FoamFile
 // - or converting boundary faces into a boundary face
 //   (internalFacesOnly=false)(though should use really createPatch
 //    to do this)
-// - specification in one of two modes:
+//
+// - selection of faces (and orientation) to 'baffle' through:
+//      faceZone:
+//          type        faceZone;
+//          zoneName    f0;
+//      searchableSurface:
+//          type        searchableSurface;
+//          surface     triSurfaceMesh;
+//          name        baffle1D.stl;
+//
+// - specification of patches for baffle sides in one of two modes:
 //      - patchPairs : create two patches of same type, same input
 //      - patches    : create patches separately, full control over what
 //                     to create on what side
