@@ -27,7 +27,7 @@
                 mesh,
                 linear<scalar>(mesh),
                 fv::uncorrectedSnGrad<scalar>(mesh)
-            ).fvmLaplacian(fvc::interpolate(mut/rho), alpha1)
+            ).fvmLaplacian(fvc::interpolate(turbulence->nut()), alpha1)
         );
 
         Info<< "Phase-1 volume fraction = "

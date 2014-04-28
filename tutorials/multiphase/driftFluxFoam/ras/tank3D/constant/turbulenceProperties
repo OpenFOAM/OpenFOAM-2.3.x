@@ -11,15 +11,18 @@ FoamFile
     format      ascii;
     class       dictionary;
     location    "constant";
-    object      RASProperties;
+    object      turbulenceProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-RASModel        kEpsilon;
+simulationType  RAS;
 
-turbulence      on;
+RAS
+{
+    RASModel kEpsilon;
 
-printCoeffs     on;
-
+    turbulence      on;
+    printCoeffs     on;
+}
 
 // ************************************************************************* //

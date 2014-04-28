@@ -11,33 +11,37 @@ FoamFile
     format      ascii;
     class       volScalarField;
     location    "0";
-    object      k;
+    object      nut;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -2 0 0 0 0];
+dimensions      [0 2 -1 0 0 0 0];
 
-internalField   uniform 0.01;
+internalField   uniform 0;
 
 boundaryField
 {
-    rotor
+    SYMP3
     {
-        type            kqRWallFunction;
+        type            slip;
+    }
+
+    INLE1
+    {
+        type            calculated;
         value           $internalField;
     }
-    stator
+
+    "OUTL.*"
     {
-        type            kqRWallFunction;
+        type            calculated;
         value           $internalField;
     }
-    front
+
+    "WALL.*"
     {
-        type            empty;
-    }
-    back
-    {
-        type            empty;
+        type            nutkWallFunction;
+        value           $internalField;
     }
 }
 
