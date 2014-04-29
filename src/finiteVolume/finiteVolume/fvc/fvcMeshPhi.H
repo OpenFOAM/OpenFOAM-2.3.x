@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,7 +32,6 @@ SourceFiles
     fvcMeshPhi.C
 
 \*---------------------------------------------------------------------------*/
-
 
 #ifndef fvcMeshPhi_H
 #define fvcMeshPhi_H
@@ -113,6 +112,22 @@ namespace fvc
     void makeAbsolute
     (
         surfaceScalarField& phi,
+        const volScalarField& rho,
+        const volVectorField& U
+    );
+
+
+    //- Return the given absolute flux in relative form
+    tmp<surfaceScalarField> relative
+    (
+        const tmp<surfaceScalarField>& tphi,
+        const volVectorField& U
+    );
+
+    //- Return the given absolute flux in relative form
+    tmp<surfaceScalarField> relative
+    (
+        const tmp<surfaceScalarField>& tphi,
         const volScalarField& rho,
         const volVectorField& U
     );
