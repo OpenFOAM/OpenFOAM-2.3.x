@@ -107,7 +107,7 @@ buoyantKEpsilon<BasicTurbulenceModel>::Gcoef() const
         lookupObject<uniformDimensionedVectorField>("g");
 
     return
-        (this->Cmu_*this->k_/this->sigmak_)
+        this->alpha_*(this->Cmu_/this->sigmak_)*this->k_
        *(g & fvc::grad(this->rho_))/(this->epsilon_ + this->epsilonMin_);
 }
 
