@@ -95,42 +95,40 @@ binaryNode<CompType, ThermoType>::calcV
 )
 {
     //LT is the transpose of the L matrix
-    List<List<scalar> >& LT = elementLeft->LT();
+    scalarSquareMatrix& LT = elementLeft->LT();
     bool mechReductionActive = elementLeft->chemistry()->mechRed()->active();
     //difference of composition in the full species domain
     scalarField phiDif = elementRight->phi() - elementLeft->phi();
     const scalarField& scaleFactor = elementLeft->scaleFactor();
-    scalar epsTol = elementLeft->epsTol();
+    scalar epsTol = elementLeft->tolerance();
 
     //v = LT.T()*LT*phiDif
-    // how to handle disabled species? first multiply in the reduced set
-
     for (label i=0; i<elementLeft->spaceSize(); i++)
     {
         label si = i;
         bool outOfIndexI = true;
-        if (elementLeft->DAC())
+        if (mechReductionActive)
         {
             if (i<elementLeft->spaceSize()-2)
             {
                 si = elementLeft->completeToSimplifiedIndex(i);
                 outOfIndexI = (si==-1);
             }
-            else
+            else//temperature and pressure
             {
                 outOfIndexI = false;
                 label dif = i-(elementLeft->spaceSize()-2);
                 si = elementLeft->NsDAC()+dif;
             }
         }
-        if (!(elementLeft->DAC()) || (elementLeft->DAC() && !(outOfIndexI)))
+        if (!mechReductionActive || mechReductionActive && !(outOfIndexI)))
         {
             v[i]=0.0;
             for (label j=0; j<elementLeft->spaceSize(); j++)
             {
                 label sj = j;
                 bool outOfIndexJ = true;
-                if (elementLeft->DAC())
+                if (mechReductionActive)
                 {
                     if (j<elementLeft->spaceSize()-2)
                     {
@@ -144,7 +142,11 @@ binaryNode<CompType, ThermoType>::calcV
                         sj = elementLeft->NsDAC()+dif;
                     }
                 }
-                if (!(elementLeft->DAC()) || (elementLeft->DAC() && !(outOfIndexJ)))
+                if
+                (
+                    !mechReductionActive
+                  ||(mechReductionActive && !(outOfIndexJ))
+                )
                 {
                     //since L is a lower triangular matrix k=0->min(i,j)
                     for (label k=0; k<=min(si,sj); k++)
@@ -175,10 +177,9 @@ scalar binaryNode<CompType, ThermoType>::calcA
     scalar a = 0.0;
     scalarField phih = (elementLeft->phi()+elementRight->phi())/2;
     label spaceSize = elementLeft->spaceSize();
-    const scalarField& V = v();
     for (label i=0; i<spaceSize; i++)
     {
-        a += V[i]*phih[i]; 
+        a += v_[i]*phih[i];
     }
     return a;
 }
