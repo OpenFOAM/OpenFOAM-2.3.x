@@ -44,6 +44,7 @@
     );
     rho.oldTime();
 
+    const surfaceScalarField& rhoPhi(mixture.rhoPhi());
 
     // Construct incompressible turbulence model
     autoPtr<incompressible::turbulenceModel> turbulence

@@ -29,19 +29,19 @@
     #include "createPhi.H"
 
     Info<< "Constructing twoPhaseMixtureThermo\n" << endl;
-    twoPhaseMixtureThermo twoPhaseProperties(mesh);
+    twoPhaseMixtureThermo mixture(mesh);
 
-    volScalarField& alpha1(twoPhaseProperties.alpha1());
-    volScalarField& alpha2(twoPhaseProperties.alpha2());
+    volScalarField& alpha1(mixture.alpha1());
+    volScalarField& alpha2(mixture.alpha2());
 
     Info<< "Reading thermophysical properties\n" << endl;
 
-    volScalarField& p = twoPhaseProperties.p();
-    volScalarField& T = twoPhaseProperties.T();
-    volScalarField& rho1 = twoPhaseProperties.thermo1().rho();
-    const volScalarField& psi1 = twoPhaseProperties.thermo1().psi();
-    volScalarField& rho2 = twoPhaseProperties.thermo2().rho();
-    const volScalarField& psi2 = twoPhaseProperties.thermo2().psi();
+    volScalarField& p = mixture.p();
+    volScalarField& T = mixture.T();
+    volScalarField& rho1 = mixture.thermo1().rho();
+    const volScalarField& psi1 = mixture.thermo1().psi();
+    volScalarField& rho2 = mixture.thermo2().rho();
+    const volScalarField& psi2 = mixture.thermo2().psi();
 
     volScalarField rho
     (
@@ -57,7 +57,7 @@
     );
 
 
-    dimensionedScalar pMin(twoPhaseProperties.lookup("pMin"));
+    dimensionedScalar pMin(mixture.lookup("pMin"));
 
     Info<< "Calculating field g.h\n" << endl;
     volScalarField gh("gh", g & mesh.C());
@@ -85,12 +85,12 @@
     );
 
     // Construct interface from alpha1 distribution
-    interfaceProperties interface(alpha1, U, twoPhaseProperties);
+    interfaceProperties interface(alpha1, U, mixture);
 
     // Construct compressible turbulence model
     autoPtr<compressible::turbulenceModel> turbulence
     (
-        compressible::turbulenceModel::New(rho, U, rhoPhi, twoPhaseProperties)
+        compressible::turbulenceModel::New(rho, U, rhoPhi, mixture)
     );
 
     Info<< "Creating field kinetic energy K\n" << endl;

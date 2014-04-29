@@ -15,7 +15,7 @@
     surfaceScalarField phig
     (
         (
-            multiphaseProperties.surfaceTensionForce()
+            mixture.surfaceTensionForce()
           - ghf*fvc::snGrad(rho)
         )*rAUf*mesh.magSf()
     );
@@ -32,13 +32,13 @@
         )/(mesh.magSf().boundaryField()*rAUf.boundaryField())
     );
 
-    PtrList<fvScalarMatrix> p_rghEqnComps(multiphaseProperties.phases().size());
+    PtrList<fvScalarMatrix> p_rghEqnComps(mixture.phases().size());
 
     label phasei = 0;
     forAllConstIter
     (
         PtrDictionary<phaseModel>,
-        multiphaseProperties.phases(),
+        mixture.phases(),
         phase
     )
     {
@@ -74,7 +74,7 @@
         forAllConstIter
         (
             PtrDictionary<phaseModel>,
-            multiphaseProperties.phases(),
+            mixture.phases(),
             phase
         )
         {
@@ -105,14 +105,14 @@
 
         if (pimple.finalNonOrthogonalIter())
         {
-            // p = max(p_rgh + multiphaseProperties.rho()*gh, pMin);
-            // p_rgh = p - multiphaseProperties.rho()*gh;
+            // p = max(p_rgh + mixture.rho()*gh, pMin);
+            // p_rgh = p - mixture.rho()*gh;
 
             phasei = 0;
             forAllIter
             (
                 PtrDictionary<phaseModel>,
-                multiphaseProperties.phases(),
+                mixture.phases(),
                 phase
             )
             {
@@ -129,11 +129,11 @@
         }
     }
 
-    p = max(p_rgh + multiphaseProperties.rho()*gh, pMin);
+    p = max(p_rgh + mixture.rho()*gh, pMin);
 
     // Update densities from change in p_rgh
-    multiphaseProperties.correctRho(p_rgh - p_rgh_0);
-    rho = multiphaseProperties.rho();
+    mixture.correctRho(p_rgh - p_rgh_0);
+    rho = mixture.rho();
 
     K = 0.5*magSqr(U);
 

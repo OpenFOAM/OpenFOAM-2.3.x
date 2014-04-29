@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,6 +37,7 @@ Description
 #include "surfaceInterpolate.H"
 #include "fvcDiv.H"
 #include "fvcGrad.H"
+#include "fvcSnGrad.H"
 
 // * * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * //
 
@@ -166,7 +167,7 @@ void Foam::threePhaseInterfaceProperties::calculateK()
 
 Foam::threePhaseInterfaceProperties::threePhaseInterfaceProperties
 (
-    const threePhaseMixture& mixture
+    const incompressibleThreePhaseMixture& mixture
 )
 :
     mixture_(mixture),
@@ -210,6 +211,27 @@ Foam::threePhaseInterfaceProperties::threePhaseInterfaceProperties
 {
     calculateK();
 }
+
+
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
+
+Foam::tmp<Foam::surfaceScalarField>
+Foam::threePhaseInterfaceProperties::surfaceTensionForce() const
+{
+    return fvc::interpolate(sigmaK())*fvc::snGrad(mixture_.alpha1());
+}
+
+
+Foam::tmp<Foam::volScalarField>
+Foam::threePhaseInterfaceProperties::nearInterface() const
+{
+    return max
+    (
+        pos(mixture_.alpha1() - 0.01)*pos(0.99 - mixture_.alpha1()),
+        pos(mixture_.alpha2() - 0.01)*pos(0.99 - mixture_.alpha2())
+    );
+}
+
 
 
 // ************************************************************************* //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -203,6 +203,22 @@ Foam::interfaceProperties::interfaceProperties
     )
 {
     calculateK();
+}
+
+
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
+
+Foam::tmp<Foam::surfaceScalarField>
+Foam::interfaceProperties::surfaceTensionForce() const
+{
+    return fvc::interpolate(sigmaK())*fvc::snGrad(alpha1_);
+}
+
+
+Foam::tmp<Foam::volScalarField>
+Foam::interfaceProperties::nearInterface() const
+{
+    return pos(alpha1_ - 0.01)*pos(0.99 - alpha1_);
 }
 
 

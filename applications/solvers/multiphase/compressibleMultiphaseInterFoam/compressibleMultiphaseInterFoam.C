@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -76,9 +76,9 @@ int main(int argc, char *argv[])
         // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
         {
-            multiphaseProperties.solve();
+            mixture.solve();
 
-            solve(fvm::ddt(rho) + fvc::div(multiphaseProperties.rhoPhi()));
+            solve(fvm::ddt(rho) + fvc::div(mixture.rhoPhi()));
 
             #include "UEqn.H"
             #include "TEqn.H"

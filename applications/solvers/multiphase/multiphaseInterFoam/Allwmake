@@ -4,5 +4,6 @@ set -x
 
 wmake libso multiphaseMixture
 wmake
+wmake multiphaseInterDyMFoam
 
 # ----------------------------------------------------------------- end-of-file

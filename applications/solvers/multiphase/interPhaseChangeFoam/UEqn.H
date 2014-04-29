@@ -17,7 +17,7 @@
             fvc::reconstruct
             (
                 (
-                    fvc::interpolate(interface.sigmaK())*fvc::snGrad(alpha1)
+                    interface.surfaceTensionForce()
                   - ghf*fvc::snGrad(rho)
                   - fvc::snGrad(p_rgh)
                 ) * mesh.magSf()

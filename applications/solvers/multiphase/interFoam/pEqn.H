@@ -11,13 +11,13 @@
         (fvc::interpolate(HbyA) & mesh.Sf())
       + fvc::interpolate(rho*rAU)*fvc::ddtCorr(U, phi)
     );
-
     adjustPhi(phiHbyA, U, p_rgh);
+    fvOptions.makeRelative(phiHbyA);
 
     surfaceScalarField phig
     (
         (
-            fvc::interpolate(interface.sigmaK())*fvc::snGrad(alpha1)
+            mixture.surfaceTensionForce()
           - ghf*fvc::snGrad(rho)
         )*rAUf*mesh.magSf()
     );
@@ -30,7 +30,7 @@
         p_rgh.boundaryField(),
         (
             phiHbyA.boundaryField()
-          - (mesh.Sf().boundaryField() & U.boundaryField())
+          - fvOptions.relative(mesh.Sf().boundaryField() & U.boundaryField())
         )/(mesh.magSf().boundaryField()*rAUf.boundaryField())
     );
 
