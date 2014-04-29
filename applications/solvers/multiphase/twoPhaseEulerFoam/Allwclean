@@ -4,7 +4,7 @@ set -x
 
 wclean libso twoPhaseSystem
 wclean libso interfacialModels
-wclean libso phaseIncompressibleTurbulenceModels
+wclean libso phaseCompressibleTurbulenceModels
 wclean
 
 # ----------------------------------------------------------------- end-of-file

@@ -37,6 +37,10 @@ License
 namespace Foam
 {
 
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+scalar omegaWallFunctionFvPatchScalarField::tolerance_ = 1e-5;
+
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
 void omegaWallFunctionFvPatchScalarField::checkType()
@@ -79,14 +83,14 @@ void omegaWallFunctionFvPatchScalarField::setMaster()
     {
         if (isA<omegaWallFunctionFvPatchScalarField>(bf[patchi]))
         {
-            omegaWallFunctionFvPatchScalarField& epf = omegaPatch(patchi);
+            omegaWallFunctionFvPatchScalarField& opf = omegaPatch(patchi);
 
             if (master == -1)
             {
                 master = patchi;
             }
 
-            epf.master() = master;
+            opf.master() = master;
         }
     }
 }
@@ -160,10 +164,10 @@ omegaWallFunctionFvPatchScalarField::omegaPatch(const label patchi)
 
     const volScalarField::GeometricBoundaryField& bf = omega.boundaryField();
 
-    const omegaWallFunctionFvPatchScalarField& epf =
+    const omegaWallFunctionFvPatchScalarField& opf =
         refCast<const omegaWallFunctionFvPatchScalarField>(bf[patchi]);
 
-    return const_cast<omegaWallFunctionFvPatchScalarField&>(epf);
+    return const_cast<omegaWallFunctionFvPatchScalarField&>(opf);
 }
 
 
@@ -179,11 +183,11 @@ void omegaWallFunctionFvPatchScalarField::calculateTurbulenceFields
     {
         if (!cornerWeights_[patchi].empty())
         {
-            omegaWallFunctionFvPatchScalarField& epf = omegaPatch(patchi);
+            omegaWallFunctionFvPatchScalarField& opf = omegaPatch(patchi);
 
             const List<scalar>& w = cornerWeights_[patchi];
 
-            epf.calculate(turbulence, w, epf.patch(), G0, omega0);
+            opf.calculate(turbulence, w, opf.patch(), G0, omega0);
         }
     }
 
@@ -192,9 +196,9 @@ void omegaWallFunctionFvPatchScalarField::calculateTurbulenceFields
     {
         if (!cornerWeights_[patchi].empty())
         {
-            omegaWallFunctionFvPatchScalarField& epf = omegaPatch(patchi);
+            omegaWallFunctionFvPatchScalarField& opf = omegaPatch(patchi);
 
-            epf == scalarField(omega0, epf.patch().faceCells());
+            opf == scalarField(omega0, opf.patch().faceCells());
         }
     }
 }
@@ -493,17 +497,17 @@ void omegaWallFunctionFvPatchScalarField::updateCoeffs
 
     scalarField& omegaf = *this;
 
-    // only set the values if the weights are < 1 - tolerance
+    // only set the values if the weights are > tolerance
     forAll(weights, faceI)
     {
         scalar w = weights[faceI];
 
-        if (w < 1.0 - 1e-6)
+        if (w > tolerance_)
         {
             label cellI = patch().faceCells()[faceI];
 
-            G[cellI] = w*G[cellI] + (1.0 - w)*G0[cellI];
-            omega[cellI] = w*omega[cellI] + (1.0 - w)*omega0[cellI];
+            G[cellI] = (1.0 - w)*G[cellI] + w*G0[cellI];
+            omega[cellI] = (1.0 - w)*omega[cellI] + w*omega0[cellI];
             omegaf[faceI] = omega[cellI];
         }
     }
@@ -539,8 +543,6 @@ void omegaWallFunctionFvPatchScalarField::manipulateMatrix
         return;
     }
 
-    // filter weights so that we only apply the constraint where the
-    // weight > SMALL
     DynamicList<label> constraintCells(weights.size());
     DynamicList<scalar> constraintomega(weights.size());
     const labelUList& faceCells = patch().faceCells();
@@ -553,8 +555,8 @@ void omegaWallFunctionFvPatchScalarField::manipulateMatrix
 
     forAll(weights, faceI)
     {
-        // only set the values if the weights are < 1 - tolerance
-        if (weights[faceI] < (1.0 - 1e-6))
+        // only set the values if the weights are > tolerance
+        if (weights[faceI] > tolerance_)
         {
             nConstrainedCells++;
 

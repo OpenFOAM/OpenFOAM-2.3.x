@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.0                                 |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -20,12 +20,14 @@ FoamFile
     rotor
     {
         type            wall;
+        inGroups        1(wall);
         nFaces          192;
         startFace       5952;
     }
     stator
     {
         type            wall;
+        inGroups        1(wall);
         nFaces          192;
         startFace       6144;
     }

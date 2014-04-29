@@ -46,7 +46,7 @@ Foam::LESModel<BasicTurbulenceModel>::LESModel
     const alphaField& alpha,
     const rhoField& rho,
     const volVectorField& U,
-    const surfaceScalarField& alphaPhi,
+    const surfaceScalarField& alphaRhoPhi,
     const surfaceScalarField& phi,
     const transportModel& transport,
     const word& propertiesName
@@ -57,7 +57,7 @@ Foam::LESModel<BasicTurbulenceModel>::LESModel
         alpha,
         rho,
         U,
-        alphaPhi,
+        alphaRhoPhi,
         phi,
         transport,
         propertiesName
@@ -104,7 +104,7 @@ Foam::LESModel<BasicTurbulenceModel>::New
     const alphaField& alpha,
     const rhoField& rho,
     const volVectorField& U,
-    const surfaceScalarField& alphaPhi,
+    const surfaceScalarField& alphaRhoPhi,
     const surfaceScalarField& phi,
     const transportModel& transport,
     const word& propertiesName
@@ -154,7 +154,7 @@ Foam::LESModel<BasicTurbulenceModel>::New
 
     return autoPtr<LESModel>
     (
-        cstrIter()(alpha, rho, U, alphaPhi, phi, transport, propertiesName)
+        cstrIter()(alpha, rho, U, alphaRhoPhi, phi, transport, propertiesName)
     );
 }
 

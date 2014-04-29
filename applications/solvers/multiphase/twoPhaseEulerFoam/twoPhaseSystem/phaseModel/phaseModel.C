@@ -27,7 +27,7 @@ License
 #include "twoPhaseSystem.H"
 #include "diameterModel.H"
 #include "fvMatrix.H"
-#include "PhaseIncompressibleTurbulenceModel.H"
+#include "PhaseCompressibleTurbulenceModel.H"
 #include "dragModel.H"
 #include "heatTransferModel.H"
 #include "fixedValueFvPatchFields.H"
@@ -77,7 +77,7 @@ Foam::phaseModel::phaseModel
         ),
         fluid.mesh()
     ),
-    phiAlpha_
+    alphaPhi_
     (
         IOobject
         (
@@ -87,6 +87,17 @@ Foam::phaseModel::phaseModel
         ),
         fluid.mesh(),
         dimensionedScalar("0", dimensionSet(0, 3, -1, 0, 0), 0)
+    ),
+    alphaRhoPhi_
+    (
+        IOobject
+        (
+            IOobject::groupName("alphaRhoPhi", name_),
+            fluid.mesh().time().timeName(),
+            fluid.mesh()
+        ),
+        fluid.mesh(),
+        dimensionedScalar("0", dimensionSet(1, 0, -1, 0, 0), 0)
     )
 {
     thermo_->validate("phaseModel " + name_, "h", "e");
@@ -169,11 +180,12 @@ Foam::phaseModel::phaseModel
     );
 
     turbulence_ =
-        PhaseIncompressibleTurbulenceModel<phaseModel>::New
+        PhaseCompressibleTurbulenceModel<phaseModel>::New
         (
             *this,
+            thermo_->rho(),
             U_,
-            phiAlpha_,
+            alphaRhoPhi_,
             phi(),
             *this
         );
@@ -199,13 +211,13 @@ Foam::tmp<Foam::volScalarField> Foam::phaseModel::d() const
     return dPtr_().d();
 }
 
-Foam::PhaseIncompressibleTurbulenceModel<Foam::phaseModel>&
+Foam::PhaseCompressibleTurbulenceModel<Foam::phaseModel>&
 Foam::phaseModel::turbulence()
 {
     return turbulence_();
 }
 
-const Foam::PhaseIncompressibleTurbulenceModel<Foam::phaseModel>&
+const Foam::PhaseCompressibleTurbulenceModel<Foam::phaseModel>&
 Foam::phaseModel::turbulence() const
 {
     return turbulence_();
