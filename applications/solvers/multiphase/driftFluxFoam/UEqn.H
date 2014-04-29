@@ -5,8 +5,7 @@
         fvm::ddt(rho, U)
       + fvm::div(rhoPhi, U)
       + fvc::div(UdmModel.tauDm())
-      - fvm::laplacian(muEff, U)
-      - fvc::div(muEff*dev2(T(fvc::grad(U))))
+      + turbulence->divDevRhoReff(U)
      ==
         fvOptions(rho, U)
     );

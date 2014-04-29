@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,7 +24,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "CompressibleTurbulenceModel.H"
-#include "fluidThermo.H"
+#include "incompressibleTwoPhaseInteractingMixture.H"
 #include "addToRunTimeSelectionTable.H"
 #include "makeTurbulenceModel.H"
 
@@ -38,16 +38,24 @@ makeBaseTurbulenceModel
     volScalarField,
     compressibleTurbulenceModel,
     CompressibleTurbulenceModel,
-    fluidThermo
+    incompressibleTwoPhaseInteractingMixture
 );
 
 #define makeRASModel(Type)                                                     \
     makeTemplatedTurbulenceModel                                               \
-    (fluidThermoCompressibleTurbulenceModel, RAS, Type)
+    (                                                                          \
+        incompressibleTwoPhaseInteractingMixtureCompressibleTurbulenceModel,   \
+        RAS,                                                                   \
+        Type                                                                   \
+    )
 
 #define makeLESModel(Type)                                                     \
     makeTemplatedTurbulenceModel                                               \
-    (fluidThermoCompressibleTurbulenceModel, LES, Type)
+    (                                                                          \
+        incompressibleTwoPhaseInteractingMixtureCompressibleTurbulenceModel,   \
+        LES,                                                                   \
+        Type                                                                   \
+    )
 
 #include "kEpsilon.H"
 makeRASModel(kEpsilon);

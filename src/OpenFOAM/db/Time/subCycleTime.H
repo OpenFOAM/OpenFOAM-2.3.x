@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -74,6 +74,18 @@ public:
 
         //- End the sub-cycling and reset the time-state
         void endSubCycle();
+
+        //- Return the total number of sub-cycles
+        label nSubCycles() const
+        {
+            return nSubCycles_;
+        }
+
+        //- Return the current sub-cycle index
+        label index() const
+        {
+            return subCycleIndex_;
+        }
 
 
     // Member operators

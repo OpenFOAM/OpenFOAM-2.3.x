@@ -9,37 +9,25 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       volScalarField;
-    location    "0";
-    object      k;
+    class       dictionary;
+    location    "constant";
+    object      turbulenceProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -2 0 0 0 0];
+simulationType  RAS;
 
-internalField   uniform 0.01;
-
-boundaryField
+RAS
 {
-    rotor
+    RASModel buoyantKEpsilon;
+
+    turbulence      on;
+    printCoeffs     on;
+
+    buoyantKEpsilonCoeffs
     {
-        type            kqRWallFunction;
-        value           $internalField;
-    }
-    stator
-    {
-        type            kqRWallFunction;
-        value           $internalField;
-    }
-    front
-    {
-        type            empty;
-    }
-    back
-    {
-        type            empty;
+        Cg      0.85;
     }
 }
-
 
 // ************************************************************************* //

@@ -34,17 +34,19 @@ boundaryField
 
     bottomWall
     {
-        type            zeroGradient;
+        type            kqRWallFunction;
+        value           $internalField;
     }
 
     endWall
     {
-        type            zeroGradient;
+        type            kqRWallFunction;
+        value           $internalField;
     }
 
     top
     {
-        type            zeroGradient;
+        type            slip;
     }
 
     frontAndBack
