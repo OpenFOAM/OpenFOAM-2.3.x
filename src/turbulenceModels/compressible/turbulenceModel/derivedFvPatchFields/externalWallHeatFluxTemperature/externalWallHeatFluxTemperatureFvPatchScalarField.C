@@ -72,9 +72,9 @@ externalWallHeatFluxTemperatureFvPatchScalarField
     thicknessLayers_(),
     kappaLayers_()
 {
-    this->refValue() = 0.0;
-    this->refGrad() = 0.0;
-    this->valueFraction() = 1.0;
+    refValue() = 0.0;
+    refGrad() = 0.0;
+    valueFraction() = 1.0;
 }
 
 
@@ -242,17 +242,13 @@ void Foam::externalWallHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
         return;
     }
 
-    scalarField q(size(), 0.0);
-    const scalarField Tc(patchInternalField());
     const scalarField Tp(*this);
-    const scalarField KWall(kappa(Tp));
-    const scalarField KDelta(KWall*patch().deltaCoeffs());
+    scalarField hp(patch().size(), 0.0);
 
     switch (mode_)
     {
         case fixedHeatFlux:
         {
-            q = q_;
             break;
         }
         case fixedHeatTransferCoeff:
@@ -269,7 +265,7 @@ void Foam::externalWallHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
                     }
                 }
             }
-            q = (Ta_ - Tp)/(1.0/h_ + totalSolidRes);
+            hp = 1.0/(1.0/h_ + totalSolidRes);
             break;
         }
         default:
@@ -283,27 +279,24 @@ void Foam::externalWallHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
         }
     }
 
-    forAll(*this, i)
+    if (mode_ == fixedHeatFlux)
     {
-        if (q[i] > 0) //in
-        {
-            this->refGrad()[i] =  q[i]/KWall[i];
-            this->refValue()[i] = 0.0;
-            this->valueFraction()[i] = 0.0;
-        }
-        else //out
-        {
-            this->refGrad()[i] = 0.0;
-            this->refValue()[i] = q[i]/KDelta[i] + Tc[i];
-            this->valueFraction()[i] = 1.0;
-        }
+        refGrad() =  q_/kappa(Tp);
+        refValue() =  0.0;
+        valueFraction() = 0.0;
+    }
+    else if (mode_ == fixedHeatTransferCoeff)
+    {
+        refGrad() =  0.0;
+        refValue() =  Ta_;
+        valueFraction() = hp/(hp + kappa(Tp)*patch().deltaCoeffs());
     }
 
     mixedFvPatchScalarField::updateCoeffs();
 
     if (debug)
     {
-        scalar Q = gSum(KWall*patch().magSf()*snGrad());
+        scalar Q = gSum(kappa(Tp)*patch().magSf()*snGrad());
 
         Info<< patch().boundaryMesh().mesh().name() << ':'
             << patch().name() << ':'
