@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.0                                 |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -27,21 +27,21 @@ gradSchemes
 
 divSchemes
 {
-    default                     none;
+    default                         none;
 
-    div(phi,alpha.air)          Gauss vanLeer;
-    div(phir,alpha.air)         Gauss vanLeer;
+    div(phi,alpha.air)              Gauss vanLeer;
+    div(phir,alpha.air)             Gauss vanLeer;
 
-    div(phi.air,kappai.air)     Gauss vanLeer;
+    "div\(alphaRhoPhi.*,U.*\)"      Gauss limitedLinearV 1;
+    "div\(phi.*,U.*\)"              Gauss limitedLinearV 1;
 
-    "div\(alphaPhi.*,U.*\)"     Gauss limitedLinearV 1;
-    "div\(phi.*,U.*\)"          Gauss limitedLinearV 1;
-    "div\(alphaPhi.*,.*rho.*\)" Gauss linear;
+    div(phi.air,kappai.air)         Gauss vanLeer;
 
-    "div\(alphaPhi.*,(h|e).*\)" Gauss limitedLinear 1;
-    "div\(alphaPhi.*,(K.*|p)\)" Gauss limitedLinear 1;
+    "div\(alphaRhoPhi.*,(h|e).*\)"  Gauss limitedLinear 1;
+    "div\(alphaRhoPhi.*,K.*\)"      Gauss limitedLinear 1;
+    "div\(alphaPhi.*,p\)"           Gauss limitedLinear 1;
 
-    "div\(\(\(alpha.*nuEff.*\)*dev2\(T\(grad\(U.*\)\)\)\)\)" Gauss linear;
+    "div\(\(\(\(alpha.**thermo:rho.*\)*nuEff.*\)*dev2\(T\(grad\(U.*\)\)\)\)\)" Gauss linear;
 }
 
 laplacianSchemes

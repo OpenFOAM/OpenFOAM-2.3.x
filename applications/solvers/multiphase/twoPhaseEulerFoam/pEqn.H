@@ -5,8 +5,8 @@
     rAU1 = 1.0/U1Eqn.A();
     rAU2 = 1.0/U2Eqn.A();
 
-    surfaceScalarField rAlphaAU1f(fvc::interpolate(alpha1*rAU1));
-    surfaceScalarField rAlphaAU2f(fvc::interpolate(alpha2*rAU2));
+    surfaceScalarField rAlphaAU1f(fvc::interpolate(alpha1*rho1*rAU1));
+    surfaceScalarField rAlphaAU2f(fvc::interpolate(alpha2*rho2*rAU2));
 
     volVectorField HbyA1
     (
@@ -31,7 +31,7 @@
     surfaceScalarField phiP1
     (
         "phiP1",
-        fvc::interpolate((1.0/rho1)*rAU1*phase1.turbulence().pPrime())
+        fvc::interpolate(rAU1*phase1.turbulence().pPrime())
        *fvc::snGrad(alpha1)*mesh.magSf()
     );
     phiP1.boundaryField() == 0;
@@ -40,7 +40,7 @@
     surfaceScalarField phiP2
     (
         "phiP2",
-        fvc::interpolate((1.0/rho2)*rAU2*phase2.turbulence().pPrime())
+        fvc::interpolate(rAU2*phase2.turbulence().pPrime())
        *fvc::snGrad(alpha2)*mesh.magSf()
     );
     phiP2.boundaryField() == 0;
@@ -61,14 +61,14 @@
 
     phiHbyA1 +=
     (
-        fvc::interpolate((1.0/rho1)*rAU1*dragCoeff)*phi2
+        fvc::interpolate(rAU1*dragCoeff)*phi2
       - phiP1
       + rAlphaAU1f*(g & mesh.Sf())
     );
 
     phiHbyA2 +=
     (
-        fvc::interpolate((1.0/rho2)*rAU2*dragCoeff)*phi1
+        fvc::interpolate(rAU2*dragCoeff)*phi1
       - phiP2
       + rAlphaAU2f*(g & mesh.Sf())
     );
@@ -82,8 +82,8 @@
 
     surfaceScalarField phiHbyA("phiHbyA", alpha1f*phiHbyA1 + alpha2f*phiHbyA2);
 
-    HbyA1 += (1.0/rho1)*rAU1*dragCoeff*U2;
-    HbyA2 += (1.0/rho2)*rAU2*dragCoeff*U1;
+    HbyA1 += rAU1*dragCoeff*U2;
+    HbyA2 += rAU2*dragCoeff*U1;
 
     surfaceScalarField rAUf
     (
@@ -129,7 +129,7 @@
 
         pEqnComp1 =
             (
-                fvc::ddt(alpha1, rho1) + fvc::div(alphaPhi1, rho1)
+                fvc::ddt(alpha1, rho1) + fvc::div(alphaRhoPhi1)
               - fvc::Sp(fvc::ddt(alpha1) + fvc::div(alphaPhi1), rho1)
             )/rho1
           + (alpha1/rho1)*correction
@@ -142,7 +142,7 @@
 
         pEqnComp2 =
             (
-                fvc::ddt(alpha2, rho2) + fvc::div(alphaPhi2, rho2)
+                fvc::ddt(alpha2, rho2) + fvc::div(alphaRhoPhi2)
               - fvc::Sp(fvc::ddt(alpha2) + fvc::div(alphaPhi2), rho2)
             )/rho2
           + (alpha2/rho2)*correction
@@ -157,14 +157,14 @@
     {
         pEqnComp1 =
             (
-                fvc::ddt(alpha1, rho1) + fvc::div(alphaPhi1, rho1)
+                fvc::ddt(alpha1, rho1) + fvc::div(alphaRhoPhi1)
               - fvc::Sp(fvc::ddt(alpha1) + fvc::div(alphaPhi1), rho1)
             )/rho1
           + (alpha1*psi1/rho1)*correction(fvm::ddt(p));
 
         pEqnComp2 =
             (
-                fvc::ddt(alpha2, rho2) + fvc::div(alphaPhi2, rho2)
+                fvc::ddt(alpha2, rho2) + fvc::div(alphaRhoPhi2)
               - fvc::Sp(fvc::ddt(alpha2) + fvc::div(alphaPhi2), rho2)
             )/rho2
           + (alpha2*psi2/rho2)*correction(fvm::ddt(p));
@@ -209,8 +209,8 @@
 
             fluid.dgdt() =
             (
-                pos(alpha2)*(pEqnComp2 & p)/max(alpha2, scalar(1e-3))
-              - pos(alpha1)*(pEqnComp1 & p)/max(alpha1, scalar(1e-3))
+                alpha1*(pEqnComp2 & p)
+              - alpha2*(pEqnComp1 & p)
             );
 
             p.relax();

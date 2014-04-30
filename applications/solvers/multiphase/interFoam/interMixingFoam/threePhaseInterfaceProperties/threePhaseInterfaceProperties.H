@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,7 +37,7 @@ SourceFiles
 #ifndef threePhaseInterfaceProperties_H
 #define threePhaseInterfaceProperties_H
 
-#include "threePhaseMixture.H"
+#include "incompressibleThreePhaseMixture.H"
 #include "surfaceFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -53,7 +53,7 @@ class threePhaseInterfaceProperties
 {
     // Private data
 
-        const threePhaseMixture& mixture_;
+        const incompressibleThreePhaseMixture& mixture_;
 
         //- Compression coefficient
         scalar cAlpha_;
@@ -98,7 +98,10 @@ public:
     // Constructors
 
         //- Construct from volume fraction field alpha and IOdictionary
-        threePhaseInterfaceProperties(const threePhaseMixture& mixture);
+        threePhaseInterfaceProperties
+        (
+            const incompressibleThreePhaseMixture& mixture
+        );
 
 
     // Member Functions
@@ -137,6 +140,12 @@ public:
         {
             return sigma()*K_;
         }
+
+        tmp<surfaceScalarField> surfaceTensionForce() const;
+
+        //- Indicator of the proximity of the interface
+        //  Field values are 1 near and 0 away for the interface.
+        tmp<volScalarField> nearInterface() const;
 
         void correct()
         {

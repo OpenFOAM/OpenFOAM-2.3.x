@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -125,7 +125,7 @@ public:
                        "steady-state solver, use 'bounded Gauss' "
                        "to ensure boundedness.\n"
                     << "    To remove this warning switch off "
-                    << "'boundedGauss' in "
+                    << "'warnUnboundedGauss' in "
                     << controlDictFiles[controlDictFiles.size()-1]
                     << endl;
             }

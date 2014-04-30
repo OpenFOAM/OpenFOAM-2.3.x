@@ -16,7 +16,7 @@
     surfaceScalarField phig
     (
         (
-            fvc::interpolate(interface.sigmaK())*fvc::snGrad(alpha1)
+            interface.surfaceTensionForce()
           - ghf*fvc::snGrad(rho)
         )*rAUf*mesh.magSf()
     );
@@ -33,7 +33,7 @@
         )/(mesh.magSf().boundaryField()*rAUf.boundaryField())
     );
 
-    Pair<tmp<volScalarField> > vDotP = twoPhaseProperties->vDotP();
+    Pair<tmp<volScalarField> > vDotP = mixture->vDotP();
     const volScalarField& vDotcP = vDotP[0]();
     const volScalarField& vDotvP = vDotP[1]();
 

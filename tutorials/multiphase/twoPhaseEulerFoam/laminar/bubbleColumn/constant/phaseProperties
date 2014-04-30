@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.0                                 |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -29,7 +29,7 @@ air
 
 water
 {
-    diameterModel constant;
+    diameterModel   constant;
     constantCoeffs
     {
         d               1e-4;
@@ -125,13 +125,13 @@ heatTransfer
     (air in water)
     {
         type            RanzMarshall;
-        residualAlpha   1e-6;
+        residualAlpha   1e-4;
     }
 
     (water in air)
     {
         type            RanzMarshall;
-        residualAlpha   1e-6;
+        residualAlpha   1e-4;
     }
 );
 

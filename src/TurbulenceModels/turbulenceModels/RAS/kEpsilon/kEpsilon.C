@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -41,7 +41,7 @@ kEpsilon<BasicTurbulenceModel>::kEpsilon
     const alphaField& alpha,
     const rhoField& rho,
     const volVectorField& U,
-    const surfaceScalarField& alphaPhi,
+    const surfaceScalarField& alphaRhoPhi,
     const surfaceScalarField& phi,
     const transportModel& transport,
     const word& propertiesName,
@@ -54,7 +54,7 @@ kEpsilon<BasicTurbulenceModel>::kEpsilon
         alpha,
         rho,
         U,
-        alphaPhi,
+        alphaRhoPhi,
         phi,
         transport,
         propertiesName
@@ -223,14 +223,13 @@ void kEpsilon<BasicTurbulenceModel>::correct()
     // Local references
     const alphaField& alpha = this->alpha_;
     const rhoField& rho = this->rho_;
-    const surfaceScalarField& alphaPhi = this->alphaPhi_;
-    const surfaceScalarField& phi = this->phi_;
+    const surfaceScalarField& alphaRhoPhi = this->alphaRhoPhi_;
     const volVectorField& U = this->U_;
     volScalarField& nut = this->nut_;
 
     eddyViscosity<RASModel<BasicTurbulenceModel> >::correct();
 
-    volScalarField divU(fvc::div(fvc::absolute(phi/fvc::interpolate(rho), U)));
+    volScalarField divU(fvc::div(fvc::absolute(this->phi(), U)));
 
     tmp<volTensorField> tgradU = fvc::grad(U);
     volScalarField G(this->GName(), nut*(tgradU() && dev(twoSymm(tgradU()))));
@@ -243,8 +242,8 @@ void kEpsilon<BasicTurbulenceModel>::correct()
     tmp<fvScalarMatrix> epsEqn
     (
         fvm::ddt(alpha, rho, epsilon_)
-      + fvm::div(alphaPhi, epsilon_)
-      - fvm::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaPhi), epsilon_)
+      + fvm::div(alphaRhoPhi, epsilon_)
+      - fvm::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), epsilon_)
       - fvm::laplacian(alpha*rho*DepsilonEff(), epsilon_)
      ==
         C1_*alpha*rho*G*epsilon_/k_
@@ -266,8 +265,8 @@ void kEpsilon<BasicTurbulenceModel>::correct()
     tmp<fvScalarMatrix> kEqn
     (
         fvm::ddt(alpha, rho, k_)
-      + fvm::div(alphaPhi, k_)
-      - fvm::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaPhi), k_)
+      + fvm::div(alphaRhoPhi, k_)
+      - fvm::Sp(fvc::ddt(alpha, rho) + fvc::div(alphaRhoPhi), k_)
       - fvm::laplacian(alpha*rho*DkEff(), k_)
      ==
         alpha*rho*G

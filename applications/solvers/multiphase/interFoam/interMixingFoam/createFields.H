@@ -28,17 +28,17 @@
 
     #include "createPhi.H"
 
-    threePhaseMixture threePhaseProperties(U, phi);
+    immiscibleIncompressibleThreePhaseMixture mixture(U, phi);
 
-    volScalarField& alpha1(threePhaseProperties.alpha1());
-    volScalarField& alpha2(threePhaseProperties.alpha2());
-    volScalarField& alpha3(threePhaseProperties.alpha3());
+    volScalarField& alpha1(mixture.alpha1());
+    volScalarField& alpha2(mixture.alpha2());
+    volScalarField& alpha3(mixture.alpha3());
 
-    const dimensionedScalar& rho1 = threePhaseProperties.rho1();
-    const dimensionedScalar& rho2 = threePhaseProperties.rho2();
-    const dimensionedScalar& rho3 = threePhaseProperties.rho3();
+    const dimensionedScalar& rho1 = mixture.rho1();
+    const dimensionedScalar& rho2 = mixture.rho2();
+    const dimensionedScalar& rho3 = mixture.rho3();
 
-    dimensionedScalar D23(threePhaseProperties.lookup("D23"));
+    dimensionedScalar D23(mixture.lookup("D23"));
 
     // Need to store rho for ddt(rho, U)
     volScalarField rho
@@ -73,14 +73,10 @@
     );
 
 
-    // Construct interface from alpha distribution
-    threePhaseInterfaceProperties interface(threePhaseProperties);
-
-
     // Construct incompressible turbulence model
     autoPtr<incompressible::turbulenceModel> turbulence
     (
-        incompressible::turbulenceModel::New(U, phi, threePhaseProperties)
+        incompressible::turbulenceModel::New(U, phi, mixture)
     );
 
 

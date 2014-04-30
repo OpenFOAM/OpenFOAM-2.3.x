@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -92,7 +92,7 @@ void epsilonLowReWallFunctionFvPatchScalarField::calculate
     {
         label cellI = patch.faceCells()[faceI];
 
-        scalar yPlus = Cmu25*sqrt(k[cellI])*y[faceI]/muw[faceI]/rhow[faceI];
+        scalar yPlus = Cmu25*sqrt(k[cellI])*y[faceI]/(muw[faceI]/rhow[faceI]);
 
         scalar w = cornerWeights[faceI];
 

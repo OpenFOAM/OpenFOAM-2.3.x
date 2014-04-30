@@ -22,7 +22,7 @@ boundaryField
 {
     SYMP3
     {
-        type            zeroGradient;
+        type            slip;
     }
 
     INLE1
@@ -51,69 +51,10 @@ boundaryField
         type            zeroGradient;
     }
 
-    WALL6
+    "WALL.*"
     {
-        type            zeroGradient;
-    }
-
-    WALL8
-    {
-        type            zeroGradient;
-    }
-
-    WALL61
-    {
-        type            zeroGradient;
-    }
-
-    WALL62
-    {
-        type            zeroGradient;
-    }
-
-    WALL63
-    {
-        type            zeroGradient;
-    }
-
-    WALL64
-    {
-        type            zeroGradient;
-    }
-
-    WALL65
-    {
-        type            zeroGradient;
-    }
-
-    WALL66
-    {
-        type            zeroGradient;
-    }
-
-    WALL67
-    {
-        type            zeroGradient;
-    }
-
-    WALL68
-    {
-        type            zeroGradient;
-    }
-
-    WALL69
-    {
-        type            zeroGradient;
-    }
-
-    WALL7
-    {
-        type            zeroGradient;
-    }
-
-    WALL70
-    {
-        type            zeroGradient;
+        type            kqRWallFunction;
+        value           $internalField;
     }
 
     OUTL15

@@ -54,7 +54,9 @@ Foam::relativeVelocityModel::relativeVelocityModel
         (
             "Udm",
             alphac_.time().timeName(),
-            alphac_.mesh()
+            alphac_.mesh(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
         ),
         alphac_.mesh(),
         dimensionedVector("Udm", dimVelocity, vector::zero),

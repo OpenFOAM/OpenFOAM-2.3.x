@@ -29,18 +29,18 @@
     #include "createPhi.H"
 
     Info<< "Reading transportProperties\n" << endl;
-    incompressibleTwoPhaseMixture twoPhaseProperties(U, phi);
+    incompressibleTwoPhaseMixture mixture(U, phi);
 
-    volScalarField& alpha1(twoPhaseProperties.alpha1());
-    volScalarField& alpha2(twoPhaseProperties.alpha2());
+    volScalarField& alpha1(mixture.alpha1());
+    volScalarField& alpha2(mixture.alpha2());
 
-    const dimensionedScalar& rho1 = twoPhaseProperties.rho1();
-    const dimensionedScalar& rho2 = twoPhaseProperties.rho2();
+    const dimensionedScalar& rho1 = mixture.rho1();
+    const dimensionedScalar& rho2 = mixture.rho2();
 
-    dimensionedScalar Dab(twoPhaseProperties.lookup("Dab"));
+    dimensionedScalar Dab(mixture.lookup("Dab"));
 
     // Read the reciprocal of the turbulent Schmidt number
-    dimensionedScalar alphatab(twoPhaseProperties.lookup("alphatab"));
+    dimensionedScalar alphatab(mixture.lookup("alphatab"));
 
     // Need to store rho for ddt(rho, U)
     volScalarField rho("rho", alpha1*rho1 + alpha2*rho2);
@@ -66,7 +66,7 @@
     // Construct incompressible turbulence model
     autoPtr<incompressible::turbulenceModel> turbulence
     (
-        incompressible::turbulenceModel::New(U, phi, twoPhaseProperties)
+        incompressible::turbulenceModel::New(U, phi, mixture)
     );
 
     Info<< "Calculating field g.h\n" << endl;

@@ -1,7 +1,7 @@
     fvVectorMatrix UEqn
     (
         fvm::ddt(rho, U)
-      + fvm::div(multiphaseProperties.rhoPhi(), U)
+      + fvm::div(mixture.rhoPhi(), U)
       + turbulence->divDevRhoReff(U)
     );
 
@@ -16,7 +16,7 @@
             fvc::reconstruct
             (
                 (
-                    multiphaseProperties.surfaceTensionForce()
+                    mixture.surfaceTensionForce()
                   - ghf*fvc::snGrad(rho)
                   - fvc::snGrad(p_rgh)
                 ) * mesh.magSf()

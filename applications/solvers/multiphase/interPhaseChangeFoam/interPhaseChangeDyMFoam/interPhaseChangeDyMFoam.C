@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
                 dimensionedScalar("0", dimMass/dimTime, 0)
             );
 
-            twoPhaseProperties->correct();
+            mixture->correct();
 
             #include "alphaEqnSubCycle.H"
             interface.correct();

@@ -32,7 +32,7 @@ Description
 
 #include "fvCFD.H"
 #include "twoPhaseSystem.H"
-#include "PhaseIncompressibleTurbulenceModel.H"
+#include "PhaseCompressibleTurbulenceModel.H"
 #include "pimpleControl.H"
 #include "IOMRFZoneList.H"
 #include "fixedFluxPressureFvPatchScalarField.H"
@@ -72,7 +72,6 @@ int main(int argc, char *argv[])
         while (pimple.loop())
         {
             fluid.solve();
-            rho = fluid.rho();
             fluid.correct();
 
             #include "EEqns.H"

@@ -24,7 +24,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "twoPhaseSystem.H"
-#include "PhaseIncompressibleTurbulenceModel.H"
+#include "PhaseCompressibleTurbulenceModel.H"
 #include "BlendedInterfacialModel.H"
 #include "dragModel.H"
 #include "virtualMassModel.H"
@@ -104,9 +104,12 @@ Foam::twoPhaseSystem::twoPhaseSystem
         (
             "dgdt",
             mesh.time().timeName(),
-            mesh
+            mesh,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
         ),
-        pos(phase2_)*fvc::div(phi_)/max(phase2_, scalar(0.0001))
+        mesh,
+        dimensionedScalar("dgdt", dimless/dimTime, 0)
     ),
 
     yWall_
@@ -124,8 +127,6 @@ Foam::twoPhaseSystem::twoPhaseSystem
 
 
     // Blending
-    // ~~~~~~~~
-
     forAllConstIter(dictionary, subDict("blending"), iter)
     {
         blendingMethods_.insert
@@ -141,7 +142,6 @@ Foam::twoPhaseSystem::twoPhaseSystem
 
 
     // Pairs
-    // ~~~~~
 
     phasePair::scalarTable sigmaTable(lookup("sigma"));
     phasePair::dictTable aspectRatioTable(lookup("aspectRatio"));
@@ -183,7 +183,6 @@ Foam::twoPhaseSystem::twoPhaseSystem
 
 
     // Models
-    // ~~~~~~
 
     drag_.set
     (
@@ -396,10 +395,8 @@ void Foam::twoPhaseSystem::solve()
         );
 
         pPrimeByA =
-            fvc::interpolate((1.0/phase1_.rho())
-           *rAU1*phase1_.turbulence().pPrime())
-          + fvc::interpolate((1.0/phase2_.rho())
-           *rAU2*phase2_.turbulence().pPrime());
+            fvc::interpolate(rAU1*phase1_.turbulence().pPrime())
+          + fvc::interpolate(rAU2*phase2_.turbulence().pPrime());
 
         surfaceScalarField phiP
         (
@@ -439,67 +436,90 @@ void Foam::twoPhaseSystem::solve()
 
         forAll(dgdt_, celli)
         {
-            if (dgdt_[celli] > 0.0 && alpha1[celli] > 0.0)
+            if (dgdt_[celli] > 0.0)
             {
-                Sp[celli] -= dgdt_[celli]*alpha1[celli];
-                Su[celli] += dgdt_[celli]*alpha1[celli];
+                Sp[celli] -= dgdt_[celli]/max(1.0 - alpha1[celli], 1e-4);
+                Su[celli] += dgdt_[celli]/max(1.0 - alpha1[celli], 1e-4);
             }
-            else if (dgdt_[celli] < 0.0 && alpha1[celli] < 1.0)
+            else if (dgdt_[celli] < 0.0)
             {
-                Sp[celli] += dgdt_[celli]*(1.0 - alpha1[celli]);
+                Sp[celli] += dgdt_[celli]/max(alpha1[celli], 1e-4);
             }
         }
 
-        dimensionedScalar totalDeltaT = runTime.deltaT();
-        if (nAlphaSubCycles > 1)
-        {
-            phase1_.phiAlpha() =
-                dimensionedScalar("0", phase1_.phiAlpha().dimensions(), 0);
-        }
-
-        for
+        surfaceScalarField alphaPhic1
         (
-            subCycle<volScalarField> alphaSubCycle(alpha1, nAlphaSubCycles);
-            !(++alphaSubCycle).end();
-        )
-        {
-            surfaceScalarField alphaPhic1
+            fvc::flux
             (
-                fvc::flux
-                (
-                    phic,
-                    alpha1,
-                    alphaScheme
-                )
-              + fvc::flux
-                (
-                    -fvc::flux(-phir, scalar(1) - alpha1, alpharScheme),
-                    alpha1,
-                    alpharScheme
-                )
-            );
+                phic,
+                alpha1,
+                alphaScheme
+            )
+          + fvc::flux
+            (
+               -fvc::flux(-phir, scalar(1) - alpha1, alpharScheme),
+                alpha1,
+                alpharScheme
+            )
+        );
 
-            // Ensure that the flux at inflow BCs is preserved
-            forAll(alphaPhic1.boundaryField(), patchi)
+        // Ensure that the flux at inflow BCs is preserved
+        forAll(alphaPhic1.boundaryField(), patchi)
+        {
+            fvsPatchScalarField& alphaPhic1p =
+                alphaPhic1.boundaryField()[patchi];
+
+            if (!alphaPhic1p.coupled())
             {
-                fvsPatchScalarField& alphaPhic1p =
-                    alphaPhic1.boundaryField()[patchi];
+                const scalarField& phi1p = phi1.boundaryField()[patchi];
+                const scalarField& alpha1p = alpha1.boundaryField()[patchi];
 
-                if (!alphaPhic1p.coupled())
+                forAll(alphaPhic1p, facei)
                 {
-                    const scalarField& phi1p = phi1.boundaryField()[patchi];
-                    const scalarField& alpha1p = alpha1.boundaryField()[patchi];
-
-                    forAll(alphaPhic1p, facei)
+                    if (phi1p[facei] < 0)
                     {
-                        if (phi1p[facei] < 0)
-                        {
-                            alphaPhic1p[facei] = alpha1p[facei]*phi1p[facei];
-                        }
+                        alphaPhic1p[facei] = alpha1p[facei]*phi1p[facei];
                     }
                 }
             }
+        }
 
+        if (nAlphaSubCycles > 1)
+        {
+            for
+            (
+                subCycle<volScalarField> alphaSubCycle(alpha1, nAlphaSubCycles);
+                !(++alphaSubCycle).end();
+            )
+            {
+                surfaceScalarField alphaPhic10(alphaPhic1);
+
+                MULES::explicitSolve
+                (
+                    geometricOneField(),
+                    alpha1,
+                    phi_,
+                    alphaPhic10,
+                    (alphaSubCycle.index()*Sp)(),
+                    (Su - (alphaSubCycle.index() - 1)*Sp*alpha1)(),
+                    phase1_.alphaMax(),
+                    0
+                );
+
+                if (alphaSubCycle.index() == 1)
+                {
+                    phase1_.alphaPhi() = alphaPhic10;
+                }
+                else
+                {
+                    phase1_.alphaPhi() += alphaPhic10;
+                }
+            }
+
+            phase1_.alphaPhi() /= nAlphaSubCycles;
+        }
+        else
+        {
             MULES::explicitSolve
             (
                 geometricOneField(),
@@ -512,14 +532,7 @@ void Foam::twoPhaseSystem::solve()
                 0
             );
 
-            if (nAlphaSubCycles > 1)
-            {
-                phase1_.phiAlpha() += (runTime.deltaT()/totalDeltaT)*alphaPhic1;
-            }
-            else
-            {
-                phase1_.phiAlpha() = alphaPhic1;
-            }
+            phase1_.alphaPhi() = alphaPhic1;
         }
 
         if (implicitPhasePressure)
@@ -527,17 +540,22 @@ void Foam::twoPhaseSystem::solve()
             fvScalarMatrix alpha1Eqn
             (
                 fvm::ddt(alpha1) - fvc::ddt(alpha1)
-              - fvm::laplacian(alpha1f*pPrimeByA, alpha1, "bounded")
+              - fvm::laplacian(alpha1f*pPrimeByA(), alpha1, "bounded")
             );
 
             alpha1Eqn.relax();
             alpha1Eqn.solve();
 
-            phase1_.phiAlpha() += alpha1Eqn.flux();
+            phase1_.alphaPhi() += alpha1Eqn.flux();
         }
 
-        phase2_.phiAlpha() = phi_ - phase1_.phiAlpha();
+        phase1_.alphaRhoPhi() =
+            fvc::interpolate(phase1_.rho())*phase1_.alphaPhi();
+
+        phase2_.alphaPhi() = phi_ - phase1_.alphaPhi();
         alpha2 = scalar(1) - alpha1;
+        phase2_.alphaRhoPhi() =
+            fvc::interpolate(phase2_.rho())*phase2_.alphaPhi();
 
         Info<< alpha1.name() << " volume fraction = "
             << alpha1.weightedAverage(mesh_.V()).value()

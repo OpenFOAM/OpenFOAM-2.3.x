@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -88,6 +88,19 @@ boundedDdtScheme<Type>::fvcDdt
 
 
 template<class Type>
+tmp<GeometricField<Type, fvPatchField, volMesh> >
+boundedDdtScheme<Type>::fvcDdt
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    return scheme_().fvcDdt(alpha, rho, vf) - fvc::ddt(alpha, rho)*vf;
+}
+
+
+template<class Type>
 tmp<fvMatrix<Type> >
 boundedDdtScheme<Type>::fvmDdt
 (
@@ -119,6 +132,19 @@ boundedDdtScheme<Type>::fvmDdt
 )
 {
     return scheme_().fvmDdt(rho, vf) - fvm::Sp(fvc::ddt(rho), vf);
+}
+
+
+template<class Type>
+tmp<fvMatrix<Type> >
+boundedDdtScheme<Type>::fvmDdt
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    return scheme_().fvmDdt(alpha, rho, vf) - fvm::Sp(fvc::ddt(alpha, rho), vf);
 }
 
 
