@@ -29,10 +29,10 @@
     #include "createPhi.H"
 
     Info<< "Constructing multiphaseMixtureThermo\n" << endl;
-    multiphaseMixtureThermo multiphaseProperties(U, phi);
+    multiphaseMixtureThermo mixture(U, phi);
 
-    volScalarField& p = multiphaseProperties.p();
-    volScalarField& T = multiphaseProperties.T();
+    volScalarField& p = mixture.p();
+    volScalarField& T = mixture.T();
 
     volScalarField rho
     (
@@ -43,12 +43,12 @@
             mesh,
             IOobject::READ_IF_PRESENT
         ),
-        multiphaseProperties.rho()
+        mixture.rho()
     );
 
     Info<< max(rho) << min(rho);
 
-    dimensionedScalar pMin(multiphaseProperties.lookup("pMin"));
+    dimensionedScalar pMin(mixture.lookup("pMin"));
 
 
     Info<< "Calculating field g.h\n" << endl;
@@ -62,8 +62,8 @@
         (
             rho,
             U,
-            multiphaseProperties.rhoPhi(),
-            multiphaseProperties
+            mixture.rhoPhi(),
+            mixture
         )
     );
 

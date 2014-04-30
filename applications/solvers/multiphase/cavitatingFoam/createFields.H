@@ -57,12 +57,12 @@
 
     Info<< "Reading transportProperties\n" << endl;
 
-    incompressibleTwoPhaseMixture twoPhaseProperties(U, phi);
+    incompressibleTwoPhaseMixture mixture(U, phi);
 
-    volScalarField& alphav(twoPhaseProperties.alpha1());
+    volScalarField& alphav(mixture.alpha1());
     alphav.oldTime();
 
-    volScalarField& alphal(twoPhaseProperties.alpha2());
+    volScalarField& alphal(mixture.alpha2());
 
     Info<< "Creating compressibilityModel\n" << endl;
     autoPtr<barotropicCompressibilityModel> psiModel =
@@ -85,5 +85,5 @@
     // Create incompressible turbulence model
     autoPtr<incompressible::turbulenceModel> turbulence
     (
-        incompressible::turbulenceModel::New(U, phi, twoPhaseProperties)
+        incompressible::turbulenceModel::New(U, phi, mixture)
     );

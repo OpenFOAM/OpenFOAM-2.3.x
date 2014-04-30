@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -96,6 +96,29 @@ ddt
         vf.mesh(),
         vf.mesh().ddtScheme("ddt(" + rho.name() + ',' + vf.name() + ')')
     )().fvmDdt(rho, vf);
+}
+
+
+template<class Type>
+tmp<fvMatrix<Type> >
+ddt
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    return fv::ddtScheme<Type>::New
+    (
+        vf.mesh(),
+        vf.mesh().ddtScheme
+        (
+            "ddt("
+          + alpha.name() + ','
+          + rho.name() + ','
+          + vf.name() + ')'
+        )
+    )().fvmDdt(alpha, rho, vf);
 }
 
 

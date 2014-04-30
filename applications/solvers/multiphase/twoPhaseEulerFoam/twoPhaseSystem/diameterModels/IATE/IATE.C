@@ -146,7 +146,7 @@ void Foam::diameterModels::IATE::correct()
                 residualAlpha_
             )
         )
-       *(fvc::ddt(phase_) + fvc::div(phase_.phiAlpha()))
+       *(fvc::ddt(phase_) + fvc::div(phase_.alphaPhi()))
     );
 
     // Accumulate the run-time selectable sources

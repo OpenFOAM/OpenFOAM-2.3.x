@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,7 +42,7 @@ TurbulenceModel
     const alphaField& alpha,
     const rhoField& rho,
     const volVectorField& U,
-    const surfaceScalarField& alphaPhi,
+    const surfaceScalarField& alphaRhoPhi,
     const surfaceScalarField& phi,
     const transportModel& transport,
     const word& propertiesName
@@ -52,7 +52,7 @@ TurbulenceModel
     (
         rho,
         U,
-        alphaPhi,
+        alphaRhoPhi,
         phi,
         propertiesName
     ),
@@ -79,7 +79,7 @@ Foam::TurbulenceModel<Alpha, Rho, BasicTurbulenceModel, TransportModel>::New
     const alphaField& alpha,
     const rhoField& rho,
     const volVectorField& U,
-    const surfaceScalarField& alphaPhi,
+    const surfaceScalarField& alphaRhoPhi,
     const surfaceScalarField& phi,
     const transportModel& transport,
     const word& propertiesName
@@ -125,7 +125,7 @@ Foam::TurbulenceModel<Alpha, Rho, BasicTurbulenceModel, TransportModel>::New
 
     return autoPtr<TurbulenceModel>
     (
-        cstrIter()(alpha, rho, U, alphaPhi, phi, transport, propertiesName)
+        cstrIter()(alpha, rho, U, alphaRhoPhi, phi, transport, propertiesName)
     );
 }
 

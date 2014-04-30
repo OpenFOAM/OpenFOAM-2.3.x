@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -266,6 +266,75 @@ localEulerDdtScheme<Type>::fvcDdt
 
 
 template<class Type>
+tmp<GeometricField<Type, fvPatchField, volMesh> >
+localEulerDdtScheme<Type>::fvcDdt
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    const volScalarField& rDeltaT = localRDeltaT();
+
+    IOobject ddtIOobject
+    (
+        "ddt("+alpha.name()+','+rho.name()+','+vf.name()+')',
+        mesh().time().timeName(),
+        mesh()
+    );
+
+    if (mesh().moving())
+    {
+        return tmp<GeometricField<Type, fvPatchField, volMesh> >
+        (
+            new GeometricField<Type, fvPatchField, volMesh>
+            (
+                ddtIOobject,
+                mesh(),
+                rDeltaT.dimensions()
+               *alpha.dimensions()*rho.dimensions()*vf.dimensions(),
+                rDeltaT.internalField()*
+                (
+                    alpha.internalField()
+                   *rho.internalField()
+                   *vf.internalField()
+
+                  - alpha.oldTime().internalField()
+                   *rho.oldTime().internalField()
+                   *vf.oldTime().internalField()*mesh().Vsc0()/mesh().Vsc()
+                ),
+                rDeltaT.boundaryField()*
+                (
+                    alpha.boundaryField()
+                   *rho.boundaryField()
+                   *vf.boundaryField()
+
+                  - alpha.oldTime().boundaryField()
+                   *rho.oldTime().boundaryField()
+                   *vf.oldTime().boundaryField()
+                )
+            )
+        );
+    }
+    else
+    {
+        return tmp<GeometricField<Type, fvPatchField, volMesh> >
+        (
+            new GeometricField<Type, fvPatchField, volMesh>
+            (
+                ddtIOobject,
+                rDeltaT
+               *(
+                   alpha*rho*vf
+                 - alpha.oldTime()*rho.oldTime()*vf.oldTime()
+                )
+            )
+        );
+    }
+}
+
+
+template<class Type>
 tmp<fvMatrix<Type> >
 localEulerDdtScheme<Type>::fvmDdt
 (
@@ -368,6 +437,48 @@ localEulerDdtScheme<Type>::fvmDdt
     else
     {
         fvm.source() = rDeltaT
+            *rho.oldTime().internalField()
+            *vf.oldTime().internalField()*mesh().Vsc();
+    }
+
+    return tfvm;
+}
+
+
+template<class Type>
+tmp<fvMatrix<Type> >
+localEulerDdtScheme<Type>::fvmDdt
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    tmp<fvMatrix<Type> > tfvm
+    (
+        new fvMatrix<Type>
+        (
+            vf,
+            alpha.dimensions()*rho.dimensions()*vf.dimensions()*dimVol/dimTime
+        )
+    );
+    fvMatrix<Type>& fvm = tfvm();
+
+    const scalarField& rDeltaT = localRDeltaT().internalField();
+
+    fvm.diag() = rDeltaT*alpha.internalField()*rho.internalField()*mesh().Vsc();
+
+    if (mesh().moving())
+    {
+        fvm.source() = rDeltaT
+            *alpha.oldTime().internalField()
+            *rho.oldTime().internalField()
+            *vf.oldTime().internalField()*mesh().Vsc0();
+    }
+    else
+    {
+        fvm.source() = rDeltaT
+            *alpha.oldTime().internalField()
             *rho.oldTime().internalField()
             *vf.oldTime().internalField()*mesh().Vsc();
     }

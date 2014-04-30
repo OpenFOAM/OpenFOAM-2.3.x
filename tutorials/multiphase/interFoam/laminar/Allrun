@@ -52,13 +52,10 @@ cloneCase damBreak damBreakFine
 )
 
 # Do capillaryRise
-(
-    cd capillaryRise || exit
+(cd capillaryRise && foamRunTutorials)
 
-    runApplication blockMesh
-    cp 0/alpha.water.org 0/alpha.water
-    runApplication setFields
-    runApplication `getApplication`
-)
+# Do mixerVessel2D
+(cd mixerVessel2D && foamRunTutorials)
+
 
 # ----------------------------------------------------------------- end-of-file

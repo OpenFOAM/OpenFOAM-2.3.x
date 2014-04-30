@@ -3,13 +3,13 @@
     word alpharScheme("div(phirb,alpha)");
 
     // Standard face-flux compression coefficient
-    surfaceScalarField phic(interface.cAlpha()*mag(phi/mesh.magSf()));
+    surfaceScalarField phic(mixture.cAlpha()*mag(phi/mesh.magSf()));
 
     // Add the optional isotropic compression contribution
     if (icAlpha > 0)
     {
         phic *= (1.0 - icAlpha);
-        phic += (interface.cAlpha()*icAlpha)*fvc::interpolate(mag(U));
+        phic += (mixture.cAlpha()*icAlpha)*fvc::interpolate(mag(U));
     }
 
     // Do not compress interface at non-coupled boundary faces
@@ -74,12 +74,12 @@
 
         alpha2 = 1.0 - alpha1;
 
-        interface.correct();
+        mixture.correct();
     }
 
     for (int aCorr=0; aCorr<nAlphaCorr; aCorr++)
     {
-        surfaceScalarField phir(phic*interface.nHatf());
+        surfaceScalarField phir(phic*mixture.nHatf());
 
         tmp<surfaceScalarField> tphiAlphaUn
         (
@@ -132,7 +132,7 @@
 
         alpha2 = 1.0 - alpha1;
 
-        interface.correct();
+        mixture.correct();
     }
 
     rhoPhi = tphiAlpha()*(rho1 - rho2) + phi*rho2;

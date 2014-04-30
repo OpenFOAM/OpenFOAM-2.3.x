@@ -4,7 +4,6 @@ set -x
 
 wclean
 wclean interDyMFoam
-wclean MRFInterFoam
 wclean porousInterFoam
 wclean LTSInterFoam
 wclean interMixingFoam

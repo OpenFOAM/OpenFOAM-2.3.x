@@ -41,8 +41,7 @@ Description
 #include "fvCFD.H"
 #include "CMULES.H"
 #include "subCycle.H"
-#include "interfaceProperties.H"
-#include "incompressibleTwoPhaseMixture.H"
+#include "immiscibleIncompressibleTwoPhaseMixture.H"
 #include "turbulenceModel.H"
 #include "IOporosityModelList.H"
 #include "pimpleControl.H"
@@ -87,11 +86,9 @@ int main(int argc, char *argv[])
         while (pimple.loop())
         {
             #include "alphaControls.H"
-
-            twoPhaseProperties.correct();
-
             #include "alphaEqnSubCycle.H"
-            interface.correct();
+
+            mixture.correct();
 
             #include "UEqn.H"
 

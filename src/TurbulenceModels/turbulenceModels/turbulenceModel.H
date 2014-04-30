@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -68,7 +68,7 @@ protected:
         const fvMesh& mesh_;
 
         const volVectorField& U_;
-        const surfaceScalarField& alphaPhi_;
+        const surfaceScalarField& alphaRhoPhi_;
         const surfaceScalarField& phi_;
 
         //- Near wall distance boundary field
@@ -101,7 +101,7 @@ public:
         turbulenceModel
         (
             const volVectorField& U,
-            const surfaceScalarField& alphaPhi,
+            const surfaceScalarField& alphaRhoPhi,
             const surfaceScalarField& phi,
             const word& propertiesName
         );
@@ -143,16 +143,13 @@ public:
         }
 
         //- Access function to phase flux field
-        inline const surfaceScalarField& alphaPhi() const
+        inline const surfaceScalarField& alphaRhoPhi() const
         {
-            return alphaPhi_;
+            return alphaRhoPhi_;
         }
 
-        //- Access function to flux field
-        inline const surfaceScalarField& phi() const
-        {
-            return phi_;
-        }
+        //- Return the volumetric flux field
+        virtual tmp<surfaceScalarField> phi() const;
 
         //- Return the near wall distances
         const nearWallDist& y() const

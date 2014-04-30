@@ -43,9 +43,23 @@
         {
             Info<< "Applying the previous iteration correction flux" << endl;
             #ifdef LTSSOLVE
-            MULES::LTScorrect(alpha1, phiAlpha, tphiAlphaCorr0(), 1, 0);
+            MULES::LTScorrect
+            (
+                alpha1,
+                phiAlpha,
+                tphiAlphaCorr0(),
+                mixture.alphaMax(),
+                0
+            );
             #else
-            MULES::correct(alpha1, phiAlpha, tphiAlphaCorr0(), 1, 0);
+            MULES::correct
+            (
+                alpha1,
+                phiAlpha,
+                tphiAlphaCorr0(),
+                mixture.alphaMax(),
+                0
+            );
             #endif
 
             phiAlpha += tphiAlphaCorr0();
@@ -79,9 +93,23 @@
             volScalarField alpha10(alpha1);
 
             #ifdef LTSSOLVE
-            MULES::LTScorrect(alpha1, tphiAlphaUn(), tphiAlphaCorr(), 1, 0);
+            MULES::LTScorrect
+            (
+                alpha1,
+                tphiAlphaUn(),
+                tphiAlphaCorr(),
+                mixture.alphaMax(),
+                0
+            );
             #else
-            MULES::correct(alpha1, tphiAlphaUn(), tphiAlphaCorr(), 1, 0);
+            MULES::correct
+            (
+                alpha1,
+                tphiAlphaUn(),
+                tphiAlphaCorr(),
+                mixture.alphaMax(),
+                0
+            );
             #endif
 
             // Under-relax the correction for all but the 1st corrector
@@ -100,9 +128,23 @@
             phiAlpha = tphiAlphaUn;
 
             #ifdef LTSSOLVE
-            MULES::explicitLTSSolve(alpha1, phi, phiAlpha, 1, 0);
+            MULES::explicitLTSSolve
+            (
+                alpha1,
+                phi,
+                phiAlpha,
+                mixture.alphaMax(),
+                0
+            );
             #else
-            MULES::explicitSolve(alpha1, phi, phiAlpha, 1, 0);
+            MULES::explicitSolve
+            (
+                alpha1,
+                phi,
+                phiAlpha,
+                mixture.alphaMax(),
+                0
+            );
             #endif
         }
     }

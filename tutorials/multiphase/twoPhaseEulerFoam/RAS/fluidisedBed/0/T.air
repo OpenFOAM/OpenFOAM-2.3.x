@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.0                                 |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -16,22 +16,22 @@ FoamFile
 
 dimensions          [0 0 0 1 0 0 0];
 
-internalField       uniform 300;
+internalField       uniform 600;
 
 boundaryField
 {
     inlet
     {
         type               fixedValue;
-        value              $internalField;
+        value              uniform 300;
     }
 
     outlet
     {
         type               inletOutlet;
         phi                phi.air;
-        inletValue         $internalField;
-        value              $internalField;
+        inletValue         uniform 300;
+        value              uniform 300;
     }
 
     walls
