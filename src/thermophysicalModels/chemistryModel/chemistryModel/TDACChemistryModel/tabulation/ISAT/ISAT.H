@@ -82,7 +82,10 @@ private:
 
         //- Factor that multiply the ideal depth of a binary tree to decide
         //wheter to try to balance of not
-        maxDepthFactor_;
+        scalar maxDepthFactor_;
+
+        //- Minimal size before trying to balance the tree
+        label minBalanceThreshold_;
 
         //- After a failed primary retrieve, look in the MRU list
         Switch MRURetrieve_;

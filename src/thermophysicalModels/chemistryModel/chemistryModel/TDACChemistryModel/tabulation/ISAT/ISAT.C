@@ -69,6 +69,10 @@ Foam::ISAT<CompType, ThermoType>::ISAT
                 /(std::log(chemisTree_.maxElements())/std::log(2.0))
         )
     ),
+    minBalanceThreshold_
+    (
+        coeffsDict.lookupOrDefault("minBalanceThreshold",0.1*maxNLeafs_)
+    ),
     MRURetrieve_(this->coeffsDict_.lookupOrDefault("MRURetrieve", false)),
     MRUSize_(this->coeffsDict_.lookupOrDefault("MRUSize", 0)),
     lastSearch_(NULL),
@@ -293,7 +297,7 @@ bool Foam::ISAT<CompType, ThermoType>::cleanAndBalance()
     //      ideal depth (e.g. 4 leafs can be stored in a tree of depth 2)
     if
     (
-        chemisTree_.size() > 0
+        chemisTree_.size() > minBalanceThreshold_
      && chemisTree_.depth() >
             maxDepthFactor_*std::log(chemisTree_.size())/std::log(2.0)
     )

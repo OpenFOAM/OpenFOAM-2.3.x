@@ -88,12 +88,6 @@ private:
     //- Secondary retrieve search variables
     label n2ndSearch_;
     label max2ndSearch_;
-
-    //- Variables to balance the tree
-    label minBalanceThreshold_;
-    label maxNbBalanceTest_;
-    scalar balanceProp_;
-    
     
     //- Insert new node at the position of phi0
     //  phi0 should be already attached to another node or the pointer to it
@@ -107,12 +101,11 @@ private:
     //- Perform a search in the subtree starting from the subtree node y
     //  This search continue to use the hyperplan to walk the tree
     //  If covering EOA is found return true and x points to the chemPoint
-    //  CAUTION : x pointer should not be used if inSubTree returns false
     bool inSubTree
     (
         const scalarField& phiq, 
         bn* y,
-        chP*& x
+        chP* x
     );
     
     void deleteSubTree(binaryNode<CompType, ThermoType>* subTreeRoot);
@@ -122,6 +115,7 @@ private:
         deleteSubTree(root_);
     }
 
+    //- Replace the binaryNode u with v
     void transplant(bn* u, bn* v);
     
     chP* chemPSibling(bn* y);
@@ -203,13 +197,12 @@ public:
         (
             const scalarField& phiq,
             bn* node,
-            chemPointBase*& nearest
+            chemPointISAT*& nearest
         );
 
         //Perform a secondary binary tree search starting from a failed
-        //chemPoint x/
+        //chemPoint x, with a depth-first search algorithm
         //If another candidate is found return true and x points to the chemP
-        //The nUsed features is handled at ISAT level
         bool secondaryBTSearch(const scalarField& phiq,chP*& x);
 
         //- Delete a leaf from the binary tree and reshape the binary tree for
@@ -220,10 +213,11 @@ public:
         
         //- Cheap balance function
         //  This function just roughly separate the space in two parts 
-        //  with a hyperplane perpendicular to the variance vector.
+        //  with a hyperplane which separate the two extreme chemPoint in the
+        //  direction of the maximum the variance
         //  Then, it repopulate the tree with this hyperplane stored at the root
-        //  and by inserting the chemPoint randomly which should give a
-        //  depth O(log_2(n))
+        //  and by inserting the chemPoint in increasing order of value in that
+        //  direction
         bool balance();
         
         inline void deleteAllNode()
