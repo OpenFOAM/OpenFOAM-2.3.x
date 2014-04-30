@@ -2,7 +2,8 @@
 cd ${0%/*} || exit 1    # run from this directory
 set -x
 
+wclean libso multiphaseMixture
 wclean
-wclean MRFMultiphaseInterFoam
+wclean multiphaseInterDyMFoam
 
 # ----------------------------------------------------------------- end-of-file

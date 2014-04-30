@@ -26,7 +26,7 @@ License
 #include "Burns.H"
 #include "phasePair.H"
 #include "fvc.H"
-#include "PhaseIncompressibleTurbulenceModel.H"
+#include "PhaseCompressibleTurbulenceModel.H"
 #include "addToRunTimeSelectionTable.H"
 
 #include "dragModel.H"

@@ -33,7 +33,7 @@ Description
     inlet
     {
         type              interstitialInletVelocity;
-        inletVelocity     uniform (0 0.2 0; // Non-interstitial inlet velocity
+        inletVelocity     uniform (0 0.2 0);// Non-interstitial inlet velocity
         alpha             alpha.particles;  // Name of the phase-fraction field
         value             uniform (0 0 0);
     }

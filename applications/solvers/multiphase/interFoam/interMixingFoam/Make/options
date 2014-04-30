@@ -1,6 +1,7 @@
 EXE_INC = \
     -I.. \
     -I$(LIB_SRC)/transportModels/twoPhaseMixture/lnInclude \
+    -IimmiscibleIncompressibleThreePhaseMixture \
     -IincompressibleThreePhaseMixture \
     -IthreePhaseInterfaceProperties \
     -I$(LIB_SRC)/transportModels/interfaceProperties/lnInclude \

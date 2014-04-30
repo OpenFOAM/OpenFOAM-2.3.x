@@ -49,7 +49,7 @@ class twoPhaseSystem;
 class diameterModel;
 
 template<class Phase>
-class PhaseIncompressibleTurbulenceModel;
+class PhaseCompressibleTurbulenceModel;
 
 
 /*---------------------------------------------------------------------------*\
@@ -81,7 +81,10 @@ class phaseModel
         volVectorField U_;
 
         //- Volumetric flux of the phase
-        surfaceScalarField phiAlpha_;
+        surfaceScalarField alphaPhi_;
+
+        //- Mass flux of the phase
+        surfaceScalarField alphaRhoPhi_;
 
         //- Volumetric flux of the phase
         autoPtr<surfaceScalarField> phiPtr_;
@@ -90,7 +93,7 @@ class phaseModel
         autoPtr<diameterModel> dPtr_;
 
         //- turbulence model
-        autoPtr<PhaseIncompressibleTurbulenceModel<phaseModel> > turbulence_;
+        autoPtr<PhaseCompressibleTurbulenceModel<phaseModel> > turbulence_;
 
 
 public:
@@ -137,12 +140,12 @@ public:
         tmp<volScalarField> d() const;
 
         //- Return the turbulence model
-        const PhaseIncompressibleTurbulenceModel<phaseModel>&
+        const PhaseCompressibleTurbulenceModel<phaseModel>&
             turbulence() const;
 
         //- Return non-const access to the turbulence model
         //  for correction
-        PhaseIncompressibleTurbulenceModel<phaseModel>&
+        PhaseCompressibleTurbulenceModel<phaseModel>&
             turbulence();
 
         //- Return the thermophysical model
@@ -168,6 +171,18 @@ public:
         tmp<scalarField> nu(const label patchi) const
         {
             return thermo_->nu(patchi);
+        }
+
+        //- Return the laminar dynamic viscosity
+        tmp<volScalarField> mu() const
+        {
+            return thermo_->mu();
+        }
+
+        //- Return the laminar dynamic viscosity for patch
+        tmp<scalarField> mu(const label patchi) const
+        {
+            return thermo_->mu(patchi);
         }
 
         //- Return the thermal conductivity
@@ -214,15 +229,27 @@ public:
         }
 
         //- Return the volumetric flux of the phase
-        const surfaceScalarField& phiAlpha() const
+        const surfaceScalarField& alphaPhi() const
         {
-            return phiAlpha_;
+            return alphaPhi_;
         }
 
         //- Return non-const access to the volumetric flux of the phase
-        surfaceScalarField& phiAlpha()
+        surfaceScalarField& alphaPhi()
         {
-            return phiAlpha_;
+            return alphaPhi_;
+        }
+
+        //- Return the mass flux of the phase
+        const surfaceScalarField& alphaRhoPhi() const
+        {
+            return alphaRhoPhi_;
+        }
+
+        //- Return non-const access to the mass flux of the phase
+        surfaceScalarField& alphaRhoPhi()
+        {
+            return alphaRhoPhi_;
         }
 
         //- Correct the phase properties

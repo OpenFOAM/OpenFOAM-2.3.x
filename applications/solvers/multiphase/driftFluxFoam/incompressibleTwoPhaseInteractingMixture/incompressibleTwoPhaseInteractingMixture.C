@@ -82,6 +82,13 @@ incompressibleTwoPhaseInteractingMixture
 
     rhod_("rho", dimDensity, muModel_->viscosityProperties().lookup("rho")),
     rhoc_("rho", dimDensity, nucModel_->viscosityProperties().lookup("rho")),
+    dd_
+    (
+        "d",
+        dimLength,
+        muModel_->viscosityProperties().lookupOrDefault("d", 0.0)
+    ),
+    alphaMax_(muModel_->viscosityProperties().lookupOrDefault("alphaMax", 1.0)),
 
     U_(U),
     phi_(phi),
@@ -117,6 +124,20 @@ bool Foam::incompressibleTwoPhaseInteractingMixture::read()
         {
             muModel_->viscosityProperties().lookup("rho") >> rhod_;
             nucModel_->viscosityProperties().lookup("rho") >> rhoc_;
+
+            dd_ = dimensionedScalar
+            (
+                "d",
+                dimLength,
+                muModel_->viscosityProperties().lookupOrDefault("d", 0)
+            );
+
+            alphaMax_ =
+                muModel_->viscosityProperties().lookupOrDefault
+                (
+                    "alphaMax",
+                    1.0
+                );
 
             return true;
         }

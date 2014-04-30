@@ -12,7 +12,7 @@
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        interface.cAlpha()*mag(phi/mesh.magSf())*interface.nHatf()
+        mixture.cAlpha()*mag(phi/mesh.magSf())*mixture.nHatf()
     );
 
     for (int gCorr=0; gCorr<nAlphaCorr; gCorr++)

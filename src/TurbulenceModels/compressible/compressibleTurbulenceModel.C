@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,6 +24,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "compressibleTurbulenceModel.H"
+#include "surfaceInterpolate.H"
+#include "surfaceFields.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -39,7 +41,7 @@ Foam::compressibleTurbulenceModel::compressibleTurbulenceModel
 (
     const volScalarField& rho,
     const volVectorField& U,
-    const surfaceScalarField& alphaPhi,
+    const surfaceScalarField& alphaRhoPhi,
     const surfaceScalarField& phi,
     const word& propertiesName
 )
@@ -47,12 +49,28 @@ Foam::compressibleTurbulenceModel::compressibleTurbulenceModel
     turbulenceModel
     (
         U,
-        alphaPhi,
+        alphaRhoPhi,
         phi,
         propertiesName
     ),
     rho_(rho)
 {}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+Foam::tmp<Foam::surfaceScalarField>
+Foam::compressibleTurbulenceModel::phi() const
+{
+    if (phi_.dimensions() == dimensionSet(0, 3, -1, 0, 0))
+    {
+        return phi_;
+    }
+    else
+    {
+        return phi_/fvc::interpolate(rho_);
+    }
+}
 
 
 // ************************************************************************* //

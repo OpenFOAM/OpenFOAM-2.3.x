@@ -298,10 +298,7 @@ Foam::multiphaseMixture::surfaceTensionForce() const
 
 void Foam::multiphaseMixture::solve()
 {
-    forAllIter(PtrDictionary<phase>, phases_, iter)
-    {
-        iter().correct();
-    }
+    correct();
 
     const Time& runTime = mesh_.time();
 
@@ -347,7 +344,12 @@ void Foam::multiphaseMixture::solve()
 
 
 void Foam::multiphaseMixture::correct()
-{}
+{
+    forAllIter(PtrDictionary<phase>, phases_, iter)
+    {
+        iter().correct();
+    }
+}
 
 
 Foam::tmp<Foam::surfaceVectorField> Foam::multiphaseMixture::nHatfv

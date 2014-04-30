@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -34,7 +34,7 @@ PhaseIncompressibleTurbulenceModel
     const volScalarField& alpha,
     const geometricOneField& rho,
     const volVectorField& U,
-    const surfaceScalarField& alphaPhi,
+    const surfaceScalarField& alphaRhoPhi,
     const surfaceScalarField& phi,
     const TransportModel& transportModel,
     const word& propertiesName
@@ -51,7 +51,7 @@ PhaseIncompressibleTurbulenceModel
         alpha,
         rho,
         U,
-        alphaPhi,
+        alphaRhoPhi,
         phi,
         transportModel,
         propertiesName
@@ -67,7 +67,7 @@ Foam::PhaseIncompressibleTurbulenceModel<TransportModel>::New
 (
     const volScalarField& alpha,
     const volVectorField& U,
-    const surfaceScalarField& alphaPhi,
+    const surfaceScalarField& alphaRhoPhi,
     const surfaceScalarField& phi,
     const TransportModel& transportModel,
     const word& propertiesName
@@ -87,7 +87,7 @@ Foam::PhaseIncompressibleTurbulenceModel<TransportModel>::New
             alpha,
             geometricOneField(),
             U,
-            alphaPhi,
+            alphaRhoPhi,
             phi,
             transportModel,
             propertiesName

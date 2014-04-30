@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -190,7 +190,7 @@ void v2WallFunctionFvPatchScalarField::updateCoeffs()
 
         scalar uTau = Cmu25*sqrt(k[faceCellI]);
 
-        scalar yPlus = uTau*y[faceI]/muw[faceI]/rhow[faceI];
+        scalar yPlus = uTau*y[faceI]/(muw[faceI]/rhow[faceI]);
 
         if (yPlus > yPlusLam_)
         {

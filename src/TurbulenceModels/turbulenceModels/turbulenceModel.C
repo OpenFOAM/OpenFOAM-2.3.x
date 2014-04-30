@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -43,7 +43,7 @@ const Foam::word Foam::turbulenceModel::propertiesName("turbulenceProperties");
 Foam::turbulenceModel::turbulenceModel
 (
     const volVectorField& U,
-    const surfaceScalarField& alphaPhi,
+    const surfaceScalarField& alphaRhoPhi,
     const surfaceScalarField& phi,
     const word& propertiesName
 )
@@ -64,13 +64,19 @@ Foam::turbulenceModel::turbulenceModel
     mesh_(U.mesh()),
 
     U_(U),
-    alphaPhi_(alphaPhi),
+    alphaRhoPhi_(alphaRhoPhi),
     phi_(phi),
     y_(mesh_)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+Foam::tmp<Foam::surfaceScalarField> Foam::turbulenceModel::phi() const
+{
+    return phi_;
+}
+
 
 bool Foam::turbulenceModel::read()
 {

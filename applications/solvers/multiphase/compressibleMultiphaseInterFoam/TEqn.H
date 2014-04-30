@@ -2,16 +2,16 @@
     fvScalarMatrix TEqn
     (
         fvm::ddt(rho, T)
-      + fvm::div(multiphaseProperties.rhoPhi(), T)
-      - fvm::laplacian(multiphaseProperties.alphaEff(turbulence->mut()), T)
+      + fvm::div(mixture.rhoPhi(), T)
+      - fvm::laplacian(mixture.alphaEff(turbulence->mut()), T)
       + (
             fvc::div(fvc::absolute(phi, U), p)
-          + fvc::ddt(rho, K) + fvc::div(multiphaseProperties.rhoPhi(), K)
-        )*multiphaseProperties.rCv()
+          + fvc::ddt(rho, K) + fvc::div(mixture.rhoPhi(), K)
+        )*mixture.rCv()
     );
 
     TEqn.relax();
     TEqn.solve();
 
-    multiphaseProperties.correct();
+    mixture.correct();
 }

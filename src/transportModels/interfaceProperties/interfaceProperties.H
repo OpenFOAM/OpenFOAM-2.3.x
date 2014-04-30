@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -141,6 +141,12 @@ public:
         {
             return sigma_*K_;
         }
+
+        tmp<surfaceScalarField> surfaceTensionForce() const;
+
+        //- Indicator of the proximity of the interface
+        //  Field values are 1 near and 0 away for the interface.
+        tmp<volScalarField> nearInterface() const;
 
         void correct()
         {

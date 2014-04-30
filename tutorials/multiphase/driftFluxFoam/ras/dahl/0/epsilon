@@ -34,17 +34,25 @@ boundaryField
 
     bottomWall
     {
-        type            zeroGradient;
+        type            epsilonWallFunction;
+        value           $internalField;
+        Cmu             0.09;
+        kappa           0.41;
+        E               9.8;
     }
 
     endWall
     {
-        type            zeroGradient;
+        type            epsilonWallFunction;
+        value           $internalField;
+        Cmu             0.09;
+        kappa           0.41;
+        E               9.8;
     }
 
     top
     {
-        type            zeroGradient;
+        type            slip;
     }
 
     frontAndBack

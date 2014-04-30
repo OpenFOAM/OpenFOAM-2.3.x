@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -144,6 +144,41 @@ void Foam::fvc::makeAbsolute
     if (phi.mesh().moving())
     {
         phi += fvc::interpolate(rho)*fvc::meshPhi(rho, U);
+    }
+}
+
+
+Foam::tmp<Foam::surfaceScalarField> Foam::fvc::relative
+(
+    const tmp<surfaceScalarField>& tphi,
+    const volVectorField& U
+)
+{
+    if (tphi().mesh().moving())
+    {
+        return tphi - fvc::meshPhi(U);
+    }
+    else
+    {
+        return tmp<surfaceScalarField>(tphi, true);
+    }
+}
+
+
+Foam::tmp<Foam::surfaceScalarField> Foam::fvc::relative
+(
+    const tmp<surfaceScalarField>& tphi,
+    const volScalarField& rho,
+    const volVectorField& U
+)
+{
+    if (tphi().mesh().moving())
+    {
+        return tphi - fvc::interpolate(rho)*fvc::meshPhi(rho, U);
+    }
+    else
+    {
+        return tmp<surfaceScalarField>(tphi, true);
     }
 }
 

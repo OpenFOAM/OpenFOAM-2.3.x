@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -158,6 +158,37 @@ steadyStateDdtScheme<Type>::fvcDdt
 
 
 template<class Type>
+tmp<GeometricField<Type, fvPatchField, volMesh> >
+steadyStateDdtScheme<Type>::fvcDdt
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    return tmp<GeometricField<Type, fvPatchField, volMesh> >
+    (
+        new GeometricField<Type, fvPatchField, volMesh>
+        (
+            IOobject
+            (
+                "ddt("+alpha.name()+','+rho.name()+','+vf.name()+')',
+                mesh().time().timeName(),
+                mesh()
+            ),
+            mesh(),
+            dimensioned<Type>
+            (
+                "0",
+                rho.dimensions()*vf.dimensions()/dimTime,
+                pTraits<Type>::zero
+            )
+        )
+    );
+}
+
+
+template<class Type>
 tmp<fvMatrix<Type> >
 steadyStateDdtScheme<Type>::fvmDdt
 (
@@ -212,6 +243,28 @@ steadyStateDdtScheme<Type>::fvmDdt
         (
             vf,
             rho.dimensions()*vf.dimensions()*dimVol/dimTime
+        )
+    );
+
+    return tfvm;
+}
+
+
+template<class Type>
+tmp<fvMatrix<Type> >
+steadyStateDdtScheme<Type>::fvmDdt
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    tmp<fvMatrix<Type> > tfvm
+    (
+        new fvMatrix<Type>
+        (
+            vf,
+            alpha.dimensions()*rho.dimensions()*vf.dimensions()*dimVol/dimTime
         )
     );
 

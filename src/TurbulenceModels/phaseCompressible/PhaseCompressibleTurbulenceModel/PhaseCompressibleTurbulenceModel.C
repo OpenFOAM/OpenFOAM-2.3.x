@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -34,7 +34,7 @@ PhaseCompressibleTurbulenceModel
     const volScalarField& alpha,
     const volScalarField& rho,
     const volVectorField& U,
-    const surfaceScalarField& alphaPhi,
+    const surfaceScalarField& alphaRhoPhi,
     const surfaceScalarField& phi,
     const transportModel& transport,
     const word& propertiesName
@@ -51,7 +51,7 @@ PhaseCompressibleTurbulenceModel
         alpha,
         rho,
         U,
-        alphaPhi,
+        alphaRhoPhi,
         phi,
         transport,
         propertiesName
@@ -68,7 +68,7 @@ Foam::PhaseCompressibleTurbulenceModel<TransportModel>::New
     const volScalarField& alpha,
     const volScalarField& rho,
     const volVectorField& U,
-    const surfaceScalarField& alphaPhi,
+    const surfaceScalarField& alphaRhoPhi,
     const surfaceScalarField& phi,
     const transportModel& transport,
     const word& propertiesName
@@ -88,11 +88,59 @@ Foam::PhaseCompressibleTurbulenceModel<TransportModel>::New
             alpha,
             rho,
             U,
-            alphaPhi,
+            alphaRhoPhi,
             phi,
             transport,
             propertiesName
         ).ptr())
+    );
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class TransportModel>
+Foam::tmp<Foam::volScalarField>
+Foam::PhaseCompressibleTurbulenceModel<TransportModel>::pPrime() const
+{
+    return tmp<volScalarField>
+    (
+        new volScalarField
+        (
+            IOobject
+            (
+                IOobject::groupName("pPrime", this->U_.group()),
+                this->runTime_.timeName(),
+                this->mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            this->mesh_,
+            dimensionedScalar("pPrimef", dimPressure, 0.0)
+        )
+    );
+}
+
+
+template<class TransportModel>
+Foam::tmp<Foam::surfaceScalarField>
+Foam::PhaseCompressibleTurbulenceModel<TransportModel>::pPrimef() const
+{
+    return tmp<surfaceScalarField>
+    (
+        new surfaceScalarField
+        (
+            IOobject
+            (
+                IOobject::groupName("pPrimef", this->U_.group()),
+                this->runTime_.timeName(),
+                this->mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            this->mesh_,
+            dimensionedScalar("pPrimef", dimPressure, 0.0)
+        )
     );
 }
 

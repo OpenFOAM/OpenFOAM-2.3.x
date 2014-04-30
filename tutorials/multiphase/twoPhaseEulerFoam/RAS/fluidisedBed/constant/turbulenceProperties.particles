@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.0                                 |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -26,12 +26,12 @@ RAS
 
     kineticTheoryCoeffs
     {
-        equilibrium             on;
+        equilibrium             off;
 
         e                       0.8;
         alphaMax                0.62;
         alphaMinFriction        0.5;
-        residualAlpha           1e-6;
+        residualAlpha           1e-4;
 
         viscosityModel          Gidaspow;
         conductivityModel       Gidaspow;

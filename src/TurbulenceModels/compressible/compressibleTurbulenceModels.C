@@ -52,6 +52,9 @@ makeBaseTurbulenceModel
 #include "kEpsilon.H"
 makeRASModel(kEpsilon);
 
+#include "buoyantKEpsilon.H"
+makeRASModel(buoyantKEpsilon);
+
 #include "Smagorinsky.H"
 makeLESModel(Smagorinsky);
 
