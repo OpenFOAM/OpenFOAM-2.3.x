@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,7 +30,19 @@ Description
 \*---------------------------------------------------------------------------*/
 
 {
-    solve(fvm::ddt(rho) + fvc::div(phi));
+    fvScalarMatrix rhoEqn
+    (
+        fvm::ddt(rho)
+      + fvc::div(phi)
+      ==
+        fvOptions(rho)
+    );
+
+    fvOptions.constrain(rhoEqn);
+
+    rhoEqn.solve();
+
+    fvOptions.correct(rho);
 }
 
 // ************************************************************************* //

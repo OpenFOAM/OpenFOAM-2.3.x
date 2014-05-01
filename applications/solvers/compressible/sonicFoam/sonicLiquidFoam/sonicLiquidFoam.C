@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
         #include "readTimeControls.H"
         #include "compressibleCourantNo.H"
 
-        #include "rhoEqn.H"
+        solve(fvm::ddt(rho) + fvc::div(phi));
 
         // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
