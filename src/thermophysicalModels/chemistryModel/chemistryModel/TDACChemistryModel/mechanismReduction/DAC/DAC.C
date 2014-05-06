@@ -254,7 +254,6 @@ Foam::DAC<CompType,ThermoType>::DAC
 
             nbC += fuelSpeciesProp_[i]*Mmtot/curMm*sC_[curID];
             nbO += fuelSpeciesProp_[i]*Mmtot/curMm*sO_[curID];
-            Info<<sC_<<endl;
         }
         zprime_ = nbO/nbC;
     }

@@ -126,7 +126,7 @@ public:
 
         virtual label size() = 0;
 
-        virtual void writePerformance();
+        virtual void writePerformance() = 0;
 
         // Retrieve function: (only virtual here)
         // Try to retrieve a stored point close enough (according to tolerance)
