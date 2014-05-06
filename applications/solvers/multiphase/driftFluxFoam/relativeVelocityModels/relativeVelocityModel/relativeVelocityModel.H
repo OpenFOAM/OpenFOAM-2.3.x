@@ -125,6 +125,12 @@ public:
 
     // Member Functions
 
+        //- Mixture properties
+        const incompressibleTwoPhaseInteractingMixture& mixture() const
+        {
+            return mixture_;
+        }
+
         //- Return the mixture mean density
         tmp<volScalarField> rho() const;
 

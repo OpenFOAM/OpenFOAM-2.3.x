@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -308,6 +308,7 @@ energyRegionCoupledFvPatchScalarField
 Foam::tmp<Foam::scalarField> Foam::energyRegionCoupledFvPatchScalarField::
 snGrad() const
 {
+    Debug("snGrad");
     return
         regionCoupledPatch_.patch().deltaCoeffs()
        *(*this - patchInternalField());
@@ -317,6 +318,7 @@ snGrad() const
 Foam::tmp<Foam::scalarField> Foam::energyRegionCoupledFvPatchScalarField::
 snGrad(const scalarField&) const
 {
+    Debug("snGrad");
     return snGrad();
 }
 
@@ -427,7 +429,6 @@ void Foam::energyRegionCoupledFvPatchScalarField::updateInterfaceMatrix
 
     if (&psiInternal == &internalField())
     {
-
         label patchi = this->patch().index();
         const scalarField& pp =  thermoPtr_->p().boundaryField()[patchi];
         const scalarField& Tp =  thermoPtr_->T().boundaryField()[patchi];
@@ -436,6 +437,8 @@ void Foam::energyRegionCoupledFvPatchScalarField::updateInterfaceMatrix
     }
     else
     {
+        //NOTE: This is not correct for preconditioned solvers
+        // psiInternal is not the information needed of the slave
         forAll(*this, facei)
         {
             myHE[facei] = psiInternal[regionCoupledPatch_.faceCells()[facei]];
@@ -460,33 +463,15 @@ void Foam::energyRegionCoupledFvPatchScalarField::updateInterfaceMatrix
     const Pstream::commsTypes
 ) const
 {
-    setMethod();
-
-    scalarField myHE(this->size());
-
-    if (&psiInternal == &internalField())
-    {
-        label patchi = this->patch().index();
-        const scalarField& pp =  thermoPtr_->p().boundaryField()[patchi];
-        const scalarField& Tp =  thermoPtr_->T().boundaryField()[patchi];
-
-        myHE = thermoPtr_->he(pp, Tp, patchi);
-    }
-    else
-    {
-        forAll(*this, facei)
-        {
-            myHE[facei] = psiInternal[regionCoupledPatch_.faceCells()[facei]];
-        }
-    }
-
-    // Multiply the field by coefficients and add into the result
-    const labelUList& faceCells = regionCoupledPatch_.faceCells();
-
-    forAll(faceCells, elemI)
-    {
-        result[faceCells[elemI]] -= coeffs[elemI]*myHE[elemI];
-    }
+    notImplemented
+    (
+        "energyRegionCoupledFvPatchScalarField::updateInterfaceMatrix()"
+        "("
+        "Field<scalar>& "
+        "const Field<scalar>&"
+        "const scalarField& "
+        "const Pstream::commsTypes"
+    );
 }
 
 

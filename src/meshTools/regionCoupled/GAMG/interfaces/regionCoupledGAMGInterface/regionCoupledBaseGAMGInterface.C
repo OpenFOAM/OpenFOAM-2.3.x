@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -52,7 +52,6 @@ Foam::regionCoupledBaseGAMGInterface::regionCoupledBaseGAMGInterface
         refCast<const regionCoupledLduInterface>(fineInterface)
     )
 {
-    /*
     // Construct face agglomeration from cell agglomeration
     {
         // From coarse face to cell
@@ -94,6 +93,7 @@ Foam::regionCoupledBaseGAMGInterface::regionCoupledBaseGAMGInterface
         faceRestrictAddressing_.transfer(dynFaceRestrictAddressing);
     }
 
+    /*
     // On the owner side construct the AMI
     if (fineRegionCoupledLduInterface_.owner())
     {
@@ -228,15 +228,14 @@ internalFieldTransfer
     const labelUList& iF
 ) const
 {
+//     WarningIn
+//     (
+//         "regionCoupledBaseGAMGInterface::internalFieldTransfer"
+//         "( const Pstream::commsTypes, const labelUList&)"
+//         " the internal field can not be transfered "
+//         " as the neighbFvPatch are in different meshes "
+//     );
     /*
-    WarningIn
-    (
-        "regionCoupledBaseGAMGInterface::internalFieldTransfer"
-        "( const Pstream::commsTypes, const labelUList&)"
-        " the internal field can not be transfered "
-        " as the neighbFvPatch are in different meshes "
-    );
-
     //const labelUList& nbrFaceCells = neighbPatch().faceCells();
 
     const labelUList& nbrFaceCells = nbrLduInterface().faceCells();

@@ -554,8 +554,24 @@ thermoSingleLayer::thermoSingleLayer
 
         // Update derived fields
         hs_ == hs(T_);
+
         deltaRho_ == delta_*rho_;
-        phi_ = fvc::interpolate(deltaRho_*U_) & regionMesh().Sf();
+
+        surfaceScalarField phi0
+        (
+            IOobject
+            (
+                "phi",
+                time().timeName(),
+                regionMesh(),
+                IOobject::READ_IF_PRESENT,
+                IOobject::AUTO_WRITE,
+                false
+            ),
+            fvc::interpolate(deltaRho_*U_) & regionMesh().Sf()
+        );
+
+        phi_ == phi0;
 
         // evaluate viscosity from user-model
         viscosity_->correct(pPrimary_, T_);
