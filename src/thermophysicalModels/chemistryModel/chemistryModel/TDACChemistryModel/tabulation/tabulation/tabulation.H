@@ -40,6 +40,7 @@ SourceFiles
 #include "scalarField.H"
 #include "autoPtr.H"
 #include "fileName.H"
+#include "Switch.H"
 #include "runTimeSelectionTables.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -99,7 +100,7 @@ public:
 
         static autoPtr<tabulation> New
         (
-            const dictionary& dict,
+            const IOdictionary& dict,
             TDACChemistryModel<CompType, ThermoType>& chemistry
         );
 
@@ -116,7 +117,7 @@ public:
             return active_;
         }
 
-      	inline const scalar tolerance() const
+      	inline scalar tolerance() const
         {
             return tolerance_;
         }
@@ -125,7 +126,7 @@ public:
 
         virtual label size() = 0;
 
-        virtual void writePerformance(fileName path);
+        virtual void writePerformance();
 
         // Retrieve function: (only virtual here)
         // Try to retrieve a stored point close enough (according to tolerance)
@@ -146,6 +147,11 @@ public:
             const scalarField& RphiQ,
             const scalar rho
         ) = 0;
+
+        // Update function: (only virtual here)
+        // The underlying structure of the tabulation is updated/cleaned
+        // to increase the performance of the retrieve
+        virtual bool update() = 0;
 
 };
 

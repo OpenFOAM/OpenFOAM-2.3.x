@@ -49,6 +49,7 @@ Description
 #include "binaryTree.H"
 #include "Time.H"
 #include "fileName.H"
+#include "OFstream.H"
 
 namespace Foam
 {
@@ -78,7 +79,7 @@ private:
         label maxGrowth_;
 
         //- Check the binary tree for leafs to remove every interval
-        checkEntireTreeInterval_;
+        label checkEntireTreeInterval_;
 
         //- Factor that multiply the ideal depth of a binary tree to decide
         //wheter to try to balance of not
@@ -111,6 +112,7 @@ private:
         OFstream nAddFile_;
         OFstream sizeFile_;
 
+        bool cleaningRequired_;
 
 
     // Private Member Functions
@@ -168,13 +170,17 @@ private:
         //  strategies
         void computeA
         (
-            scalarSquareMatrix& A,
+            scalarRectangularMatrix& A,
             const scalarField& Rphiq,
             const scalar rho
-        )
+         );
 
-        void gaussj(scalarSquareMatrix& A, scalarSquareMatrix& B, label n);
-        void gaussj(scalarSquareMatrix& A, label n);
+        void gaussj
+        (
+            scalarRectangularMatrix& A,
+            scalarRectangularMatrix& B, label n
+        );
+        void gaussj(scalarRectangularMatrix& A, label n);
 
 public:
 
@@ -240,6 +246,11 @@ public:
                 const scalarField& Rphiq,
                 const scalar rho
             );
+
+            inline bool update()
+            {
+                return cleanAndBalance();
+            }
 
 };
 

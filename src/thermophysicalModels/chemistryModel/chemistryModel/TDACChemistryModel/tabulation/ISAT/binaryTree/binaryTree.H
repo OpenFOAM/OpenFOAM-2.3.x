@@ -53,9 +53,6 @@ Description
 
 #include "binaryNode.H"      
 #include "chemPointISAT.H"
-#include "scalarField.H"
-#include "List.H"
-
 
 namespace Foam
 {
@@ -182,7 +179,7 @@ public:
         (
             const scalarField& phiq,
             const scalarField& Rphiq,
-            const List<List<scalar> >& A,
+            const scalarRectangularMatrix& A,
             const scalarField& scaleFactor,
             const scalar& epsTol,
             const label nCols,
@@ -197,7 +194,7 @@ public:
         (
             const scalarField& phiq,
             bn* node,
-            chemPointISAT*& nearest
+            chP*& nearest
         );
 
         //Perform a secondary binary tree search starting from a failed
@@ -218,7 +215,7 @@ public:
         //  Then, it repopulate the tree with this hyperplane stored at the root
         //  and by inserting the chemPoint in increasing order of value in that
         //  direction
-        bool balance();
+        void balance();
         
         inline void deleteAllNode()
         {

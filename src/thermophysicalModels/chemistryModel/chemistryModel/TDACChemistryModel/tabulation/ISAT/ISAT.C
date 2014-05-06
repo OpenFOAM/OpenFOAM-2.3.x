@@ -65,16 +65,19 @@ Foam::ISAT<CompType, ThermoType>::ISAT
         this->coeffsDict_.lookupOrDefault
         (
             "maxDepthFactor",
-            (chemisTree_.maxElements()-1)
-                /(std::log(chemisTree_.maxElements())/std::log(2.0))
+            (chemisTree_.maxNLeafs()-1)
+                /(std::log(chemisTree_.maxNLeafs())/std::log(2.0))
         )
     ),
     minBalanceThreshold_
     (
-        coeffsDict.lookupOrDefault("minBalanceThreshold",0.1*maxNLeafs_)
+        this->coeffsDict_.lookupOrDefault
+        (
+            "minBalanceThreshold",0.1*chemisTree_.maxNLeafs()
+        )
     ),
     MRURetrieve_(this->coeffsDict_.lookupOrDefault("MRURetrieve", false)),
-    MRUSize_(this->coeffsDict_.lookupOrDefault("MRUSize", 0)),
+    maxMRUSize_(this->coeffsDict_.lookupOrDefault("maxMRUSize", 0)),
     lastSearch_(NULL),
     growPoints_(this->coeffsDict_.lookupOrDefault("growPoints", true)),
     nRetrieved_(0),
@@ -83,7 +86,8 @@ Foam::ISAT<CompType, ThermoType>::ISAT
     nRetrievedFile_(chemistryProperties.name().path() + "/../found_isat.out"),
     nGrowthFile_(chemistryProperties.name().path() + "/../growth_isat.out"),
     nAddFile_(chemistryProperties.name().path() + "/../add_isat.out"),
-    sizeFile_(chemistryProperties.name().path() + "/../size_isat.out")
+    sizeFile_(chemistryProperties.name().path() + "/../size_isat.out"),
+    cleaningRequired_(false)
 
 {
     if (this->active_)
@@ -127,7 +131,7 @@ void Foam::ISAT<CompType, ThermoType>::addToMRU
     chemPointISAT<CompType, ThermoType>* phi0
 )
 {
-    if (MRUSize_ > 0 && MRURetrieve_)
+    if (maxMRUSize_ > 0 && MRURetrieve_)
     {
         //first search if the chemPoint is already in the list
         bool isInList = false;
@@ -152,12 +156,23 @@ void Foam::ISAT<CompType, ThermoType>::addToMRU
                 MRUList_.insert(phi0);
             }
         }
-        else //chemPoint not yet in the list
+        else //chemPoint not yet in the list, iter is last
         {
-            if (MRUList_.size()==MRUSize_)
+            if (MRUList_.size()==maxMRUSize_)
             {
-                MRUList_.remove(MRUList_.last());
-                MRUList_.insert(phi0);
+                if (iter() == MRUList_.last())
+                {
+                    MRUList_.remove(iter);
+                    MRUList_.insert(phi0);
+                }
+                else
+                {
+                    FatalErrorIn
+                    (
+                        "ISAT::addToMRU"
+                    )   << "wrong MRUList construction"
+                        << exit(FatalError);
+                }
             }
             else
             {
@@ -180,7 +195,7 @@ void Foam::ISAT<CompType, ThermoType>::calcNewC
     bool mechRedActive = this->chemistry_->mechRed()->active();
     Rphiq = phi0->Rphi();
     scalarField dphi=phiq-phi0->phi();
-    const scalarSquareMatrix& gradientsMatrix = phi0->A();
+    const scalarRectangularMatrix& gradientsMatrix = phi0->A();
     List<label>& completeToSimplified(phi0->completeToSimplifiedIndex());
 
     //Rphiq[i]=Rphi0[i]+A[i][j]dphi[j]
@@ -201,8 +216,10 @@ void Foam::ISAT<CompType, ThermoType>::calcNewC
                         Rphiq[i] += gradientsMatrix[si][sj]*dphi[j];
                     }
                 }
-                Rphiq[i] += gradientsMatrix[si][phi0->NsDAC()]*dphi[nEqns-2];
-                Rphiq[i] += gradientsMatrix[si][phi0->NsDAC()+1]*dphi[nEqns-1];
+                Rphiq[i] +=
+                    gradientsMatrix[si][phi0->nActiveSpecies()]*dphi[nEqns-2];
+                Rphiq[i] +=
+                    gradientsMatrix[si][phi0->nActiveSpecies()+1]*dphi[nEqns-1];
                 //As we use an approximation of A, Rphiq should be checked for
                 //negative values
                 Rphiq[i] = max(0.0,Rphiq[i]);
@@ -244,7 +261,7 @@ bool Foam::ISAT<CompType, ThermoType>::grow
 
     //raise a flag when the chemPoint used has been grown more than the
     //allowed number of time
-    if (!phi0->toRemove() && phi0->nGrown() > checkGrown())
+    if (!phi0->toRemove() && phi0->nGrowth() > maxGrowth_)
     {
         cleaningRequired_ = true;
         phi0->toRemove() = true;
@@ -284,7 +301,7 @@ bool Foam::ISAT<CompType, ThermoType>::cleanAndBalance()
             chPMaxLifeTime_
           * runTime_->timeToUserTime(runTime_->deltaTValue());
 
-        if ((elapsedTime > maxElapsedTime) || (phi0->nGrowth() > maxGrowth_))
+        if ((elapsedTime > maxElapsedTime) || (x->nGrowth() > maxGrowth_))
         {
             chemisTree_.deleteLeaf(x);
             treeModified=true;
@@ -302,12 +319,9 @@ bool Foam::ISAT<CompType, ThermoType>::cleanAndBalance()
             maxDepthFactor_*std::log(chemisTree_.size())/std::log(2.0)
     )
     {
-        treeModified = chemisTree_.balance();
-    }
-
-    if (treeModified)
-    {
+        chemisTree_.balance();
         MRUList_.clear();
+        treeModified = true;
     }
 
     //return a bool to specify if the tree structure has been modified
@@ -318,7 +332,7 @@ bool Foam::ISAT<CompType, ThermoType>::cleanAndBalance()
 template<class CompType, class ThermoType>
 void Foam::ISAT<CompType, ThermoType>::computeA
 (
- scalarSquareMatrix& A,
+ scalarRectangularMatrix& A,
  const scalarField& Rphiq,
  const scalar rhoi
  )
@@ -331,7 +345,7 @@ void Foam::ISAT<CompType, ThermoType>::computeA
     forAll(Rcq,i)
     {
         label s2c = this->chemistry_->simplifiedToCompleteIndex()[i];
-        Rcq[i] = rho*Rphiq[s2c]/this->chemistry_->specieThermo()[s2c].W();
+        Rcq[i] = rhoi*Rphiq[s2c]/this->chemistry_->specieThermo()[s2c].W();
     }
 
     // Aaa is computed implicitely,
@@ -383,8 +397,8 @@ void Foam::ISAT<CompType, ThermoType>::computeA
 template<class CompType, class ThermoType>
 void Foam::ISAT<CompType, ThermoType>::gaussj
 (
- scalarSquareMatrix& A,
- scalarSquareMatrix& B,
+ scalarRectangularMatrix& A,
+ scalarRectangularMatrix& B,
  label n
  )
 {
@@ -478,11 +492,11 @@ void Foam::ISAT<CompType, ThermoType>::gaussj
 template<class CompType, class ThermoType>
 void Foam::ISAT<CompType, ThermoType>::gaussj
 (
- scalarSquareMatrix& A,
+ scalarRectangularMatrix& A,
  label n
  )
 {
-    scalarSquareMatrix B(n,n, 0.0);
+    scalarRectangularMatrix B(n,n, 0.0);
     gaussj(A, B, n);
 }
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -495,10 +509,10 @@ bool Foam::ISAT<CompType, ThermoType>::retrieve
 )
 {
     bool retrieved(false);
+    chemPointISAT<CompType, ThermoType>* phi0;
     if (chemisTree_.size())//if the tree is not empty
     {
-        chemPointISAT<CompType, ThermoType>* phi0 =
-            chemisTree_.binaryTreeSearch(phiq, chemisTree_.root());
+        chemisTree_.binaryTreeSearch(phiq, chemisTree_.root(), phi0);
 
         //lastSearch keeps track of the chemPoint we obtain by the regular
         //binary tree search
@@ -526,7 +540,7 @@ bool Foam::ISAT<CompType, ThermoType>::retrieve
                 phi0=iter();
                 if (phi0->inEOA(phiq))
                 {
-                    retrieved = true:
+                    retrieved = true;
                     break;
                 }
             }
@@ -554,7 +568,7 @@ bool Foam::ISAT<CompType, ThermoType>::retrieve
             cleaningRequired_ = true;
             phi0->toRemove() = true;
         }
-        phi0->lastTimeUsed()=runTime_->timeOutputValue();
+        lastSearch_->lastTimeUsed()=runTime_->timeOutputValue();
         addToMRU(phi0);
         calcNewC(phi0,phiq,Rphiq);
         nRetrieved_++;
@@ -601,7 +615,7 @@ bool Foam::ISAT<CompType, ThermoType>::add
         if (!cleanAndBalance())
         {
             DynamicList<chemPointISAT<CompType, ThermoType>*> tempList;
-            if (MRUSize_>0)
+            if (maxMRUSize_>0)
             {
                 //create a copy of each chemPointISAT of the MRUList_ before
                 //they are deleted
@@ -650,7 +664,7 @@ bool Foam::ISAT<CompType, ThermoType>::add
 
     //Compute the A matrix needed to store the chemPoint.
     label ASize = this->chemistry_->nEqns(); //reduced when mechRed is active
-    scalarSquareMatrix A(ASize, ASize,0.0);
+    scalarRectangularMatrix A(ASize, ASize,0.0);
     computeA(A, Rphiq, rho);
 
     chemisTree().insertNewLeaf

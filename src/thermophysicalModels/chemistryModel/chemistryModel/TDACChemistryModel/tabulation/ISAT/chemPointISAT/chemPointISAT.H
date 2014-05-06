@@ -145,10 +145,10 @@ private:
     
     //- LT the transpose of the L matrix describing the Ellipsoid Of Accuracy
     //use List of Lists to be able to change size if DAC is used
-    scalarSquareMatrix LT_;
+    scalarRectangularMatrix LT_;
     
     //- A the mapping gradient matrix
-    scalarSquareMatrix A_;
+    scalarRectangularMatrix A_;
     
     //- Vector storing the scale factor
     scalarField scaleFactor_;        
@@ -173,9 +173,7 @@ private:
     //and the complete chemical mechanism
     List<label> completeToSimplifiedIndex_;
     List<label> simplifiedToCompleteIndex_;
-    
-    label inertSpecie_;
-    
+
     scalar timeTag_;
     scalar lastTimeUsed_;
     
@@ -195,7 +193,7 @@ private:
     void qrDecompose
     (
         const label nCols,
-        scalarSquareMatrix& A
+        scalarRectangularMatrix& A
     );
 
 
@@ -224,11 +222,11 @@ private:
     //chapter 2, pp 67-70
     void svd
     (
-        scalarSquareMatrix& A,
+        scalarRectangularMatrix& A,
         label m,
         label n,
-        scalarField& d,
-        scalarSquareMatrix& V
+        scalarDiagonalMatrix& d,
+        scalarRectangularMatrix& V
     );
 
     scalar pythag(scalar a, scalar b); //function used in svd function
@@ -242,7 +240,7 @@ public:
             TDACChemistryModel<CompType, ThermoType>& chemistry,
             const scalarField& phi,
             const scalarField& Rphi,
-            const scalarSquareMatrix& A,
+            const scalarRectangularMatrix& A,
             const scalarField& scaleFactor,
             const scalar& tolerance,
             const label& spaceSize,
@@ -310,33 +308,28 @@ public:
             return node_;
         }
         
-        inline const scalarSquareMatrix& A() const
+        inline const scalarRectangularMatrix& A() const
         {
             return A_;
         }
         
-        inline scalarSquareMatrix& A() 
+        inline scalarRectangularMatrix& A() 
         {
             return A_;
         } 
-        inline const scalarSquareMatrix& LT() const
+        inline const scalarRectangularMatrix& LT() const
         {
             return LT_;
         }
         
-        inline scalarSquareMatrix& LT()
+        inline scalarRectangularMatrix& LT()
         {
             return LT_;
         }
         
-        inline scalarSquareMatrix& QT()
+        inline label nActiveSpecies()
         {
-            return QT_;
-        }
-        
-        inline label NsDAC()
-        {
-            return NsDAC_;
+            return nActiveSpecies_;
         }
 
         inline List<label>& completeToSimplifiedIndex()
@@ -347,11 +340,6 @@ public:
         inline List<label>& simplifiedToCompleteIndex()
         {
             return simplifiedToCompleteIndex_;
-        }
-        
-        inline label inertSpecie()
-        {
-            return inertSpecie_;
         }
         
         inline const scalar& timeTag()
@@ -376,14 +364,10 @@ public:
 
         //- ISAT functions
 
-        //- To RETRIEVE the mapping from the chemPoint phi, the query point phiq
-        // has to be in the EOA of phi. It follows that, dphi=phiq-phi and to
-        // test if phiq is in the ellipsoid there are two methods.
-        // First (not implemented), compare r=||dphi|| with rmin and rmax.
-        // If r < rmin, phiq is in the EOA. If r > rmax, phiq is not
-        // This operations is O(spaceSize) and is performed first.
-        // If rmin < r < rmax, then the second method is used:
-        // ||L^T.dphi|| <= 1 to be in the EOA.
+        //- To RETRIEVE the mapping from the stored chemPoint phi, the query
+        // point phiq has to be in the EOA of phi.
+        // To test if phiq is in the ellipsoid:
+        // ||L^T.dphi|| <= 1
         bool inEOA(const scalarField& phiq);
         
 
@@ -407,12 +391,12 @@ public:
         // EOA is a conservative approximation of the region of accuracy
         // surrounding the point phi, we could expand it by comparing the
         // computed results with the one obtained by linear interpolation. The
-        // error epsGrow is calculated:
-        // epsGrow = ||B.(dR - dRl)||,
+        // error eps is calculated:
+        // eps = ||B.(dR - dRl)||,
         // with dR = Rphiq - Rphi, dRl = A.dphi and B the diagonal scale factor
         // matrix.
-        // If epsGrow <= tolerance, the EOA is too conservative and a GROW is
-        // perforned,
+        // If eps <= tolerance, the EOA is too conservative and a GROW is
+        // performed,
         // otherwise, the newly computed mapping is associated to the initial
         // composition and added to the tree.
         bool checkSolution(const scalarField& phiq, const scalarField& Rphiq);

@@ -95,7 +95,7 @@ binaryNode<CompType, ThermoType>::calcV
 )
 {
     //LT is the transpose of the L matrix
-    scalarSquareMatrix& LT = elementLeft->LT();
+    scalarRectangularMatrix& LT = elementLeft->LT();
     bool mechReductionActive = elementLeft->chemistry()->mechRed()->active();
     //difference of composition in the full species domain
     scalarField phiDif = elementRight->phi() - elementLeft->phi();
@@ -111,17 +111,17 @@ binaryNode<CompType, ThermoType>::calcV
         {
             if (i<elementLeft->spaceSize()-2)
             {
-                si = elementLeft->completeToSimplifiedIndex(i);
+                si = elementLeft->completeToSimplifiedIndex()[i];
                 outOfIndexI = (si==-1);
             }
             else//temperature and pressure
             {
                 outOfIndexI = false;
                 label dif = i-(elementLeft->spaceSize()-2);
-                si = elementLeft->NsDAC()+dif;
+                si = elementLeft->nActiveSpecies()+dif;
             }
         }
-        if (!mechReductionActive || mechReductionActive && !(outOfIndexI)))
+        if (!mechReductionActive || (mechReductionActive && !(outOfIndexI)))
         {
             v[i]=0.0;
             for (label j=0; j<elementLeft->spaceSize(); j++)
@@ -132,14 +132,14 @@ binaryNode<CompType, ThermoType>::calcV
                 {
                     if (j<elementLeft->spaceSize()-2)
                     {
-                        sj = elementLeft->completeToSimplifiedIndex(j);
+                        sj = elementLeft->completeToSimplifiedIndex()[j];
                         outOfIndexJ = (sj==-1);
                     }
                     else
                     {
                         outOfIndexJ = false;
                         label dif = j-(elementLeft->spaceSize()-2);
-                        sj = elementLeft->NsDAC()+dif;
+                        sj = elementLeft->nActiveSpecies()+dif;
                     }
                 }
                 if

@@ -33,444 +33,23 @@ License
 #include "binaryNode.H"
 #include "TDACChemistryModel.H"
 #include <limits>
+#include "scalarMatrices.H"
 
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
 //Defined as static to be able to dynamicly change it during simulations
 //(all chemPoints refer to the same object)
 template<class CompType, class ThermoType>
 Foam::scalar Foam::chemPointISAT<CompType, ThermoType>::tolerance_;
 
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-
-template<class CompType, class ThermoType>
-Foam::chemPointISAT<CompType, ThermoType>::chemPointISAT
-(
-TDACChemistryModel<CompType, ThermoType>& chemistry,
-const scalarField& phi,
-const scalarField& Rphi,
-const scalarSquareMatrix& A,
-const scalarField& scaleFactor,
-const scalar& tolerance,
-const label& spaceSize,
-const dictionary& coeffsDict,
-binaryNode<CompType, ThermoType>* node
-)
-:
-    chemistry_(&chemistry),
-    phi_(phi),
-    Rphi_(Rphi),
-    A_(A),
-    scaleFactor_(scaleFactor),
-    node_(node),
-    spaceSize_(spaceSize),
-    nGrowth_(0),
-    nActiveSpecies_(chemistry.mechRed()->NsSimp()),
-    completeToSimplifiedIndex_(spaceSize-2),
-    simplifiedToCompleteIndex_(nActiveSpecies_),
-    inertSpecie_(-1),
-    timeTag_(chemistry_->time().timeOutputValue()),
-    lastTimeUsed_(chemistry_->time().timeOutputValue()),
-    toRemove_(false),
-    maxNumNewDim_(coeffsDict.lookupOrDefault("maxNumNewDim",0))
-{
-    tolerance_=tolerance;
-
-    bool isMechRedActive = chemistry_->mechRed()->active();
-    if (isMechRedActive)
-    {
-        for (label i=0; i<spaceSize-2; i++)
-        {
-            completeToSimplifiedIndex_[i] =
-                chemistry.completeToSimplifiedIndex_[i];
-        }
-        for (label i=0; i<nActiveSpecies_; i++)
-        {
-            simplifiedToCompleteIndex_[i] =
-                chemistry.simplifiedToCompleteIndex()[i];
-        }
-    }
-    
-    label dim = spaceSize;
-    if (isMechRedActive)
-    {
-        dim = nActiveSpecies_+2;
-    }
-    
-    LT_ = scalarSquareMatrix(dim, dim, 0.0);
-    
-    //SVD decomposition A= U*D*V^T 
-    scalarSquareMatrix Atilde(A);//A computed in ISAT.C
-    scalarSquareMatrix B(dim,dim,0.0);
-    scalarField diag(dim,0.0);
-    svd(Atilde, dim, dim, diag, B);
-
-    //replace the value of vector diag by max(diag, 1/2), first ISAT paper, Pope
-    for (label i=0; i<dim; i++)
-    {
-        diag[i]=max(diag[i], 0.5);
-    }
-
-    //rebuild A with max length, tol and scale factor before QR decomposition
-    for (label i=0; i<dim-2; i++)
-    {
-        scalarField AtildeI(dim);
-        for (label n=0; n<dim; n++)
-        {
-            AtildeI[n] = Atilde[i][n];
-        }
-        for (label j=0; j<dim; j++)
-        {    
-            Atilde[i][j]=0.0;
-            for (label k=0; k<dim; k++)
-            {
-                Atilde[i][j] += AtildeI[k]*diag[k]*B[j][k];
-            }
-            label si=i;
-            if (isMechRedActive)
-            {
-                si = simplifiedToCompleteIndex[i];
-            }
-            Atilde[i][j] /= (tolerance*scaleFactor[si]);
-        }
-    }
-    //Temperature
-    Atilde[dim-2][dim-2] = diag[dim-2]/(tolerance*scaleFactor[spaceSize_-2]);
-    //Pressure
-    Atilde[dim-1][dim-1] = diag[dim-1]/(tolerance*scaleFactor[spaceSize_-1]);
-
-    //The object LT_ (the transpose of the Q) describe the EOA and is set in the
-    //qrDecompose function
-    qrDecompose(dim,Atilde);
-    word inertSpecieName(chemistry.thermo().lookup("inertSpecie"));
-    forAll(chemistry.Y(),Yi)
-    {
-        if (chemistry.Y()[Yi].name()==inertSpecieName)
-        {
-            inertSpecie_=Yi;
-        }
-    }
-}
-
-
-template<class CompType, class ThermoType>
-Foam::chemPointISAT<CompType, ThermoType>::chemPointISAT
-(
-    Foam::chemPointISAT<CompType, ThermoType>& p
-)
-:
-    chemPointBase(),
-    phi_(p.phi()),
-    Rphi_(p.Rphi()),
-    LT_(p.LT()),
-    A_(p.A()),
-    scaleFactor_(p.scaleFactor()),
-    node_(p.node()),
-    spaceSize_(p.spaceSize()),
-    nUsed_(p.nUsed()),
-    nGrown_(p.nGrown()),
-    nActiveSpecies_(p.nActiveSpecies()),
-    completeToSimplifiedIndex_(p.completeToSimplifiedIndex()),
-    simplifiedToCompleteIndex_(p.simplifiedToCompleteIndex()),
-    inertSpecie_(p.inertSpecie()),
-    timeTag_(p.timeTag()),
-    lastTimeUsed_(p.lastTimeUsed()),
-    toRemove_(p.toRemove()),
-    maxNumNewDim_(p.maxNumNewDim())
-{
-   tolerance_ = p.tolerance();
-}
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-template<class CompType, class ThermoType>
-bool Foam::chemPointISAT<CompType, ThermoType>::inEOA(const scalarField& phiq)
-{
-    scalarField dphi=phiq-phi();
-    bool isMechRedActive = chemistry_->mechRed()->active();
-    label dim = (isMechRedActive) ? nActiveSpecies_ : spaceSize()-2;
-    scalar epsTemp=0.0;
-    
-
-
-    for (label i=0; i<spaceSize()-2; i++)
-    {
-        //skip the inertSpecie
-        if (i==inertSpecie_)
-        {
-            continue;
-        }
-        
-        //When mechanism reduction is inactive OR on active species
-        //multiply L by dphi to get the distance in the active species direction
-        //else (for inactive species), just multiply the diagonal
-        //element and dphi
-        if
-        (
-            !(isMechRedActive)
-          ||(isMechRedActive && completeToSimplifiedIndex_[i]!=-1)
-        )
-        {
-            label si=(isMechRedActive) ? completeToSimplifiedIndex_[i] : i;
-            for (label j=si; j<dim; j++)//LT is upper triangular
-            {
-                label sj=(isMechRedActive) ? simplifiedToCompleteIndex_[j] : j;
-                epsTemp += sqr(LT_[si][j]*dphi[sj]);
-            }
-            epsTemp += sqr(LT_[si][nActiveSpecies_]*dphi[spaceSize()-2]);
-            epsTemp += sqr(LT_[si][nActiveSpecies_+1]*dphi[spaceSize()-1]);
-        }
-        else
-        {
-            epsTemp += sqr(dphi[i]/(tolerance_*scaleFactor_[i]));
-        }
-    }
-    //Temperature
-    epsTemp += sqr(dphi[spaceSize_-2]/(tolerance_*scaleFactor_[spaceSize_-2]));
-    //Pressure
-    epsTemp += sqr(dphi[spaceSize_-1]/(tolerance_*scaleFactor_[spaceSize_-1]));
-
-    if (epsTemp > 1.0)
-    {    
-        return false;
-    }
-    else
-    {
-        nUsed_++;
-        return true;
-    }
-}
-
-
-template<class CompType, class ThermoType>
-bool Foam::chemPointISAT<CompType, ThermoType>::checkSolution
-(
-    const scalarField& phiq,
-    const scalarField& Rphiq
-)
-{
-    scalar eps2 = 0.0;
-    scalarField dR = Rphiq - Rphi();
-    scalarField dphi = phiq - phi();
-    const scalarField& scaleFactorV = scaleFactor();
-    const scalarSquareMatrix& Avar = A();
-    bool isMechRedActive = chemistry_->mechRed()->active();
-    scalar dRl = 0.0;
-    label dim = spaceSize()-2;
-    if (isMechRedActive)
-    {
-        dim = nActiveSpecies_;
-    }
-
-    //Since we build only the solution for the species, T and p are not included
-    for (label i=0; i<spaceSize()-2; i++)
-    {
-        if (i==inertSpecie_)
-        {
-            continue;
-        }
-
-        dRl = 0.0;
-        if (isMechRedActive)
-        {
-            label si = completeToSimplifiedIndex_[i];
-            //If this species is not active
-            if (si!=-1)
-            {
-                for (label j=0; j<dim; j++)
-                {
-                    label sj=j;
-                    if (isMechRedActive)
-                    {
-                        sj =simplifiedToCompleteIndex_[j];
-                    }
-                    dRl += Avar[si][j]*dphi[sj];
-                }
-                dRl += Avar[si][nActiveSpecies_]*dphi[spaceSize()-2];
-                dRl += Avar[si][nActiveSpecies_+1]*dphi[spaceSize()-1];
-            }
-            else
-            {
-                dRl = dphi[i];
-            }
-        }
-        else
-        {
-            for (label j=0; j<spaceSize(); j++)
-            {
-                dRl += Avar[i][j]*dphi[j];
-            }
-        }
-        eps2 += sqr((dR[i]-dRl)/scaleFactorV[i]);
-    }
-
-    eps2 = sqrt(eps2);
-    if (eps2 > tolerance())
-    {
-        return false;
-    }
-    else
-    {
-        // if the solution is in the ellipsoid of accuracy
-        return true;
-    }
-}
-
-
-template<class CompType, class ThermoType>
-bool Foam::chemPointISAT<CompType, ThermoType>::grow(const scalarField& phiq)
-{
-    scalarSquareMatrix& LTvar = LT();
-    scalarSquareMatrix& Avar  = A();
-    scalarField dphi = phiq - phi();
-    label dim = spaceSize();
-    label initNActiveSpecies(nActiveSpecies_);
-    bool isMechRedActive = chemistry_->mechRed()->active();
-
-    if (isMechRedActive)
-    {
-        label activeAdded(0);
-        List<label> sAdded(spaceSize()-2);
-        DynamicList<label> dimToAdd(0);
-
-        //check if the difference of active species is lower than the maximum
-        //number of new dimensions allowed
-        for (label i=0; i<spaceSize()-2; i++)
-        {
-            //first test if the current chemPoint has an inactive species
-            //corresponding to an active one in the query point
-            if
-            (
-                completeToSimplifiedIndex_[i]==-1
-             && chemistry_->completeToSimplifiedIndex_[i]!=-1
-            )
-            {
-                activeAdded++;
-                dimToAdd.append(i);
-            }
-            //then test if an active species in the current chemPoint
-            //corresponds to an inactive on in the query
-            if
-            (
-                completeToSimplifiedIndex_[i]!=-1
-             && chemistry_->completeToSimplifiedIndex_[i]==-1
-            )
-            {
-                activeAdded++;
-                //we don't need to add a new dimension but we count it to have
-                //control on the difference throuhg maxNumNewDim
-            }
-        }
-
-        //if the number of added dimension is too large, growth fail
-        if (activeAdded > maxNumNewDim_)
-        {
-            return false;
-        }
-
-        //should now reflect the number of added dimension to the current chemPoint
-        activeAdded=0;
-        forAll(dimToAdd,dimi)
-        {
-            label i(dimToAdd[dimi]);
-            nActiveSpecies_++;
-            //add the new active species
-            simplifiedToCompleteIndex_.setSize(nActiveSpecies_,i);
-            completeToSimplifiedIndex_[i]=nActiveSpecies_-1;
-            sAdded[activeAdded++]=simplifiedToCompleteIndex_[nActiveSpecies_-1];
-        }
-
-        //update LT and A :
-        //-add new column and line for the new active species
-        //-transfer last two lines of the previous matrix (p and T) to the end
-        //  (change the diagonal position)
-        //-set all element of the new lines and columns to zero except diagonal
-        //  (=1/(tolerance*scaleFactor))
-        if (nActiveSpecies_ > initNActiveSpecies)
-        {
-            LTvar.setSize(nActiveSpecies_+2, List<scalar>(initNActiveSpecies+2,0.0));
-            Avar.setSize(nActiveSpecies_+2, List<scalar>(initNActiveSpecies+2,0.0));
-            for (label i=0; i<nActiveSpecies_+2; i++)
-            {
-                LTvar[i].setSize(nActiveSpecies_+2, 0.0);
-                Avar[i].setSize(nActiveSpecies_+2, 0.0);
-            }
-            for (label i=0; i<nActiveSpecies_-activeAdded; i++)
-            {
-                //star with last column, otherwise problems when activeAdded=1
-                for (label j=1; j>=0; j--)
-                {
-                    LTvar[i][nActiveSpecies_+j]=LTvar[i][nActiveSpecies_+j-activeAdded];
-                    Avar[i][nActiveSpecies_+j]=Avar[i][nActiveSpecies_+j-activeAdded];
-                    Avar[nActiveSpecies_+j][i]=Avar[nActiveSpecies_+j-activeAdded][i];
-                    LTvar[i][nActiveSpecies_+j-activeAdded]=0.0;
-                    Avar[i][nActiveSpecies_+j-activeAdded]=0.0;
-                    Avar[nActiveSpecies_+j-activeAdded][i]=0.0;
-                }
-            }
-            for (label i=nActiveSpecies_+1; i>=nActiveSpecies_; i--)
-            {
-                for (label j=nActiveSpecies_+1; j>=nActiveSpecies_; j--)
-                {
-                    LTvar[i][j]=LTvar[i-activeAdded][j-activeAdded];
-                    Avar[i][j]=Avar[i-activeAdded][j-activeAdded];
-                    LTvar[i-activeAdded][j-activeAdded]=0.0;
-                    Avar[i-activeAdded][j-activeAdded]=0.0;
-                }
-            }
-            for (label i=nActiveSpecies_-activeAdded; i<nActiveSpecies_;i++)
-            {
-                LTvar[i][i]=1.0/(tolerance_*scaleFactor_[simplifiedToCompleteIndex_[i]]);
-                Avar[i][i]=1.0;
-            }
-        }//end if (nActiveSpecies_>initNActiveSpecies)
-        dim = nActiveSpecies_+2;
-    }//end if (isMechRedActive)
-    //beginning of grow algorithm
-    scalarField phiTilde(dim, 0.0);
-    scalar normPhiTilde = 0.0;
-    //p' = L^T.(p-phi)
-    for (label i=0; i<dim; i++)
-    {
-        for (label j=i; j<dim-2; j++)//LT is upper triangular
-        {
-            label sj = j;
-            if (isMechRedActive)
-            {
-                sj=simplifiedToCompleteIndex_[j];
-            }
-            phiTilde[i] += LTvar[i][j]*dphi[sj];
-        }
-        phiTilde[i] += LTvar[i][dim-2]*dphi[spaceSize()-2];
-        phiTilde[i] += LTvar[i][dim-1]*dphi[spaceSize()-1];
-        normPhiTilde += sqr(phiTilde[i]);
-    }
-    scalar invSqrNormPhiTilde = 1.0/normPhiTilde;
-    normPhiTilde = sqrt(normPhiTilde);
-    //gamma = (1/|p'| - 1)/|p'|^2
-    scalar gamma = (1/normPhiTilde - 1)*invSqrNormPhiTilde;
-    scalarField u(gamma*phiTilde);
-    scalarField v(dim,0.0);
-    for ( label i=0; i<dim; i++)
-    {
-        for (register label j=0; j<=i;j++)
-        {
-            v[i] += phiTilde[j]*LTvar[j][i];
-        }
-    }
-    qrUpdate(dim, u, v);
-    nGrown_++;
-    return true;
-}
-
+// * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
 template<class CompType, class ThermoType>
 void Foam::chemPointISAT<CompType, ThermoType>::qrDecompose
 (
     const label nCols,
-    scalarSquareMatrix& Q
+    scalarRectangularMatrix& Q
 )
 {
     scalarField c(nCols);
@@ -521,7 +100,7 @@ void Foam::chemPointISAT<CompType, ThermoType>::qrDecompose
     d[nCols-1] = Q[nCols-1][nCols-1];
     
     //form R
-    scalarSquareMatrix& R(LT());
+    scalarRectangularMatrix& R(LT());
     for (label i=0; i<nCols; i++)
     {
         R[i][i] = d[i];
@@ -574,7 +153,7 @@ void Foam::chemPointISAT<CompType, ThermoType>::qrUpdate
             w[i]=fabs(w[i+1])*sqrt(1.0+sqr(w[i]/w[i+1]));
         }
     }
-    scalarSquareMatrix&R(LT());
+    scalarRectangularMatrix&R(LT());
     for (i=0;i<n;i++)
     {
         R[0][i] += w[0]*v[i];
@@ -615,7 +194,7 @@ void Foam::chemPointISAT<CompType, ThermoType>::rotate
         s=sign(b)/sqrt(1.0+(fact*fact));
         c=fact*s;
     }
-    scalarSquareMatrix& R(LT());
+    scalarRectangularMatrix& R(LT());
     for (j=i;j<n;j++)
     {
         y=R[i][j];
@@ -629,11 +208,12 @@ void Foam::chemPointISAT<CompType, ThermoType>::rotate
 template<class CompType, class ThermoType>
 void Foam::chemPointISAT<CompType, ThermoType>::svd
 (
-    scalarSquareMatrix& A,
+    scalarRectangularMatrix& A,
     label m,
     label n,
-    scalarField& d,
-    scalarSquareMatrix& V)
+    scalarDiagonalMatrix& d,
+    scalarRectangularMatrix& V
+)
 {
     //UPDATED VERSION NR3
     bool flag;
@@ -941,4 +521,401 @@ Foam::chemPointISAT<CompType, ThermoType>::pythag(scalar a, scalar b)
     {
         return (absb == 0.0 ? 0.0 : absb*sqrt(1.0+sqr(absa/absb)));
     }
+}
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+
+template<class CompType, class ThermoType>
+Foam::chemPointISAT<CompType, ThermoType>::chemPointISAT
+(
+TDACChemistryModel<CompType, ThermoType>& chemistry,
+const scalarField& phi,
+const scalarField& Rphi,
+const scalarRectangularMatrix& A,
+const scalarField& scaleFactor,
+const scalar& tolerance,
+const label& spaceSize,
+const dictionary& coeffsDict,
+binaryNode<CompType, ThermoType>* node
+)
+:
+    chemistry_(&chemistry),
+    phi_(phi),
+    Rphi_(Rphi),
+    A_(A),
+    scaleFactor_(scaleFactor),
+    node_(node),
+    spaceSize_(spaceSize),
+    nGrowth_(0),
+    nActiveSpecies_(chemistry.mechRed()->NsSimp()),
+    completeToSimplifiedIndex_(spaceSize-2),
+    simplifiedToCompleteIndex_(nActiveSpecies_),
+    timeTag_(chemistry_->time().timeOutputValue()),
+    lastTimeUsed_(chemistry_->time().timeOutputValue()),
+    toRemove_(false),
+    maxNumNewDim_(coeffsDict.lookupOrDefault("maxNumNewDim",0))
+{
+    tolerance_=tolerance;
+
+    bool isMechRedActive = chemistry_->mechRed()->active();
+    if (isMechRedActive)
+    {
+        for (label i=0; i<spaceSize-2; i++)
+        {
+            completeToSimplifiedIndex_[i] =
+                chemistry.completeToSimplifiedIndex()[i];
+        }
+        for (label i=0; i<nActiveSpecies_; i++)
+        {
+            simplifiedToCompleteIndex_[i] =
+                chemistry.simplifiedToCompleteIndex()[i];
+        }
+    }
+    
+    label dim = spaceSize;
+    if (isMechRedActive)
+    {
+        dim = nActiveSpecies_+2;
+    }
+    
+    LT_ = scalarRectangularMatrix(dim, dim, 0.0);
+    
+    //SVD decomposition A= U*D*V^T 
+    scalarRectangularMatrix Atmp(A);//A computed in ISAT.C
+    scalarRectangularMatrix B(dim,dim,0.0);
+    DiagonalMatrix<scalar> diag(dim,0.0);
+    svd(Atmp, dim, dim, diag, B);
+
+    //replace the value of vector diag by max(diag, 1/2), first ISAT paper, Pope
+    for (label i=0; i<dim; i++)
+    {
+        diag[i]=max(diag[i], 0.5);
+    }
+
+    //rebuild A with max length, tol and scale factor before QR decomposition
+    scalarRectangularMatrix Atilde(dim,dim);
+    //result stored in Atilde
+    multiply(Atilde, Atmp, diag, B);
+
+    for (label i=0; i<dim-2; i++)
+    {
+        for (label j=0; j<dim; j++)
+        {
+            label si=i;
+            if (isMechRedActive)
+            {
+                si = simplifiedToCompleteIndex_[i];
+            }
+            //B*A/tolerance (where B is diagonal with inverse of scale factors)
+            //B*A is the same as dividing each line by the scale factor
+            //corresponding to the species of this line
+            Atilde[i][j] /= (tolerance*scaleFactor[si]);
+        }
+    }
+    //Temperature
+    Atilde[dim-2][dim-2] = diag[dim-2]/(tolerance*scaleFactor[spaceSize_-2]);
+    //Pressure
+    Atilde[dim-1][dim-1] = diag[dim-1]/(tolerance*scaleFactor[spaceSize_-1]);
+
+    //The object LT_ (the transpose of the Q) describe the EOA, since we have
+    // A^T B^T B A that should be factorized into L Q^T Q L^T and is set in the
+    //qrDecompose function
+    qrDecompose(dim,Atilde);
+}
+
+
+template<class CompType, class ThermoType>
+Foam::chemPointISAT<CompType, ThermoType>::chemPointISAT
+(
+    Foam::chemPointISAT<CompType, ThermoType>& p
+)
+:
+    chemistry_(p.chemistry()),
+    phi_(p.phi()),
+    Rphi_(p.Rphi()),
+    LT_(p.LT()),
+    A_(p.A()),
+    scaleFactor_(p.scaleFactor()),
+    node_(p.node()),
+    spaceSize_(p.spaceSize()),
+    nGrowth_(p.nGrowth()),
+    nActiveSpecies_(p.nActiveSpecies()),
+    completeToSimplifiedIndex_(p.completeToSimplifiedIndex()),
+    simplifiedToCompleteIndex_(p.simplifiedToCompleteIndex()),
+    timeTag_(p.timeTag()),
+    lastTimeUsed_(p.lastTimeUsed()),
+    toRemove_(p.toRemove()),
+    maxNumNewDim_(p.maxNumNewDim())
+{
+   tolerance_ = p.tolerance();
+}
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class CompType, class ThermoType>
+bool Foam::chemPointISAT<CompType, ThermoType>::inEOA(const scalarField& phiq)
+{
+    scalarField dphi=phiq-phi();
+    bool isMechRedActive = chemistry_->mechRed()->active();
+    label dim = (isMechRedActive) ? nActiveSpecies_ : spaceSize()-2;
+    scalar epsTemp=0.0;
+
+    for (label i=0; i<spaceSize()-2; i++)
+    {
+        scalar temp(0.0);
+        //When mechanism reduction is inactive OR on active species
+        //multiply L by dphi to get the distance in the active species direction
+        //else (for inactive species), just multiply the diagonal
+        //element and dphi
+        if
+        (
+            !(isMechRedActive)
+          ||(isMechRedActive && completeToSimplifiedIndex_[i]!=-1)
+        )
+        {
+            label si=(isMechRedActive) ? completeToSimplifiedIndex_[i] : i;
+            for (label j=si; j<dim; j++)//LT is upper triangular
+            {
+                label sj=(isMechRedActive) ? simplifiedToCompleteIndex_[j] : j;
+                temp += LT_[si][j]*dphi[sj];
+            }
+            temp += LT_[si][nActiveSpecies_]*dphi[spaceSize()-2];
+            temp += LT_[si][nActiveSpecies_+1]*dphi[spaceSize()-1];
+        }
+        else
+        {
+            temp = sqr(dphi[i]/(tolerance_*scaleFactor_[i]));
+        }
+        epsTemp += sqr(temp);
+    }
+    //Temperature
+    epsTemp += sqr(dphi[spaceSize_-2]/(tolerance_*scaleFactor_[spaceSize_-2]));
+    //Pressure
+    epsTemp += sqr(dphi[spaceSize_-1]/(tolerance_*scaleFactor_[spaceSize_-1]));
+
+    if (epsTemp > 1.0)
+    {    
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+
+template<class CompType, class ThermoType>
+bool Foam::chemPointISAT<CompType, ThermoType>::checkSolution
+(
+    const scalarField& phiq,
+    const scalarField& Rphiq
+)
+{
+    scalar eps2 = 0.0;
+    scalarField dR = Rphiq - Rphi();
+    scalarField dphi = phiq - phi();
+    const scalarField& scaleFactorV = scaleFactor();
+    const scalarRectangularMatrix& Avar = A();
+    bool isMechRedActive = chemistry_->mechRed()->active();
+    scalar dRl = 0.0;
+    label dim = spaceSize()-2;
+    if (isMechRedActive)
+    {
+        dim = nActiveSpecies_;
+    }
+
+    //Since we build only the solution for the species, T and p are not included
+    for (label i=0; i<spaceSize()-2; i++)
+    {
+        dRl = 0.0;
+        if (isMechRedActive)
+        {
+            label si = completeToSimplifiedIndex_[i];
+            //If this species is active
+            if (si!=-1)
+            {
+                for (label j=0; j<dim; j++)
+                {
+                    label sj=simplifiedToCompleteIndex_[j];
+                    dRl += Avar[si][j]*dphi[sj];
+                }
+                dRl += Avar[si][nActiveSpecies_]*dphi[spaceSize()-2];
+                dRl += Avar[si][nActiveSpecies_+1]*dphi[spaceSize()-1];
+            }
+            else
+            {
+                dRl = dphi[i];
+            }
+        }
+        else
+        {
+            for (label j=0; j<spaceSize(); j++)
+            {
+                dRl += Avar[i][j]*dphi[j];
+            }
+        }
+        eps2 += sqr((dR[i]-dRl)/scaleFactorV[i]);
+    }
+
+    eps2 = sqrt(eps2);
+    if (eps2 > tolerance())
+    {
+        return false;
+    }
+    else
+    {
+        // if the solution is in the ellipsoid of accuracy
+        return true;
+    }
+}
+
+
+template<class CompType, class ThermoType>
+bool Foam::chemPointISAT<CompType, ThermoType>::grow(const scalarField& phiq)
+{
+    scalarField dphi = phiq - phi();
+    label dim = spaceSize();
+    label initNActiveSpecies(nActiveSpecies_);
+    bool isMechRedActive = chemistry_->mechRed()->active();
+
+    if (isMechRedActive)
+    {
+        label activeAdded(0);
+        List<label> sAdded(spaceSize()-2);
+        DynamicList<label> dimToAdd(0);
+
+        //check if the difference of active species is lower than the maximum
+        //number of new dimensions allowed
+        for (label i=0; i<spaceSize()-2; i++)
+        {
+            //first test if the current chemPoint has an inactive species
+            //corresponding to an active one in the query point
+            if
+            (
+                completeToSimplifiedIndex_[i]==-1
+             && chemistry_->completeToSimplifiedIndex()[i]!=-1
+            )
+            {
+                activeAdded++;
+                dimToAdd.append(i);
+            }
+            //then test if an active species in the current chemPoint
+            //corresponds to an inactive on in the query
+            if
+            (
+                completeToSimplifiedIndex_[i]!=-1
+             && chemistry_->completeToSimplifiedIndex()[i]==-1
+            )
+            {
+                activeAdded++;
+                //we don't need to add a new dimension but we count it to have
+                //control on the difference throuhg maxNumNewDim
+            }
+        }
+
+        //if the number of added dimension is too large, growth fail
+        if (activeAdded > maxNumNewDim_)
+        {
+            return false;
+        }
+
+        //the number of added dimension to the current chemPoint
+        activeAdded=0;
+        forAll(dimToAdd,dimi)
+        {
+            label i(dimToAdd[dimi]);
+            nActiveSpecies_++;
+            //add the new active species
+            simplifiedToCompleteIndex_.setSize(nActiveSpecies_,i);
+            completeToSimplifiedIndex_[i]=nActiveSpecies_-1;
+            sAdded[activeAdded++]=simplifiedToCompleteIndex_[nActiveSpecies_-1];
+        }
+
+        //update LT and A :
+        //-add new column and line for the new active species
+        //-transfer last two lines of the previous matrix (p and T) to the end
+        //  (change the diagonal position)
+        //-set all element of the new lines and columns to zero except diagonal
+        //  (=1/(tolerance*scaleFactor))
+        if (nActiveSpecies_ > initNActiveSpecies)
+        {
+            scalarRectangularMatrix LTvar = LT_; //take a copy of LT_
+            scalarRectangularMatrix Avar = A_; //take a copy of A_
+            LT_ = scalarRectangularMatrix
+                (
+                    nActiveSpecies_+2,nActiveSpecies_+2,0.0
+                );
+            A_ = scalarRectangularMatrix
+                (
+                    nActiveSpecies_+2,nActiveSpecies_+2,0.0
+                );
+
+            //write the initial active species
+            for (label i=0; i<initNActiveSpecies; i++)
+            {
+                for (label j=0; j<initNActiveSpecies; j++)
+                {
+                    LT_[i][j] = LTvar[i][j];
+                    A_[i][j] = Avar[i][j];
+                }
+            }
+
+            //write the columns for temperature and pressure
+            for (label i=0; i<initNActiveSpecies+2; i++)
+            {
+                for (label j=1; j>=0; j--)
+                {
+                    LT_[i][nActiveSpecies_+j]=LTvar[i][initNActiveSpecies+j];
+                    A_[i][nActiveSpecies_+j]=Avar[i][initNActiveSpecies+j];
+                    LT_[nActiveSpecies_+j][i]=LTvar[initNActiveSpecies+j][i];
+                    A_[nActiveSpecies_+j][i]=Avar[initNActiveSpecies+j][i];
+                }
+            }
+            for (label i=initNActiveSpecies; i<nActiveSpecies_;i++)
+            {
+                LT_[i][i]=
+                    1.0
+                  / (tolerance_*scaleFactor_[simplifiedToCompleteIndex_[i]]);
+                A_[i][i]=1.0;
+            }
+        }//end if (nActiveSpecies_>initNActiveSpecies)
+
+        dim = nActiveSpecies_+2;
+    }//end if (isMechRedActive)
+    //beginning of grow algorithm
+    scalarField phiTilde(dim, 0.0);
+    scalar normPhiTilde = 0.0;
+    //p' = L^T.(p-phi)
+    for (label i=0; i<dim; i++)
+    {
+        for (label j=i; j<dim-2; j++)//LT is upper triangular
+        {
+            label sj = j;
+            if (isMechRedActive)
+            {
+                sj=simplifiedToCompleteIndex_[j];
+            }
+            phiTilde[i] += LT_[i][j]*dphi[sj];
+        }
+        phiTilde[i] += LT_[i][dim-2]*dphi[spaceSize()-2];
+        phiTilde[i] += LT_[i][dim-1]*dphi[spaceSize()-1];
+        normPhiTilde += sqr(phiTilde[i]);
+    }
+    scalar invSqrNormPhiTilde = 1.0/normPhiTilde;
+    normPhiTilde = sqrt(normPhiTilde);
+    //gamma = (1/|p'| - 1)/|p'|^2
+    scalar gamma = (1/normPhiTilde - 1)*invSqrNormPhiTilde;
+    scalarField u(gamma*phiTilde);
+    scalarField v(dim,0.0);
+    for ( label i=0; i<dim; i++)
+    {
+        for (register label j=0; j<=i;j++)
+        {
+            v[i] += phiTilde[j]*LT_[j][i];
+        }
+    }
+    qrUpdate(dim, u, v);
+    nGrowth_++;
+    return true;
 }

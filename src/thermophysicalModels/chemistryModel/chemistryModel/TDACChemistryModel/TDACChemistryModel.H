@@ -167,7 +167,7 @@ public:
                 const scalar t,
                 const scalarField& c,
                 scalarField& dcdt,
-                scalarSquareMatrix& dfdc
+                scalarRectangularMatrix& dfdc
             ) const;
 
             virtual void solve
@@ -211,7 +211,7 @@ public:
             (
                 const scalar t,
                 const scalarField& c,
-                scalarSquareMatrix& dfdc
+                scalarRectangularMatrix& dfdc
             ) const;
 
 };

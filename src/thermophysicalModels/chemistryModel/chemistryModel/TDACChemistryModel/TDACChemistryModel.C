@@ -375,7 +375,7 @@ void Foam::TDACChemistryModel<CompType, ThermoType>::jacobian
     const scalar t,
     const scalarField& c,
     scalarField& dcdt,
-    scalarSquareMatrix& dfdc
+    scalarRectangularMatrix& dfdc
 ) const
 {
     //if the mechanism reduction is active, the computed Jacobian
@@ -561,8 +561,8 @@ template<class CompType, class ThermoType>
 void Foam::TDACChemistryModel<CompType, ThermoType>::jacobian
 (
  const scalar t,
- const scalarField& c
- scalarSquareMatrix& dfdc
+ const scalarField& c,
+ scalarRectangularMatrix& dfdc
  ) const
 {
     //if the mechanism reduction is active, the computed Jacobian
@@ -862,9 +862,6 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
             deltaTMin = min(this->deltaTChem_[celli], deltaTMin);
         }
 
-//!!!!!!clean and balance to be include somewhere
-tabulation_->clean
-//!!!!!!
         // Set the RR vector (used in the solver)
         for (label i=0; i<this->nSpecie_; i++)
         {
@@ -875,7 +872,10 @@ tabulation_->clean
 
     if (tabulation_->active())
     {
-        tabulation->writePerformance();
+        //every time-step, look if the tabulation should be updated
+        tabulation_->update();
+        //write the performance of the tabulation
+        tabulation_->writePerformance();
     }
 
     return deltaTMin;

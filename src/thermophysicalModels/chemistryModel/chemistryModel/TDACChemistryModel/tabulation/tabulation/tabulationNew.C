@@ -31,7 +31,7 @@ template<class CompType, class ThermoType>
 Foam::autoPtr<Foam::tabulation<CompType, ThermoType> >
 Foam::tabulation<CompType, ThermoType>::New
 (
-    const dictionary& dict,
+    const IOdictionary& dict,
     TDACChemistryModel<CompType, ThermoType>& chemistry
 )
 {
@@ -64,7 +64,7 @@ Foam::tabulation<CompType, ThermoType>::New
     {
         FatalIOErrorIn
         (
-             (mechanismReduction::typeName + "::New(const mesh&)").c_str(),
+             (tabulation::typeName + "::New(const mesh&)").c_str(),
              thermoDict
         )<< "thermoType is in the old format and must be upgraded"
          << exit(FatalIOError);
@@ -85,7 +85,7 @@ Foam::tabulation<CompType, ThermoType>::New
         FatalErrorIn
         (
             "tabulation::New(const dictionary&, const chemistryModel&)"
-        )   << "Unknown tabulationType type " << tabulationType
+        )   << "Unknown tabulationType type " << tabulationTypeName
             << endl << endl
             << "Valid tabulationType types are :" << endl
             << dictionaryConstructorTablePtr_->toc()
