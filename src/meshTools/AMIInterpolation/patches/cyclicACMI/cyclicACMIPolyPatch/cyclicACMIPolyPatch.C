@@ -127,6 +127,10 @@ void Foam::cyclicACMIPolyPatch::setNeighbourFaceAreas() const
 
 void Foam::cyclicACMIPolyPatch::initGeometry(PstreamBuffers& pBufs)
 {
+    // initialise the AMI so that base geometry (e.g. cell volumes) are
+    // correctly evaluated
+    resetAMI();
+
     cyclicAMIPolyPatch::initGeometry(pBufs);
 }
 
