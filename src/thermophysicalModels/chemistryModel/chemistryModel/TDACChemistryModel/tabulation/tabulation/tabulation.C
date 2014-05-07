@@ -41,7 +41,7 @@ Foam::tabulation<CompType, ThermoType>::tabulation
 )
 :
     dict_(dict),
-    chemistry_(&chemistry),
+    chemistry_(chemistry),
     coeffsDict_(dict.subDict("tabulation")),
     active_(coeffsDict_.lookup("active")),
     tolerance_(readScalar(coeffsDict_.lookup("tolerance")))

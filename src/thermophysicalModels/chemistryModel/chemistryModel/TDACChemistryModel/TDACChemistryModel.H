@@ -79,7 +79,6 @@ class TDACChemistryModel
         scalar solve(const DeltaTType& deltaT);
 
         //- Mechanism reduction
-        autoPtr<mechanismReduction<CompType, ThermoType> > mechRed_;
         label NsDAC_;
         scalarField completeC_;
         scalarField simplifiedC_;
@@ -88,6 +87,8 @@ class TDACChemistryModel
         Field<label> completeToSimplifiedIndex_;
         DynamicList<label> simplifiedToCompleteIndex_;
         List<List<chemkinReader::specieElement> > specieComp_;
+        autoPtr<mechanismReduction<CompType, ThermoType> > mechRed_;
+
 
         //- Tabulation
         autoPtr<tabulation<CompType, ThermoType> > tabulation_;
@@ -203,7 +204,7 @@ public:
 
             inline List<List<chemkinReader::specieElement> >& specieComp();
 
-            inline autoPtr<mechanismReduction<CompType, ThermoType> > mechRed();
+            inline autoPtr<mechanismReduction<CompType, ThermoType> >& mechRed();
 
         // Tabulation related
     

@@ -35,7 +35,6 @@ License
 #include <limits>
 #include "scalarMatrices.H"
 
-
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 //Defined as static to be able to dynamicly change it during simulations
@@ -49,7 +48,7 @@ template<class CompType, class ThermoType>
 void Foam::chemPointISAT<CompType, ThermoType>::qrDecompose
 (
     const label nCols,
-    scalarRectangularMatrix& Q
+    scalarRectangularMatrix& R
 )
 {
     scalarField c(nCols);
@@ -61,7 +60,7 @@ void Foam::chemPointISAT<CompType, ThermoType>::qrDecompose
         scale = 0.0;
         for (label i=k; i<nCols; i++)
         {
-            scale=max(scale, fabs(Q[i][k]));
+            scale=max(scale, fabs(R[i][k]));
         }
         if (scale == 0.0)
         {
@@ -71,46 +70,40 @@ void Foam::chemPointISAT<CompType, ThermoType>::qrDecompose
         {
             for (label i=k; i<nCols; i++)
             {
-                Q[i][k] /= scale;
+                R[i][k] /= scale;
             }
             sum = 0.0;
             for (label i=k; i<nCols; i++)
             {
-                sum += sqr(Q[i][k]);
+                sum += sqr(R[i][k]);
             }
-            sigma = sign(Q[k][k])*sqrt(sum);
-            Q[k][k] += sigma;
-            c[k]=sigma*Q[k][k];
+            sigma = sign(R[k][k])*sqrt(sum);
+            R[k][k] += sigma;
+            c[k]=sigma*R[k][k];
             d[k]=-scale*sigma;
             for (label j=k+1; j<nCols; j++)
             {
                 sum=0.0;
                 for ( label i=k; i<nCols; i++)
                 {
-                    sum += Q[i][k]*Q[i][j];
+                    sum += R[i][k]*R[i][j];
                 }
                 scalar tau = sum/c[k];
                 for ( label i=k; i<nCols; i++)
                 {
-                    Q[i][j] -= tau*Q[i][k];
+                    R[i][j] -= tau*R[i][k];
                 }
             }
         }
     }
-    d[nCols-1] = Q[nCols-1][nCols-1];
-    
+    d[nCols-1] = R[nCols-1][nCols-1];
     //form R
-    scalarRectangularMatrix& R(LT());
     for (label i=0; i<nCols; i++)
     {
         R[i][i] = d[i];
         for ( label j=0; j<i; j++)
         {
             R[i][j]=0.0;
-        }
-        for (label j=i+1; j<nCols; j++)
-        {
-            R[i][j]=Q[i][j];
         }
     }
 }
@@ -119,6 +112,7 @@ void Foam::chemPointISAT<CompType, ThermoType>::qrDecompose
 template<class CompType, class ThermoType>
 void Foam::chemPointISAT<CompType, ThermoType>::qrUpdate
 (
+    scalarRectangularMatrix& R,
     const label n,
     const Foam::scalarField &u,
     const Foam::scalarField &v
@@ -139,7 +133,7 @@ void Foam::chemPointISAT<CompType, ThermoType>::qrUpdate
     }
     for (i=k-1;i>=0;i--)
     {
-        rotate(i,w[i],-w[i+1], n);
+        rotate(R, i,w[i],-w[i+1], n);
         if (w[i] == 0.0)
         {
             w[i]=fabs(w[i+1]);
@@ -153,22 +147,21 @@ void Foam::chemPointISAT<CompType, ThermoType>::qrUpdate
             w[i]=fabs(w[i+1])*sqrt(1.0+sqr(w[i]/w[i+1]));
         }
     }
-    scalarRectangularMatrix&R(LT());
     for (i=0;i<n;i++)
     {
         R[0][i] += w[0]*v[i];
     }
     for (i=0;i<k;i++)
     {
-        rotate(i,R[i][i],-R[i+1][i], n);
+        rotate(R, i,R[i][i],-R[i+1][i], n);
     }
 }
 
 
-//rotate function used by qrUpdate    
 template<class CompType, class ThermoType>
 void Foam::chemPointISAT<CompType, ThermoType>::rotate
 (
+    scalarRectangularMatrix& R,
     const label i,
     const scalar a,
     const scalar b,
@@ -194,7 +187,6 @@ void Foam::chemPointISAT<CompType, ThermoType>::rotate
         s=sign(b)/sqrt(1.0+(fact*fact));
         c=fact*s;
     }
-    scalarRectangularMatrix& R(LT());
     for (j=i;j<n;j++)
     {
         y=R[i][j];
@@ -442,10 +434,16 @@ void Foam::chemPointISAT<CompType, ThermoType>::svd
                 }
                 break;
             }
-            if (its == 29)
+            if (its == 34)
             {
-                Info<< "No convergence in 30 iterations" << endl;
+                WarningIn
+                (
+                    "SVD::SVD"
+                    "(scalarRectangularMatrix& A, const scalar minCondition)"
+                )   << "no convergence in 35 SVD iterations"
+                    << endl;
             }
+
             x = d[l];
             nm = k-1;
             y = d[nm];
@@ -540,7 +538,7 @@ const dictionary& coeffsDict,
 binaryNode<CompType, ThermoType>* node
 )
 :
-    chemistry_(&chemistry),
+    chemistry_(chemistry),
     phi_(phi),
     Rphi_(Rphi),
     A_(A),
@@ -551,14 +549,14 @@ binaryNode<CompType, ThermoType>* node
     nActiveSpecies_(chemistry.mechRed()->NsSimp()),
     completeToSimplifiedIndex_(spaceSize-2),
     simplifiedToCompleteIndex_(nActiveSpecies_),
-    timeTag_(chemistry_->time().timeOutputValue()),
-    lastTimeUsed_(chemistry_->time().timeOutputValue()),
+    timeTag_(chemistry_.time().timeOutputValue()),
+    lastTimeUsed_(chemistry_.time().timeOutputValue()),
     toRemove_(false),
     maxNumNewDim_(coeffsDict.lookupOrDefault("maxNumNewDim",0))
 {
     tolerance_=tolerance;
 
-    bool isMechRedActive = chemistry_->mechRed()->active();
+    bool isMechRedActive = chemistry_.mechRed()->active();
     if (isMechRedActive)
     {
         for (label i=0; i<spaceSize-2; i++)
@@ -579,8 +577,6 @@ binaryNode<CompType, ThermoType>* node
         dim = nActiveSpecies_+2;
     }
     
-    LT_ = scalarRectangularMatrix(dim, dim, 0.0);
-    
     //SVD decomposition A= U*D*V^T 
     scalarRectangularMatrix Atmp(A);//A computed in ISAT.C
     scalarRectangularMatrix B(dim,dim,0.0);
@@ -596,7 +592,7 @@ binaryNode<CompType, ThermoType>* node
     //rebuild A with max length, tol and scale factor before QR decomposition
     scalarRectangularMatrix Atilde(dim,dim);
     //result stored in Atilde
-    multiply(Atilde, Atmp, diag, B);
+    multiply(Atilde, Atmp, diag, B.T());
 
     for (label i=0; i<dim-2; i++)
     {
@@ -621,7 +617,8 @@ binaryNode<CompType, ThermoType>* node
     //The object LT_ (the transpose of the Q) describe the EOA, since we have
     // A^T B^T B A that should be factorized into L Q^T Q L^T and is set in the
     //qrDecompose function
-    qrDecompose(dim,Atilde);
+    LT_ = scalarRectangularMatrix(Atilde);
+    qrDecompose(dim,LT_);
 }
 
 
@@ -657,7 +654,7 @@ template<class CompType, class ThermoType>
 bool Foam::chemPointISAT<CompType, ThermoType>::inEOA(const scalarField& phiq)
 {
     scalarField dphi=phiq-phi();
-    bool isMechRedActive = chemistry_->mechRed()->active();
+    bool isMechRedActive = chemistry_.mechRed()->active();
     label dim = (isMechRedActive) ? nActiveSpecies_ : spaceSize()-2;
     scalar epsTemp=0.0;
 
@@ -717,7 +714,7 @@ bool Foam::chemPointISAT<CompType, ThermoType>::checkSolution
     scalarField dphi = phiq - phi();
     const scalarField& scaleFactorV = scaleFactor();
     const scalarRectangularMatrix& Avar = A();
-    bool isMechRedActive = chemistry_->mechRed()->active();
+    bool isMechRedActive = chemistry_.mechRed()->active();
     scalar dRl = 0.0;
     label dim = spaceSize()-2;
     if (isMechRedActive)
@@ -777,7 +774,7 @@ bool Foam::chemPointISAT<CompType, ThermoType>::grow(const scalarField& phiq)
     scalarField dphi = phiq - phi();
     label dim = spaceSize();
     label initNActiveSpecies(nActiveSpecies_);
-    bool isMechRedActive = chemistry_->mechRed()->active();
+    bool isMechRedActive = chemistry_.mechRed()->active();
 
     if (isMechRedActive)
     {
@@ -794,7 +791,7 @@ bool Foam::chemPointISAT<CompType, ThermoType>::grow(const scalarField& phiq)
             if
             (
                 completeToSimplifiedIndex_[i]==-1
-             && chemistry_->completeToSimplifiedIndex()[i]!=-1
+             && chemistry_.completeToSimplifiedIndex()[i]!=-1
             )
             {
                 activeAdded++;
@@ -805,7 +802,7 @@ bool Foam::chemPointISAT<CompType, ThermoType>::grow(const scalarField& phiq)
             if
             (
                 completeToSimplifiedIndex_[i]!=-1
-             && chemistry_->completeToSimplifiedIndex()[i]==-1
+             && chemistry_.completeToSimplifiedIndex()[i]==-1
             )
             {
                 activeAdded++;
@@ -915,7 +912,8 @@ bool Foam::chemPointISAT<CompType, ThermoType>::grow(const scalarField& phiq)
             v[i] += phiTilde[j]*LT_[j][i];
         }
     }
-    qrUpdate(dim, u, v);
+    scalarRectangularMatrix QT(dim,dim,0.0);
+    qrUpdate(LT_,dim, u, v);
     nGrowth_++;
     return true;
 }

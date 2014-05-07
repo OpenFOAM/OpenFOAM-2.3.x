@@ -93,11 +93,11 @@ Foam::ISAT<CompType, ThermoType>::ISAT
     if (this->active_)
     {
         dictionary scaleDict(this->coeffsDict_.subDict("scaleFactor"));
-        label Ysize = this->chemistry_->Y().size();
+        label Ysize = this->chemistry_.Y().size();
         scalar otherScaleFactor = readScalar(scaleDict.lookup("otherSpecies"));
         for (label i = 0; i<Ysize; i++)
         {
-            if (!scaleDict.found(this->chemistry_->Y()[i].name()))
+            if (!scaleDict.found(this->chemistry_.Y()[i].name()))
             {
                 scaleFactor_[i] = otherScaleFactor;
             }
@@ -106,7 +106,7 @@ Foam::ISAT<CompType, ThermoType>::ISAT
                 scaleFactor_[i] =
                     readScalar
                     (
-                        scaleDict.lookup(this->chemistry_->Y()[i].name())
+                        scaleDict.lookup(this->chemistry_.Y()[i].name())
                     );
             }
         }
@@ -191,8 +191,8 @@ void Foam::ISAT<CompType, ThermoType>::calcNewC
     scalarField& Rphiq
 )
 {
-    label nEqns = this->chemistry_->nEqns();//full set of species
-    bool mechRedActive = this->chemistry_->mechRed()->active();
+    label nEqns = this->chemistry_.nEqns();//full set of species
+    bool mechRedActive = this->chemistry_.mechRed()->active();
     Rphiq = phi0->Rphi();
     scalarField dphi=phiq-phi0->phi();
     const scalarRectangularMatrix& gradientsMatrix = phi0->A();
@@ -338,15 +338,20 @@ void Foam::ISAT<CompType, ThermoType>::computeA
  )
 {
     scalar dt = runTime_->deltaTValue();
-    bool mechRedActive = this->chemistry_->mechRed()->active();
-    label speciesNumber=this->chemistry_->nSpecie();
-
-    scalarField Rcq(this->chemistry_->nEqns());
-    forAll(Rcq,i)
+    bool mechRedActive = this->chemistry_.mechRed()->active();
+    label speciesNumber=this->chemistry_.nSpecie();
+    scalarField Rcq(this->chemistry_.nEqns());
+    for (label i=0; i<speciesNumber; i++)
     {
-        label s2c = this->chemistry_->simplifiedToCompleteIndex()[i];
-        Rcq[i] = rhoi*Rphiq[s2c]/this->chemistry_->specieThermo()[s2c].W();
+        label s2c = i;
+        if (mechRedActive)
+        {
+            s2c = this->chemistry_.simplifiedToCompleteIndex()[i];
+        }
+        Rcq[i] = rhoi*Rphiq[s2c]/this->chemistry_.specieThermo()[s2c].W();
     }
+    Rcq[speciesNumber] = Rphiq[Rphiq.size()-2];
+    Rcq[speciesNumber+1] = Rphiq[Rphiq.size()-1];
 
     // Aaa is computed implicitely,
     // A is given by A=C(psi0,t0+dt), where C is obtained through solving
@@ -357,7 +362,8 @@ void Foam::ISAT<CompType, ThermoType>::computeA
     // C(psi0,t0+dt)*(I-dt*J(psi(t0+dt))) = C(psi0, t0)
     // A = C(psi0,t0)/(I-dt*J(psi(t0+dt)))
     // where C(psi0,t0)=I
-    this->chemistry_->jacobian(runTime_->value(), Rcq, A);
+
+    this->chemistry_.jacobian(runTime_->value(), Rcq, A);
 
     //the jacobian is computed according to the molar concentration
     //the following conversion allows the code to use A with mass fraction
@@ -366,25 +372,25 @@ void Foam::ISAT<CompType, ThermoType>::computeA
         label si=i;
         if (mechRedActive)
         {
-            si = this->chemistry_->simplifiedToCompleteIndex()[i];
+            si = this->chemistry_.simplifiedToCompleteIndex()[i];
         }
         for (label j=0; j<speciesNumber; j++)
         {
             label sj=j;
             if (mechRedActive)
             {
-                sj = this->chemistry_->simplifiedToCompleteIndex()[j];
+                sj = this->chemistry_.simplifiedToCompleteIndex()[j];
             }
             A[i][j] *=
-                -dt*this->chemistry_->specieThermo()[si].W()
-              / this->chemistry_->specieThermo()[sj].W();
+                -dt*this->chemistry_.specieThermo()[si].W()
+              / this->chemistry_.specieThermo()[sj].W();
         }
         A[i][i] += 1;
         //columns for pressure and temperature
         A[i][speciesNumber] *=
-            -dt*this->chemistry_->specieThermo()[si].W()/rhoi;
+            -dt*this->chemistry_.specieThermo()[si].W()/rhoi;
         A[i][speciesNumber+1] *=
-            -dt*this->chemistry_->specieThermo()[si].W()/rhoi;
+            -dt*this->chemistry_.specieThermo()[si].W()/rhoi;
     }
     //For temperature and pressure, only unity on the diagonal
     A[speciesNumber][speciesNumber] = 1;
@@ -517,7 +523,6 @@ bool Foam::ISAT<CompType, ThermoType>::retrieve
         //lastSearch keeps track of the chemPoint we obtain by the regular
         //binary tree search
         lastSearch_ = phi0;
-
         if (phi0->inEOA(phiq))
         {
             retrieved = true;
@@ -602,7 +607,6 @@ bool Foam::ISAT<CompType, ThermoType>::add
             return false;
         }
     }
-
     bool treeCleanedOrCleared(false);
     //If the code reach this point, it is either because lastSearch_ is not
     //valid, OR because growPoints_ is not on, OR because the grow operation
@@ -653,7 +657,6 @@ bool Foam::ISAT<CompType, ThermoType>::add
                 deleteDemandDrivenData(tempList[i]);
             }
         }
-
         //the structure has been changed, it will force the binary tree to
         //perform a new search and find the most appropriate point still stored
         lastSearch_ = NULL;
@@ -663,7 +666,7 @@ bool Foam::ISAT<CompType, ThermoType>::add
     }
 
     //Compute the A matrix needed to store the chemPoint.
-    label ASize = this->chemistry_->nEqns(); //reduced when mechRed is active
+    label ASize = this->chemistry_.nEqns(); //reduced when mechRed is active
     scalarRectangularMatrix A(ASize, ASize,0.0);
     computeA(A, Rphiq, rho);
 

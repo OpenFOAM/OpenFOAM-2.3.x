@@ -43,28 +43,26 @@ Foam::TDACChemistryModel<CompType, ThermoType>::TDACChemistryModel
     simplifiedToCompleteIndex_(this->nSpecie_),
     specieComp_(this->nSpecie_)
 {
-    {
-        IOdictionary thermoDict
+    IOdictionary thermoDict
+    (
+        IOobject
         (
-         IOobject
-         (
-          "thermophysicalProperties",
-          mesh.time().constant(),
-          mesh,
-          IOobject::MUST_READ,
-          IOobject::NO_WRITE
-          )
-         );
+            "thermophysicalProperties",
+            mesh.time().constant(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE
+         )
+     );
 
-        // Store the species composition according to the species index
-        speciesTable speciesTab = this->thermo().composition().species();
-        chemkinReader tchemRead(thermoDict, speciesTab);
-        const HashTable<List<chemkinReader::specieElement> >& specComp =
-        tchemRead.specieComposition();
-        forAll(specieComp_,i)
-        {
-            specieComp_[i] = specComp[this->Y()[i].name()];
-        }
+    // Store the species composition according to the species index
+    speciesTable speciesTab = this->thermo().composition().species();
+    chemkinReader tchemRead(thermoDict, speciesTab);
+    const HashTable<List<chemkinReader::specieElement> >& specComp =
+    tchemRead.specieComposition();
+    forAll(specieComp_,i)
+    {
+        specieComp_[i] = specComp[this->Y()[i].name()];
     }
 
     mechRed_ =
@@ -588,7 +586,6 @@ void Foam::TDACChemistryModel<CompType, ThermoType>::jacobian
             c2[i] = max(c[i], 0.0);
         }
     }
-
     for (label i=0; i<this->nEqns(); i++)
     {
         for (label j=0; j<this->nEqns(); j++)
@@ -844,10 +841,12 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
             // the stored points (either expand or add)
             if (tabulation_->active())
             {
-                forAll(Rphiq,i)
+                forAll(c,i)
                 {
                     Rphiq[i] = c[i]/rhoi*this->specieThermo_[i].W();
                 }
+                Rphiq[Rphiq.size()-2] = Ti;
+                Rphiq[Rphiq.size()-1] = pi;
                 tabulation_->add(phiq, Rphiq, rhoi);
             }
 
@@ -858,7 +857,6 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
             {
                 this->nSpecie_ = mechRed_->nSpecie();
             }
-
             deltaTMin = min(this->deltaTChem_[celli], deltaTMin);
         }
 

@@ -96,7 +96,7 @@ binaryNode<CompType, ThermoType>::calcV
 {
     //LT is the transpose of the L matrix
     scalarRectangularMatrix& LT = elementLeft->LT();
-    bool mechReductionActive = elementLeft->chemistry()->mechRed()->active();
+    bool mechReductionActive = elementLeft->chemistry().mechRed()->active();
     //difference of composition in the full species domain
     scalarField phiDif = elementRight->phi() - elementLeft->phi();
     const scalarField& scaleFactor = elementLeft->scaleFactor();

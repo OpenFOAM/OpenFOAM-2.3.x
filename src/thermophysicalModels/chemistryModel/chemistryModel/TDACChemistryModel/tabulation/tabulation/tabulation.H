@@ -61,7 +61,7 @@ class tabulation
 protected:
 
     const dictionary& dict_;
-    TDACChemistryModel<CompType, ThermoType>* chemistry_;
+    TDACChemistryModel<CompType, ThermoType>& chemistry_;
     const dictionary coeffsDict_;
     const Switch active_;
     scalar tolerance_;

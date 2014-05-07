@@ -135,7 +135,7 @@ private:
     //Private data
     
     //- Pointer to the chemistryModel object
-    TDACChemistryModel<CompType, ThermoType>* chemistry_;
+    TDACChemistryModel<CompType, ThermoType>& chemistry_;
     
     //- Vector storing the composition, temperature and pressure
     scalarField phi_;
@@ -182,30 +182,36 @@ private:
     label maxNumNewDim_;
     
 
-    //QR decomposition of the matrix A (implementation based on the one in
-    //DenseMatrixTools but here A is not modified in order to keep it and
-    //store it along with the qr decomposition which describe the
-    //initial ellipsoid of accuracy)
+    //QR decomposition of a matrix
     //Input : nCols cols number
-    //A the matrix to decompose A = Q.R
-    //Q is stored in A, R is stored in the member LT_ of the class
+    //R the matrix to decompose
+    //QT an empty matrix that stores the transpose of the Q matrix
+    //R is returned in the given R matrix
     //which is used to store the ellipsoid of accuracy
     void qrDecompose
     (
         const label nCols,
-        scalarRectangularMatrix& A
+        scalarRectangularMatrix& R
     );
 
 
     //QR update of the matrix A
     void qrUpdate
     (
+        scalarRectangularMatrix& R,
         const label n,
         const scalarField &u,
         const scalarField &v
     );
     
-    void rotate(const label i, const scalar a, const scalar b, label n);
+    void rotate
+    (
+        scalarRectangularMatrix& R,
+        const label i,
+        const scalar a,
+        const scalar b,
+        label n
+    );
 
     //Singular Value Decomposition (SVD) for a square matrix
     //needed to compute the the length of the hyperellipsoid semi-axes
@@ -263,7 +269,7 @@ public:
 
     //- Member functions
         //- Access
-        inline TDACChemistryModel<CompType, ThermoType>* chemistry()
+        inline TDACChemistryModel<CompType, ThermoType>& chemistry()
         {
             return chemistry_;
         }

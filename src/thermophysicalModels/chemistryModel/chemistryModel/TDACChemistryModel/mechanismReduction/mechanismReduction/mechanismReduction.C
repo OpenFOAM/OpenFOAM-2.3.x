@@ -42,7 +42,7 @@ Foam::mechanismReduction<CompType,ThermoType>::mechanismReduction
 )
 :
     dict_(dict),
-    chemistry_(&chemistry),
+    chemistry_(chemistry),
     activeSpecies_(chemistry.nSpecie(),false),
     NsSimp_(chemistry.nSpecie()),
     nSpecie_(chemistry.nSpecie()),

@@ -163,23 +163,23 @@ Foam::DAC<CompType,ThermoType>::DAC
                 Info<< "element not considered"<<endl;
             }
         }
-        if (this->chemistry_->Y()[i].name() == CO2Name_)
+        if (this->chemistry_.Y()[i].name() == CO2Name_)
         {
             CO2Id_ = i;
         }
-        else if (this->chemistry_->Y()[i].name() == COName_)
+        else if (this->chemistry_.Y()[i].name() == COName_)
         {
             COId_ = i;
         }
-        else if (this->chemistry_->Y()[i].name() == HO2Name_)
+        else if (this->chemistry_.Y()[i].name() == HO2Name_)
         {
             HO2Id_ = i;
         }
-        else if (this->chemistry_->Y()[i].name() == H2OName_)
+        else if (this->chemistry_.Y()[i].name() == H2OName_)
         {
             H2OId_ = i;
         }
-        else if (this->chemistry_->Y()[i].name() == NOName_)
+        else if (this->chemistry_.Y()[i].name() == NOName_)
         {
             NOId_ = i;
         }
@@ -233,14 +233,14 @@ Foam::DAC<CompType,ThermoType>::DAC
             fuelSpeciesProp_[i] = readScalar(fuelDict.lookup(fuelSpecies_[i]));
             for (label j=0; j<this->nSpecie_; j++)
             {
-                if (this->chemistry_->Y()[j].name() == fuelSpecies_[i])
+                if (this->chemistry_.Y()[j].name() == fuelSpecies_[i])
                 {
                     fuelSpeciesID_[i]=j;
                     break;
                 }
             }
             scalar curMm =
-                this->chemistry_->specieThermo()[fuelSpeciesID_[i]].W();
+                this->chemistry_.specieThermo()[fuelSpeciesID_[i]].W();
             Mmtot += fuelSpeciesProp_[i]/curMm;
         }
 
@@ -250,7 +250,7 @@ Foam::DAC<CompType,ThermoType>::DAC
         forAll(fuelSpecies_, i)
         {
             label curID = fuelSpeciesID_[i];
-            scalar curMm = this->chemistry_->specieThermo()[curID].W();
+            scalar curMm = this->chemistry_.specieThermo()[curID].W();
 
             nbC += fuelSpeciesProp_[i]*Mmtot/curMm*sC_[curID];
             nbO += fuelSpeciesProp_[i]*Mmtot/curMm*sO_[curID];
@@ -278,8 +278,8 @@ void Foam::DAC<CompType,ThermoType>::reduceMechanism
     const scalar p
 )
 {
-    scalarField& completeC(this->chemistry_->completeC());
-    scalarField c1(this->chemistry_->nEqns(), 0.0);
+    scalarField& completeC(this->chemistry_.completeC());
+    scalarField c1(this->chemistry_.nEqns(), 0.0);
     for(label i=0; i<this->nSpecie_; i++)
     {
         c1[i] = c[i];
@@ -303,11 +303,11 @@ void Foam::DAC<CompType,ThermoType>::reduceMechanism
 
     scalar pf,cf,pr,cr;
     label lRef, rRef;
-    forAll(this->chemistry_->reactions(), i)
+    forAll(this->chemistry_.reactions(), i)
     {
-        const Reaction<ThermoType>& R = this->chemistry_->reactions()[i];
+        const Reaction<ThermoType>& R = this->chemistry_.reactions()[i];
         //for each reaction compute omegai
-        scalar omegai = this->chemistry_->omega
+        scalar omegai = this->chemistry_.omega
         (
             R, c1, T, p, pf, cf, lRef, pr, cr, rRef
         );
@@ -493,8 +493,8 @@ void Foam::DAC<CompType,ThermoType>::reduceMechanism
             //complete combustion products are not considered
             if
             (
-                this->chemistry_->Y()[i].name() == "CO2"
-             || this->chemistry_->Y()[i].name() == "H2O"
+                this->chemistry_.Y()[i].name() == "CO2"
+             || this->chemistry_.Y()[i].name() == "H2O"
             )
             {
                 continue;
@@ -502,7 +502,7 @@ void Foam::DAC<CompType,ThermoType>::reduceMechanism
             Na[0] += sC_[i]*c[i];
             Na[1] += sH_[i]*c[i];
             Na[2] += sO_[i]*c[i];
-            if (sC_[i]>nbCLarge_ || this->chemistry_->Y()[i].name() == "O2")
+            if (sC_[i]>nbCLarge_ || this->chemistry_.Y()[i].name() == "O2")
             {
                 Nal[0] += sC_[i]*c[i];
                 Nal[1] += sH_[i]*c[i];
@@ -674,10 +674,10 @@ void Foam::DAC<CompType,ThermoType>::reduceMechanism
     }//end of Q.empty()
 
     //Put a flag on the reactions containing at least one removed species
-    forAll(this->chemistry_->reactions(), i)
+    forAll(this->chemistry_.reactions(), i)
     {
-        const Reaction<ThermoType>& R = this->chemistry_->reactions()[i];
-        this->chemistry_->reactionsDisabled()[i]=false;
+        const Reaction<ThermoType>& R = this->chemistry_.reactions()[i];
+        this->chemistry_.reactionsDisabled()[i]=false;
 
         forAll(R.lhs(), s)
         {
@@ -685,11 +685,11 @@ void Foam::DAC<CompType,ThermoType>::reduceMechanism
             if (!this->activeSpecies_[ss])
             {
                 //flag the reaction to disable it
-                this->chemistry_->reactionsDisabled()[i]=true;
+                this->chemistry_.reactionsDisabled()[i]=true;
                 break;
             }
         }
-        if (!this->chemistry_->reactionsDisabled()[i])
+        if (!this->chemistry_.reactionsDisabled()[i])
         {
             forAll(R.rhs(), s)
             {
@@ -697,7 +697,7 @@ void Foam::DAC<CompType,ThermoType>::reduceMechanism
                 if (!this->activeSpecies_[ss])
                 {
                     //flag the reaction to disable it
-                    this->chemistry_->reactionsDisabled()[i]=true;
+                    this->chemistry_.reactionsDisabled()[i]=true;
                     break;
                 }
             }
@@ -705,11 +705,11 @@ void Foam::DAC<CompType,ThermoType>::reduceMechanism
     }//end of loop over reactions
 
     this->NsSimp_ = speciesNumber;
-    scalarField& simplifiedC(this->chemistry_->simplifiedC());
+    scalarField& simplifiedC(this->chemistry_.simplifiedC());
     simplifiedC.setSize(this->NsSimp_+2);
-    DynamicList<label>& s2c(this->chemistry_->simplifiedToCompleteIndex());
+    DynamicList<label>& s2c(this->chemistry_.simplifiedToCompleteIndex());
     s2c.setSize(this->NsSimp_);
-    Field<label>& c2s(this->chemistry_->completeToSimplifiedIndex());
+    Field<label>& c2s(this->chemistry_.completeToSimplifiedIndex());
 
     label j = 0;
     for (label i=0; i<this->nSpecie_; i++)
@@ -719,9 +719,9 @@ void Foam::DAC<CompType,ThermoType>::reduceMechanism
             s2c[j] = i;
             simplifiedC[j] = c[i];
             c2s[i] = j++;
-            if (!this->chemistry_->isActive(i))
+            if (!this->chemistry_.isActive(i))
             {
-                this->chemistry_->setActive(i);
+                this->chemistry_.setActive(i);
             }
         }
         else
@@ -732,9 +732,9 @@ void Foam::DAC<CompType,ThermoType>::reduceMechanism
 
     simplifiedC[this->NsSimp_] = T;
     simplifiedC[this->NsSimp_+1] = p;
-    this->chemistry_->setNsDAC(this->NsSimp_);
+    this->chemistry_.setNsDAC(this->NsSimp_);
     //change temporary Ns in chemistryModel
     //to make the function nEqns working
-    this->chemistry_->setNSpecie(this->NsSimp_);
+    this->chemistry_.setNSpecie(this->NsSimp_);
 }
 // ************************************************************************* //

@@ -59,7 +59,7 @@ class mechanismReduction
 protected:
 
     const IOdictionary& dict_;
-    TDACChemistryModel<CompType, ThermoType>* chemistry_;
+    TDACChemistryModel<CompType, ThermoType>& chemistry_;
 
     //List of active species (active = true)
     List<bool> activeSpecies_;
