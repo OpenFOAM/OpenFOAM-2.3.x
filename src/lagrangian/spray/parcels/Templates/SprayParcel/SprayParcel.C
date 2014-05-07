@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -285,7 +285,7 @@ void Foam::SprayParcel<ParcelType>::calcBreakup
         SprayParcel<ParcelType>* child = new SprayParcel<ParcelType>(*this);
         child->mass0() = massChild;
         child->d() = dChild;
-        child->nParticle() = massChild/this->rho()*this->volume(dChild);
+        child->nParticle() = massChild/(this->rho()*this->volume(dChild));
 
         const forceSuSp Fcp =
             forces.calcCoupled(*child, dt, massChild, Re, muAv);
