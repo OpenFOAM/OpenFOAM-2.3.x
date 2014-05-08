@@ -130,6 +130,7 @@
         pEqnComp1 =
             (
                 fvc::ddt(alpha1, rho1) + fvc::div(alphaRhoPhi1)
+              - (fvOptions(alpha1, rho1)&rho1)
               - fvc::Sp(fvc::ddt(alpha1) + fvc::div(alphaPhi1), rho1)
             )/rho1
           + (alpha1/rho1)*correction
@@ -143,7 +144,9 @@
         pEqnComp2 =
             (
                 fvc::ddt(alpha2, rho2) + fvc::div(alphaRhoPhi2)
+              - (fvOptions(alpha2, rho2)&rho2)
               - fvc::Sp(fvc::ddt(alpha2) + fvc::div(alphaPhi2), rho2)
+
             )/rho2
           + (alpha2/rho2)*correction
             (
@@ -158,6 +161,7 @@
         pEqnComp1 =
             (
                 fvc::ddt(alpha1, rho1) + fvc::div(alphaRhoPhi1)
+              - (fvOptions(alpha1, rho1)&rho1)
               - fvc::Sp(fvc::ddt(alpha1) + fvc::div(alphaPhi1), rho1)
             )/rho1
           + (alpha1*psi1/rho1)*correction(fvm::ddt(p));
@@ -165,6 +169,7 @@
         pEqnComp2 =
             (
                 fvc::ddt(alpha2, rho2) + fvc::div(alphaRhoPhi2)
+              - (fvOptions(alpha2, rho2)&rho2)
               - fvc::Sp(fvc::ddt(alpha2) + fvc::div(alphaPhi2), rho2)
             )/rho2
           + (alpha2*psi2/rho2)*correction(fvm::ddt(p));
@@ -227,6 +232,7 @@
                   - phiP1
                 );
             U1.correctBoundaryConditions();
+            fvOptions.correct(U1);
 
             U2 = HbyA2
               + fvc::reconstruct
@@ -239,6 +245,7 @@
                   - phiP2
                 );
             U2.correctBoundaryConditions();
+            fvOptions.correct(U2);
 
             U = fluid.U();
         }
