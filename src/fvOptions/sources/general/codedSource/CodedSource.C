@@ -182,6 +182,25 @@ void Foam::fv::CodedSource<Type>::addSup
 
 
 template<class Type>
+void Foam::fv::CodedSource<Type>::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<Type>& eqn,
+    const label fieldI
+)
+{
+    if (debug)
+    {
+        Info<< "CodedSource<"<< pTraits<Type>::typeName
+            << ">::addSup for source " << name_ << endl;
+    }
+
+    updateLibrary(redirectType_);
+    redirectFvOption().addSup(rho, eqn, fieldI);
+}
+
+
+template<class Type>
 void Foam::fv::CodedSource<Type>::setValue
 (
     fvMatrix<Type>& eqn,

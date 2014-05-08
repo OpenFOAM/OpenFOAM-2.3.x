@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -86,7 +86,6 @@ Foam::fv::explicitPorositySource::explicitPorositySource
     option(name, modelType, dict, mesh),
     porosityPtr_(NULL),
     UName_(coeffs_.lookupOrDefault<word>("UName", "U")),
-    rhoName_(coeffs_.lookupOrDefault<word>("rhoName", "rho")),
     muName_(coeffs_.lookupOrDefault<word>("muName", "thermo:mu"))
 {
     initialise();
@@ -103,18 +102,23 @@ void Foam::fv::explicitPorositySource::addSup
 {
     fvMatrix<vector> porosityEqn(eqn.psi(), eqn.dimensions());
 
-    if (eqn.dimensions() == dimForce)
-    {
-        const volScalarField& rho =
-            mesh_.lookupObject<volScalarField>(rhoName_);
-        const volScalarField& mu = mesh_.lookupObject<volScalarField>(muName_);
+    porosityPtr_->addResistance(porosityEqn);
 
-        porosityPtr_->addResistance(porosityEqn, rho, mu);
-    }
-    else
-    {
-        porosityPtr_->addResistance(porosityEqn);
-    }
+    eqn -= porosityEqn;
+}
+
+
+void Foam::fv::explicitPorositySource::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<vector>& eqn,
+    const label fieldI
+)
+{
+    fvMatrix<vector> porosityEqn(eqn.psi(), eqn.dimensions());
+
+    const volScalarField& mu = mesh_.lookupObject<volScalarField>(muName_);
+    porosityPtr_->addResistance(porosityEqn, rho, mu);
 
     eqn -= porosityEqn;
 }
@@ -132,7 +136,6 @@ bool Foam::fv::explicitPorositySource::read(const dictionary& dict)
     if (option::read(dict))
     {
         coeffs_.readIfPresent("UName", UName_);
-        coeffs_.readIfPresent("rhoName", rhoName_);
         coeffs_.readIfPresent("muName", muName_);
 
         return true;

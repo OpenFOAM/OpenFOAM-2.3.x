@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -68,40 +68,45 @@ void Foam::fv::radialActuationDiskSource::addSup
     const label fieldI
 )
 {
-    bool compressible = false;
-    if (eqn.dimensions() == dimForce)
-    {
-        compressible = true;
-    }
-
     const scalarField& cellsV = mesh_.V();
     vectorField& Usource = eqn.source();
     const vectorField& U = eqn.psi();
 
     if (V_ > VSMALL)
     {
-        if (compressible)
-        {
-            addRadialActuationDiskAxialInertialResistance
-            (
-                Usource,
-                cells_,
-                cellsV,
-                mesh_.lookupObject<volScalarField>("rho"),
-                U
-            );
-        }
-        else
-        {
-            addRadialActuationDiskAxialInertialResistance
-            (
-                Usource,
-                cells_,
-                cellsV,
-                geometricOneField(),
-                U
-            );
-        }
+        addRadialActuationDiskAxialInertialResistance
+        (
+            Usource,
+            cells_,
+            cellsV,
+            geometricOneField(),
+            U
+        );
+    }
+}
+
+
+void Foam::fv::radialActuationDiskSource::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<vector>& eqn,
+    const label fieldI
+)
+{
+    const scalarField& cellsV = mesh_.V();
+    vectorField& Usource = eqn.source();
+    const vectorField& U = eqn.psi();
+
+    if (V_ > VSMALL)
+    {
+        addRadialActuationDiskAxialInertialResistance
+        (
+            Usource,
+            cells_,
+            cellsV,
+            rho,
+            U
+        );
     }
 }
 
