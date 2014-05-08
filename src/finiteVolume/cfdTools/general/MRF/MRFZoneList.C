@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -157,6 +157,46 @@ void Foam::MRFZoneList::addCoriolis
     {
         operator[](i).addCoriolis(rho, UEqn);
     }
+}
+
+
+Foam::tmp<Foam::volVectorField> Foam::MRFZoneList::operator()
+(
+    const volVectorField& U
+)
+{
+    tmp<volVectorField> tacceleration
+    (
+        new volVectorField
+        (
+            IOobject
+            (
+                "MRFZoneList:acceleration",
+                U.mesh().time().timeName(),
+                U.mesh()
+            ),
+            U.mesh(),
+            dimensionedVector("0", U.dimensions()/dimTime, vector::zero)
+        )
+    );
+    volVectorField& acceleration = tacceleration();
+
+    forAll(*this, i)
+    {
+        operator[](i).addCoriolis(U, acceleration);
+    }
+
+    return tacceleration;
+}
+
+
+Foam::tmp<Foam::volVectorField> Foam::MRFZoneList::operator()
+(
+    const volScalarField& rho,
+    const volVectorField& U
+)
+{
+    return rho*operator()(U);
 }
 
 

@@ -384,6 +384,97 @@ public:
                 );
 
 
+            // Add explicit and implicit contributions to compressible equations
+
+                //- Scalar
+                virtual void addSup
+                (
+                    const volScalarField& rho,
+                    fvMatrix<scalar>& eqn,
+                    const label fieldI
+                );
+
+                //- Vector
+                virtual void addSup
+                (
+                    const volScalarField& rho,
+                    fvMatrix<vector>& eqn,
+                    const label fieldI
+                );
+
+                //- Spherical tensor
+                virtual void addSup
+                (
+                    const volScalarField& rho,
+                    fvMatrix<symmTensor>& eqn,
+                    const label fieldI
+                );
+
+                //- Symmetric tensor
+                virtual void addSup
+                (
+                    const volScalarField& rho,
+                    fvMatrix<sphericalTensor>& eqn,
+                    const label fieldI
+                );
+
+                //- Tensor
+                virtual void addSup
+                (
+                    const volScalarField& rho,
+                    fvMatrix<tensor>& eqn,
+                    const label fieldI
+                );
+
+
+            // Add explicit and implicit contributions to phase equations
+
+                //- Scalar
+                virtual void addSup
+                (
+                    const volScalarField& alpha,
+                    const volScalarField& rho,
+                    fvMatrix<scalar>& eqn,
+                    const label fieldI
+                );
+
+                //- Vector
+                virtual void addSup
+                (
+                    const volScalarField& alpha,
+                    const volScalarField& rho,
+                    fvMatrix<vector>& eqn,
+                    const label fieldI
+                );
+
+                //- Spherical tensor
+                virtual void addSup
+                (
+                    const volScalarField& alpha,
+                    const volScalarField& rho,
+                    fvMatrix<symmTensor>& eqn,
+                    const label fieldI
+                );
+
+                //- Symmetric tensor
+                virtual void addSup
+                (
+                    const volScalarField& alpha,
+                    const volScalarField& rho,
+                    fvMatrix<sphericalTensor>& eqn,
+                    const label fieldI
+                );
+
+                //- Tensor
+                virtual void addSup
+                (
+                    const volScalarField& alpha,
+                    const volScalarField& rho,
+                    fvMatrix<tensor>& eqn,
+                    const label fieldI
+                );
+
+
             // Set values directly
 
                 //- Scalar

@@ -403,13 +403,21 @@ void Foam::fv::option::correct(volTensorField& fld)
 }
 
 
-void Foam::fv::option::addSup(fvMatrix<scalar>& eqn, const label fieldI)
+void Foam::fv::option::addSup
+(
+    fvMatrix<scalar>& eqn,
+    const label fieldI
+)
 {
     // do nothing
 }
 
 
-void Foam::fv::option::addSup(fvMatrix<vector>& eqn, const label fieldI)
+void Foam::fv::option::addSup
+(
+    fvMatrix<vector>& eqn,
+    const label fieldI
+)
 {
     // do nothing
 }
@@ -425,15 +433,138 @@ void Foam::fv::option::addSup
 }
 
 
-void Foam::fv::option::addSup(fvMatrix<symmTensor>& eqn, const label fieldI)
+void Foam::fv::option::addSup
+(
+    fvMatrix<symmTensor>& eqn,
+    const label fieldI
+)
 {
     // do nothing
 }
 
 
-void Foam::fv::option::addSup(fvMatrix<tensor>& eqn, const label fieldI)
+void Foam::fv::option::addSup
+(
+    fvMatrix<tensor>& eqn,
+    const label fieldI
+)
 {
     // do nothing
+}
+
+
+void Foam::fv::option::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<scalar>& eqn,
+    const label fieldI
+)
+{
+    // do nothing
+}
+
+
+void Foam::fv::option::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<vector>& eqn,
+    const label fieldI
+)
+{
+    // do nothing
+}
+
+
+void Foam::fv::option::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<sphericalTensor>& eqn,
+    const label fieldI
+)
+{
+    // do nothing
+}
+
+
+void Foam::fv::option::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<symmTensor>& eqn,
+    const label fieldI
+)
+{
+    // do nothing
+}
+
+
+void Foam::fv::option::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<tensor>& eqn,
+    const label fieldI
+)
+{
+    // do nothing
+}
+
+
+void Foam::fv::option::addSup
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    fvMatrix<scalar>& eqn,
+    const label fieldI
+)
+{
+    addSup(alpha*rho, eqn, fieldI);
+}
+
+
+void Foam::fv::option::addSup
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    fvMatrix<vector>& eqn,
+    const label fieldI
+)
+{
+    addSup(alpha*rho, eqn, fieldI);
+}
+
+
+void Foam::fv::option::addSup
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    fvMatrix<sphericalTensor>& eqn,
+    const label fieldI
+)
+{
+    addSup(alpha*rho, eqn, fieldI);
+}
+
+
+void Foam::fv::option::addSup
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    fvMatrix<symmTensor>& eqn,
+    const label fieldI
+)
+{
+    addSup(alpha*rho, eqn, fieldI);
+}
+
+
+void Foam::fv::option::addSup
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    fvMatrix<tensor>& eqn,
+    const label fieldI
+)
+{
+    addSup(alpha*rho, eqn, fieldI);
 }
 
 

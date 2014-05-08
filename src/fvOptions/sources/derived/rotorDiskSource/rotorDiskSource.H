@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,7 +37,6 @@ Description
     rotorDiskSourceCoeffs
     {
         fieldNames      (U);    // names of fields on which to apply source
-        rhoName         rho;    // density field if compressible case
         nBlades         3;      // number of blades
         tipEffect       0.96;   // normalised radius above which lift = 0
 
@@ -95,7 +94,6 @@ SourceFiles
 #include "bladeModel.H"
 #include "profileModelList.H"
 #include "volFieldsFwd.H"
-#include "dimensionSet.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -149,10 +147,7 @@ protected:
 
     // Protected data
 
-        //- Name of density field
-        word rhoName_;
-
-        //- Reference density for rhoName = 'none'
+        //- Reference density for incompressible case
         scalar rhoRef_;
 
         //- Rotational speed [rad/s]
@@ -258,7 +253,7 @@ public:
 
         // Access
 
-            //- Return the reference density for rhoName = 'none'
+            //- Return the reference density for incompressible case
             inline scalar rhoRef() const;
 
             //- Return the rotational speed [rad/s]
@@ -272,18 +267,14 @@ public:
             //- Return the rotor co-ordinate system (r, theta, z)
             inline const cylindricalCS& coordSys() const;
 
-            //- Return true if solving a compressible case
-            inline bool compressible() const;
-
-            //- Return the density field [kg/m3]
-            inline tmp<volScalarField> rho() const;
-
 
         // Evaluation
 
             //- Calculate forces
+            template<class RhoFieldType>
             void calculate
             (
+                const RhoFieldType& rho,
                 const vectorField& U,
                 const scalarField& thetag,
                 vectorField& force,
@@ -294,8 +285,20 @@ public:
 
         // Source term addition
 
-            //- Source term to fvMatrix<vector>
-            virtual void addSup(fvMatrix<vector>& eqn, const label fieldI);
+            //- Source term to momentum equation
+            virtual void addSup
+            (
+                fvMatrix<vector>& eqn,
+                const label fieldI
+            );
+
+            //- Source term to compressible momentum equation
+            virtual void addSup
+            (
+                const volScalarField& rho,
+                fvMatrix<vector>& eqn,
+                const label fieldI
+            );
 
 
         // I-O

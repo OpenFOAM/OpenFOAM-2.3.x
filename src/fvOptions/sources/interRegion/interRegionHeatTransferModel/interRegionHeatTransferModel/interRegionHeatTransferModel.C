@@ -24,7 +24,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "interRegionHeatTransferModel.H"
-#include "fluidThermo.H"
+#include "basicThermo.H"
 #include "fvmSup.H"
 #include "zeroGradientFvPatchFields.H"
 #include "fvcVolumeIntegrate.H"
@@ -216,7 +216,7 @@ void Foam::fv::interRegionHeatTransferModel::addSup
     {
         if (he.dimensions() == dimEnergy/dimMass)
         {
-            if (mesh_.foundObject<fluidThermo>("thermophysicalProperties"))
+            if (mesh_.foundObject<basicThermo>("thermophysicalProperties"))
             {
                 const basicThermo& thermo =
                    mesh_.lookupObject<basicThermo>("thermophysicalProperties");
@@ -237,7 +237,7 @@ void Foam::fv::interRegionHeatTransferModel::addSup
             }
             else
             {
-                 FatalErrorIn
+                FatalErrorIn
                 (
                     "void Foam::fv::interRegionHeatTransferModel::addSup"
                     "("
@@ -245,11 +245,9 @@ void Foam::fv::interRegionHeatTransferModel::addSup
                     "   const label "
                     ")"
                 )   << " on mesh " << mesh_.name()
-                    << " could not find object fluidThermo."
-                    << " The available objects : "
+                    << " could not find object basicThermo."
+                    << " The available objects are: "
                     << mesh_.names()
-                    << " The semi implicit option can only be used for "
-                    << "fluid-fluid inter region heat transfer models "
                     << exit(FatalError);
             }
         }
@@ -265,12 +263,23 @@ void Foam::fv::interRegionHeatTransferModel::addSup
 }
 
 
+void Foam::fv::interRegionHeatTransferModel::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<scalar>& eqn,
+    const label fieldI
+)
+{
+    addSup(eqn, fieldI);
+}
+
+
 void Foam::fv::interRegionHeatTransferModel::writeData(Ostream& os) const
 {
     os.writeKeyword("name") << this->name() << token::END_STATEMENT << nl;
     os.writeKeyword("nbrRegionName") << nbrRegionName_
         << token::END_STATEMENT << nl;
-    os.writeKeyword("nbrModeleName") << nbrModelName_
+    os.writeKeyword("nbrModelName") << nbrModelName_
         << token::END_STATEMENT << nl;
     os.writeKeyword("master") << master_ << token::END_STATEMENT << nl;
     os.writeKeyword("semiImplicit") << semiImplicit_ << token::END_STATEMENT

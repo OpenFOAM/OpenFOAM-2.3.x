@@ -42,7 +42,7 @@ Description
 
     setValue
     (
-         fvMatrix<Type}>& eqn,
+        fvMatrix<Type}>& eqn,
         const label fieldI
     )
 
@@ -202,6 +202,15 @@ public:
             //- Explicit and implicit matrix contributions
             virtual void addSup
             (
+                fvMatrix<Type>& eqn,
+                const label fieldI
+            );
+
+            //- Explicit and implicit matrix contributions
+            //  to compressible equation
+            virtual void addSup
+            (
+                const volScalarField& rho,
                 fvMatrix<Type>& eqn,
                 const label fieldI
             );
