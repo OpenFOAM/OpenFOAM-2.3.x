@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -80,9 +80,7 @@ Foam::tmp<Foam::fvMatrix<Type> > Foam::fv::optionList::operator()
     const dimensionSet ds = fld.dimensions()/dimTime*dimVolume;
 
     tmp<fvMatrix<Type> > tmtx(new fvMatrix<Type>(fld, ds));
-
     fvMatrix<Type>& mtx = tmtx();
-
 
     forAll(*this, i)
     {
@@ -111,10 +109,10 @@ Foam::tmp<Foam::fvMatrix<Type> > Foam::fv::optionList::operator()
 }
 
 
-template<class Type, class RhoType>
+template<class Type>
 Foam::tmp<Foam::fvMatrix<Type> > Foam::fv::optionList::operator()
 (
-    const RhoType& rho,
+    const volScalarField& rho,
     GeometricField<Type, fvPatchField, volMesh>& fld
 )
 {
@@ -122,10 +120,10 @@ Foam::tmp<Foam::fvMatrix<Type> > Foam::fv::optionList::operator()
 }
 
 
-template<class Type, class RhoType>
+template<class Type>
 Foam::tmp<Foam::fvMatrix<Type> > Foam::fv::optionList::operator()
 (
-    const RhoType& rho,
+    const volScalarField& rho,
     GeometricField<Type, fvPatchField, volMesh>& fld,
     const word& fieldName
 )
@@ -135,9 +133,7 @@ Foam::tmp<Foam::fvMatrix<Type> > Foam::fv::optionList::operator()
     const dimensionSet ds = rho.dimensions()*fld.dimensions()/dimTime*dimVolume;
 
     tmp<fvMatrix<Type> > tmtx(new fvMatrix<Type>(fld, ds));
-
     fvMatrix<Type>& mtx = tmtx();
-
 
     forAll(*this, i)
     {
@@ -157,7 +153,63 @@ Foam::tmp<Foam::fvMatrix<Type> > Foam::fv::optionList::operator()
                         << fieldName << endl;
                 }
 
-                source.addSup(mtx, fieldI);
+                source.addSup(rho, mtx, fieldI);
+            }
+        }
+    }
+
+    return tmtx;
+}
+
+
+template<class Type>
+Foam::tmp<Foam::fvMatrix<Type> > Foam::fv::optionList::operator()
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    GeometricField<Type, fvPatchField, volMesh>& fld
+)
+{
+    return this->operator()(alpha, rho, fld, fld.name());
+}
+
+
+template<class Type>
+Foam::tmp<Foam::fvMatrix<Type> > Foam::fv::optionList::operator()
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    GeometricField<Type, fvPatchField, volMesh>& fld,
+    const word& fieldName
+)
+{
+    checkApplied();
+
+    const dimensionSet ds =
+        alpha.dimensions()*rho.dimensions()*fld.dimensions()/dimTime*dimVolume;
+
+    tmp<fvMatrix<Type> > tmtx(new fvMatrix<Type>(fld, ds));
+    fvMatrix<Type>& mtx = tmtx();
+
+    forAll(*this, i)
+    {
+        option& source = this->operator[](i);
+
+        label fieldI = source.applyToField(fieldName);
+
+        if (fieldI != -1)
+        {
+            source.setApplied(fieldI);
+
+            if (source.isActive())
+            {
+                if (debug)
+                {
+                    Info<< "Applying source " << source.name() << " to field "
+                        << fieldName << endl;
+                }
+
+                source.addSup(alpha, rho, mtx, fieldI);
             }
         }
     }
@@ -169,24 +221,13 @@ Foam::tmp<Foam::fvMatrix<Type> > Foam::fv::optionList::operator()
 template<class Type>
 void Foam::fv::optionList::constrain(fvMatrix<Type>& eqn)
 {
-    constrain(eqn, eqn.psi().name());
-}
-
-
-template<class Type>
-void Foam::fv::optionList::constrain
-(
-    fvMatrix<Type>& eqn,
-    const word& fieldName
-)
-{
     checkApplied();
 
     forAll(*this, i)
     {
         option& source = this->operator[](i);
 
-        label fieldI = source.applyToField(fieldName);
+        label fieldI = source.applyToField(eqn.psi().name());
 
         if (fieldI != -1)
         {
@@ -197,7 +238,7 @@ void Foam::fv::optionList::constrain
                 if (debug)
                 {
                     Info<< "Applying constraint " << source.name()
-                        << " to field " << fieldName << endl;
+                        << " to field " << eqn.psi().name() << endl;
                 }
 
                 source.setValue(eqn, fieldI);

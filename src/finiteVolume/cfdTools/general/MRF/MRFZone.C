@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -338,7 +338,6 @@ void Foam::MRFZone::addCoriolis
     }
 
     const labelList& cells = mesh_.cellZones()[cellZoneID_];
-    const scalarField& V = mesh_.V();
     vectorField& ddtUc = ddtU.internalField();
     const vectorField& Uc = U.internalField();
 
@@ -347,7 +346,7 @@ void Foam::MRFZone::addCoriolis
     forAll(cells, i)
     {
         label celli = cells[i];
-        ddtUc[celli] += V[celli]*(Omega ^ Uc[celli]);
+        ddtUc[celli] += (Omega ^ Uc[celli]);
     }
 }
 

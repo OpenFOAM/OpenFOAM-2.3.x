@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -157,7 +157,6 @@ public:
 
     // Member Functions
 
-
         // Access
 
             //- Return the heat transfer coefficient
@@ -169,8 +168,20 @@ public:
             //- Return access to the neighbour model
             inline interRegionHeatTransferModel& nbrModel();
 
-            //-Source term to fvMatrix<scalar>
-            virtual void addSup(fvMatrix<scalar>& eqn, const label fieldI);
+            //- Source term to energy equation
+            virtual void addSup
+            (
+                fvMatrix<scalar>& eqn,
+                const label fieldI
+            );
+
+            //- Source term to compressible energy equation
+            virtual void addSup
+            (
+                const volScalarField& rho,
+                fvMatrix<scalar>& eqn,
+                const label fieldI
+            );
 
             //- Calculate heat transfer coefficient
             virtual void calculateHtc() = 0;

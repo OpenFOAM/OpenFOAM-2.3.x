@@ -1,5 +1,5 @@
 {
-#   include "rhoEqn.H"
+    solve(fvm::ddt(rho) + fvc::div(phi));
 }
 {
     scalar sumLocalContErr =

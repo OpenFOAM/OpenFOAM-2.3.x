@@ -25,10 +25,9 @@ License
 
 #include "rotorDiskSource.H"
 #include "addToRunTimeSelectionTable.H"
-#include "mathematicalConstants.H"
 #include "trimModel.H"
-#include "unitConversion.H"
 #include "fvMatrices.H"
+#include "geometricOneField.H"
 #include "syncTools.H"
 
 using namespace Foam::constant;
@@ -455,7 +454,6 @@ Foam::fv::rotorDiskSource::rotorDiskSource
 )
 :
     option(name, modelType, dict, mesh),
-    rhoName_("none"),
     rhoRef_(1.0),
     omega_(0.0),
     nBlades_(0),
@@ -486,8 +484,10 @@ Foam::fv::rotorDiskSource::~rotorDiskSource()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+template<class RhoFieldType>
 void Foam::fv::rotorDiskSource::calculate
 (
+    const RhoFieldType& rho,
     const vectorField& U,
     const scalarField& thetag,
     vectorField& force,
@@ -496,8 +496,6 @@ void Foam::fv::rotorDiskSource::calculate
 ) const
 {
     const scalarField& V = mesh_.V();
-    const bool compressible = this->compressible();
-    tmp<volScalarField> trho(rho());
 
     // logging info
     scalar dragEff = 0.0;
@@ -570,11 +568,7 @@ void Foam::fv::rotorDiskSource::calculate
             scalar tipFactor = neg(radius/rMax_ - tipEffect_);
 
             // calculate forces perpendicular to blade
-            scalar pDyn = 0.5*magSqr(Uc);
-            if (compressible)
-            {
-                pDyn *= trho()[cellI];
-            }
+            scalar pDyn = 0.5*rho[cellI]*magSqr(Uc);
 
             scalar f = pDyn*chord*nBlades_*area_[i]/radius/mathematical::twoPi;
             vector localForce = vector(0.0, -f*Cd, tipFactor*f*Cl);
@@ -595,7 +589,6 @@ void Foam::fv::rotorDiskSource::calculate
             }
         }
     }
-
 
     if (output)
     {
@@ -619,42 +612,69 @@ void Foam::fv::rotorDiskSource::addSup
     const label fieldI
 )
 {
-    dimensionSet dims = dimless;
-    if (eqn.dimensions() == dimForce)
-    {
-        coeffs_.lookup("rhoName") >> rhoName_;
-        dims.reset(dimForce/dimVolume);
-    }
-    else
-    {
-        coeffs_.lookup("rhoRef") >> rhoRef_;
-        dims.reset(dimForce/dimVolume/dimDensity);
-    }
-
     volVectorField force
     (
         IOobject
         (
             name_ + ":rotorForce",
             mesh_.time().timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
+            mesh_
         ),
         mesh_,
-        dimensionedVector("zero", dims, vector::zero)
+        dimensionedVector
+        (
+            "zero",
+            eqn.dimensions()/dimVolume,
+            vector::zero
+        )
     );
 
-    const volVectorField& U = eqn.psi();
+    // Read the reference density for incompressible flow
+    coeffs_.lookup("rhoRef") >> rhoRef_;
 
-    const vectorField Uin(inflowVelocity(U));
-
+    const vectorField Uin(inflowVelocity(eqn.psi()));
     trim_->correct(Uin, force);
+    calculate(geometricOneField(), Uin, trim_->thetag(), force);
 
-    calculate(Uin, trim_->thetag(), force);
+    // Add source to rhs of eqn
+    eqn -= force;
+
+    if (mesh_.time().outputTime())
+    {
+        force.write();
+    }
+}
 
 
-    // add source to rhs of eqn
+void Foam::fv::rotorDiskSource::addSup
+(
+    const volScalarField& rho,
+    fvMatrix<vector>& eqn,
+    const label fieldI
+)
+{
+    volVectorField force
+    (
+        IOobject
+        (
+            name_ + ":rotorForce",
+            mesh_.time().timeName(),
+            mesh_
+        ),
+        mesh_,
+        dimensionedVector
+        (
+            "zero",
+            eqn.dimensions()/dimVolume,
+            vector::zero
+        )
+    );
+
+    const vectorField Uin(inflowVelocity(eqn.psi()));
+    trim_->correct(rho, Uin, force);
+    calculate(rho, Uin, trim_->thetag(), force);
+
+    // Add source to rhs of eqn
     eqn -= force;
 
     if (mesh_.time().outputTime())
@@ -677,7 +697,6 @@ bool Foam::fv::rotorDiskSource::read(const dictionary& dict)
     {
         coeffs_.lookup("fieldNames") >> fieldNames_;
         applied_.setSize(fieldNames_.size(), false);
-
 
         // read co-ordinate system/geometry invariant properties
         scalar rpm(readScalar(coeffs_.lookup("rpm")));

@@ -32,13 +32,16 @@ Foam::tmp<Foam::Field<Type> > Foam::cyclicACMIPolyPatch::interpolate
     const Field<Type>& fldNonOverlap
 ) const
 {
+    // note: do not scale AMI field as face areas have already been taken
+    // into account
+
     if (owner())
     {
         const scalarField& w = srcMask_;
 
         tmp<Field<Type> > interpField(AMI().interpolateToSource(fldCouple));
 
-        return w*interpField + (1.0 - w)*fldNonOverlap;
+        return interpField + (1.0 - w)*fldNonOverlap;
     }
     else
     {
@@ -49,7 +52,7 @@ Foam::tmp<Foam::Field<Type> > Foam::cyclicACMIPolyPatch::interpolate
             neighbPatch().AMI().interpolateToTarget(fldCouple)
         );
 
-        return w*interpField + (1.0 - w)*fldNonOverlap;
+        return interpField + (1.0 - w)*fldNonOverlap;
     }
 }
 
@@ -74,19 +77,22 @@ void Foam::cyclicACMIPolyPatch::interpolate
     List<Type>& result
 ) const
 {
+    // note: do not scale AMI field as face areas have already been taken
+    // into account
+
     if (owner())
     {
         const scalarField& w = srcMask_;
 
         AMI().interpolateToSource(fldCouple, cop, result);
-        result = w*result + (1.0 - w)*fldNonOverlap;
+        result = result + (1.0 - w)*fldNonOverlap;
     }
     else
     {
         const scalarField& w = neighbPatch().tgtMask();
 
         neighbPatch().AMI().interpolateToTarget(fldCouple, cop, result);
-        result = w*result + (1.0 - w)*fldNonOverlap;
+        result = result + (1.0 - w)*fldNonOverlap;
     }
 }
 

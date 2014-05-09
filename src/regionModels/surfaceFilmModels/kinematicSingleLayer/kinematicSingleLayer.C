@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -581,11 +581,11 @@ kinematicSingleLayer::kinematicSingleLayer
             "phi",
             time().timeName(),
             regionMesh(),
-            IOobject::READ_IF_PRESENT,
+            IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
         regionMesh(),
-        dimLength*dimMass/dimTime
+        dimensionedScalar("0", dimLength*dimMass/dimTime, 0.0)
     ),
 
     primaryMassTrans_
@@ -795,7 +795,22 @@ kinematicSingleLayer::kinematicSingleLayer
         correctThermoFields();
 
         deltaRho_ == delta_*rho_;
-        phi_ = fvc::interpolate(deltaRho_*U_) & regionMesh().Sf();
+
+        surfaceScalarField phi0
+        (
+            IOobject
+            (
+                "phi",
+                time().timeName(),
+                regionMesh(),
+                IOobject::READ_IF_PRESENT,
+                IOobject::AUTO_WRITE,
+                false
+            ),
+            fvc::interpolate(deltaRho_*U_) & regionMesh().Sf()
+        );
+
+        phi_ == phi0;
     }
 }
 
