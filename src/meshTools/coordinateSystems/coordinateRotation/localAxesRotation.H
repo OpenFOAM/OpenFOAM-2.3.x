@@ -26,17 +26,22 @@ Class
 
 Description
     A local coordinate rotation.
-    Each rotational tensor is defined with two vectors (dir and e3)
-    where dir =  cellC - origin and e3 is the rotation axis.
-    Per each cell an axesRotation type of rotation is created
+    The cell based rotational field can be created in two ways:
 
-    \verbatim
-        localAxesRotation
-        {
-            type        localAxes;
-            e3          (0 0 1);
-        }
-    \endverbatim
+    1)  Each rotational tensor is defined with two vectors (dir and e3)
+        where dir =  cellC - origin and e3 is the rotation axis.
+        Per each cell an axesRotation type of rotation is created
+        (cylindrical coordinates)
+
+        \verbatim
+            localAxesRotation
+            {
+                type        localAxes;
+                e3          (0 0 1);
+            }
+        \endverbatim
+
+    2) The rotational tensor field is provided at construction
 
 \*---------------------------------------------------------------------------*/
 
@@ -88,8 +93,19 @@ public:
         //- Construct from dictionary and objectRegistry
         localAxesRotation(const dictionary&, const objectRegistry&);
 
+         //- Construct from dictionary and objectRegistry
+        localAxesRotation
+        (
+            const objectRegistry&,
+            const vector& axis,
+            const point& origin
+        );
+
         //- Construct from dictionary
         localAxesRotation(const dictionary&);
+
+        //- Construct from tensor Field
+        localAxesRotation(const tensorField&);
 
         //- Return clone
         autoPtr<localAxesRotation> clone() const

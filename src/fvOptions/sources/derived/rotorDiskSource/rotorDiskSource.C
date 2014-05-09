@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -312,6 +312,16 @@ void Foam::fv::rotorDiskSource::createCoordinateSystem()
 
             coeffs_.lookup("refDirection") >> refDir;
 
+            localAxesRotation_.reset
+            (
+                new localAxesRotation
+                (
+                    mesh_,
+                    axis,
+                    origin
+                )
+            );
+
             // set the face areas and apply correction to calculated axis
             // e.g. if cellZone is more than a single layer in thickness
             setFaceArea(axis, true);
@@ -323,6 +333,16 @@ void Foam::fv::rotorDiskSource::createCoordinateSystem()
             coeffs_.lookup("origin") >> origin;
             coeffs_.lookup("axis") >> axis;
             coeffs_.lookup("refDirection") >> refDir;
+
+            localAxesRotation_.reset
+            (
+                new localAxesRotation
+                (
+                    mesh_,
+                    axis,
+                    origin
+                )
+            );
 
             setFaceArea(axis, false);
 
@@ -448,6 +468,7 @@ Foam::fv::rotorDiskSource::rotorDiskSource
     invR_(cells_.size(), I),
     area_(cells_.size(), 0.0),
     coordSys_(false),
+    localAxesRotation_(),
     rMax_(0.0),
     trim_(trimModel::New(*this, coeffs_)),
     blade_(coeffs_.subDict("blade")),
@@ -484,6 +505,10 @@ void Foam::fv::rotorDiskSource::calculate
     scalar AOAmin = GREAT;
     scalar AOAmax = -GREAT;
 
+    tmp<vectorField> tUcf(localAxesRotation_->transform(U));
+
+    vectorField& Ucf = tUcf();
+
     forAll(cells_, i)
     {
         if (area_[i] > ROOTVSMALL)
@@ -493,7 +518,7 @@ void Foam::fv::rotorDiskSource::calculate
             const scalar radius = x_[i].x();
 
             // velocity in local cylindrical reference frame
-            vector Uc = coordSys_.localVector(U[cellI]);
+            vector Uc = Ucf[i];
 
             // transform from rotor cylindrical into local coning system
             Uc = R_[i] & Uc;
