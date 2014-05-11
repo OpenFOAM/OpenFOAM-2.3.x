@@ -76,7 +76,6 @@ void Foam::SIBS::solve
 ) const
 {
     odes_.derivatives(x, y, dydx0_);
-
     scalar h = dxTry;
     bool exitflag = false;
 
@@ -231,6 +230,7 @@ void Foam::SIBS::solve
     }
 
     dxTry = h/scale;
+
 
     if (kOpt_ >= k && kOpt_ != kMax_ && !reduct)
     {

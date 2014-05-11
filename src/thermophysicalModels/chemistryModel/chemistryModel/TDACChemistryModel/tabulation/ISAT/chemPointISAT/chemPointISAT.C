@@ -576,7 +576,7 @@ binaryNode<CompType, ThermoType>* node
     {
         dim = nActiveSpecies_+2;
     }
-    
+
     //SVD decomposition A= U*D*V^T 
     scalarRectangularMatrix Atmp(A);//A computed in ISAT.C
     scalarRectangularMatrix B(dim,dim,0.0);

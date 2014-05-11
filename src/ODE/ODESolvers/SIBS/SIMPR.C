@@ -71,7 +71,6 @@ void Foam::SIBS::SIMPR
     }
 
     scalar x = xStart + h;
-
     odes_.derivatives(x, ytemp, yEnd);
 
     for (register label nn=2; nn<=nSteps; nn++)
@@ -96,7 +95,6 @@ void Foam::SIBS::SIMPR
     {
         yEnd[i] = h*yEnd[i] - del[i];
     }
-
     LUBacksubstitute(a, pivotIndices, yEnd);
 
     for (register label i=0; i<n_; i++)

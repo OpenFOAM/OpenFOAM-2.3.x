@@ -117,8 +117,8 @@ Foam::DAC<CompType,ThermoType>::DAC
     {
         forceFuelInclusion_.readIfPresent
         (
-         "forceFuelInclusion",this->coeffsDict_
-         );
+            "forceFuelInclusion",this->coeffsDict_
+        );
     }
 
     if (this->coeffsDict_.found("phiTol"))

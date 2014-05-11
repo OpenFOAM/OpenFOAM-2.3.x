@@ -373,7 +373,7 @@ void Foam::TDACChemistryModel<CompType, ThermoType>::jacobian
     const scalar t,
     const scalarField& c,
     scalarField& dcdt,
-    scalarRectangularMatrix& dfdc
+    scalarSquareMatrix& dfdc
 ) const
 {
     //if the mechanism reduction is active, the computed Jacobian
@@ -407,7 +407,6 @@ void Foam::TDACChemistryModel<CompType, ThermoType>::jacobian
             dfdc[i][j] = 0.0;
         }
     }
-
     // length of the first argument must be nSpecie()
     // (reduced when mechanism reduction is active)
     tmp<scalarField> tom(omega(c, T, p));
@@ -421,10 +420,8 @@ void Foam::TDACChemistryModel<CompType, ThermoType>::jacobian
         if (!reactionsDisabled_[ri])
         {
             const Reaction<ThermoType>& R = this->reactions_[ri];
-
             const scalar kf0 = R.kf(p, T, c2);
             const scalar kr0 = R.kr(kf0, p, T, c2);
-
             forAll(R.lhs(), j)
             {
                 label sj = R.lhs()[j].index;
@@ -821,6 +818,7 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
                     //to update only the active species
                     completeC_ = c;
                     //solve the reduced set of ODE
+
                     this->solve
                     (
                         simplifiedC_, Ti, pi, dt, this->deltaTChem_[celli]
@@ -867,7 +865,6 @@ Foam::scalar Foam::TDACChemistryModel<CompType, ThermoType>::solve
                 (c[i] - c0[i])*this->specieThermo_[i].W()/deltaT[celli];
         }
     }
-
     if (tabulation_->active())
     {
         //every time-step, look if the tabulation should be updated
