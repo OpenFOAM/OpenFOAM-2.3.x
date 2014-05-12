@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -154,8 +154,9 @@ void Foam::ManualInjection<CloudType>::updateMesh()
 template<class CloudType>
 Foam::scalar Foam::ManualInjection<CloudType>::timeEnd() const
 {
-    // Not used
-    return this->SOI_;
+    // Injection is instantaneous - but allow for a finite interval to
+    // avoid numerical issues when interval is zero
+    return ROOTVSMALL;
 }
 
 
