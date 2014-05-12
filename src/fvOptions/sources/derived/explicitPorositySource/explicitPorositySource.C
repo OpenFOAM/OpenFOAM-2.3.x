@@ -45,10 +45,22 @@ namespace fv
 }
 }
 
-// * * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * //
 
-void Foam::fv::explicitPorositySource::initialise()
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::fv::explicitPorositySource::explicitPorositySource
+(
+    const word& name,
+    const word& modelType,
+    const dictionary& dict,
+    const fvMesh& mesh
+)
+:
+    option(name, modelType, dict, mesh),
+    porosityPtr_(NULL)
 {
+    read(dict);
+
     if (selectionMode_ != smCellZone)
     {
         FatalErrorIn("void Foam::fv::explicitPorositySource::initialise()")
@@ -66,29 +78,7 @@ void Foam::fv::explicitPorositySource::initialise()
             coeffs_,
             cellSetName_
         ).ptr()
-    ),
-
-    fieldNames_.setSize(1, UName_);
-    applied_.setSize(1, false);
-}
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-Foam::fv::explicitPorositySource::explicitPorositySource
-(
-    const word& name,
-    const word& modelType,
-    const dictionary& dict,
-    const fvMesh& mesh
-)
-:
-    option(name, modelType, dict, mesh),
-    porosityPtr_(NULL),
-    UName_(coeffs_.lookupOrDefault<word>("UName", "U")),
-    muName_(coeffs_.lookupOrDefault<word>("muName", "thermo:mu"))
-{
-    initialise();
+    );
 }
 
 
@@ -101,9 +91,7 @@ void Foam::fv::explicitPorositySource::addSup
 )
 {
     fvMatrix<vector> porosityEqn(eqn.psi(), eqn.dimensions());
-
     porosityPtr_->addResistance(porosityEqn);
-
     eqn -= porosityEqn;
 }
 
@@ -116,11 +104,22 @@ void Foam::fv::explicitPorositySource::addSup
 )
 {
     fvMatrix<vector> porosityEqn(eqn.psi(), eqn.dimensions());
-
-    const volScalarField& mu = mesh_.lookupObject<volScalarField>(muName_);
-    porosityPtr_->addResistance(porosityEqn, rho, mu);
-
+    porosityPtr_->addResistance(porosityEqn);
     eqn -= porosityEqn;
+}
+
+
+void Foam::fv::explicitPorositySource::addSup
+(
+    const volScalarField& alpha,
+    const volScalarField& rho,
+    fvMatrix<vector>& eqn,
+    const label fieldI
+)
+{
+    fvMatrix<vector> porosityEqn(eqn.psi(), eqn.dimensions());
+    porosityPtr_->addResistance(porosityEqn);
+    eqn -= alpha*porosityEqn;
 }
 
 
@@ -135,8 +134,21 @@ bool Foam::fv::explicitPorositySource::read(const dictionary& dict)
 {
     if (option::read(dict))
     {
-        coeffs_.readIfPresent("UName", UName_);
-        coeffs_.readIfPresent("muName", muName_);
+        if (coeffs_.found("UNames"))
+        {
+            coeffs_.lookup("UNames") >> fieldNames_;
+        }
+        else if (coeffs_.found("UName"))
+        {
+            word UName(coeffs_.lookup("UName"));
+            fieldNames_ = wordList(1, UName);
+        }
+        else
+        {
+            fieldNames_ = wordList(1, "U");
+        }
+
+        applied_.setSize(fieldNames_.size(), false);
 
         return true;
     }
