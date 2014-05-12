@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -130,11 +130,11 @@ void Foam::functionObjectFile::write()
 
 void Foam::functionObjectFile::resetNames(const wordList& names)
 {
+    names_.clear();
+    names_.insert(names);
+
     if (Pstream::master())
     {
-        names_.clear();
-        names_.insert(names);
-
         filePtrs_.clear();
         filePtrs_.setSize(names_.toc().size());
 
@@ -145,11 +145,11 @@ void Foam::functionObjectFile::resetNames(const wordList& names)
 
 void Foam::functionObjectFile::resetName(const word& name)
 {
+    names_.clear();
+    names_.insert(name);
+
     if (Pstream::master())
     {
-        names_.clear();
-        names_.insert(name);
-
         filePtrs_.clear();
         filePtrs_.setSize(1);
 
@@ -191,11 +191,11 @@ Foam::functionObjectFile::functionObjectFile
     names_(),
     filePtrs_()
 {
+    names_.clear();
+    names_.insert(name);
+
     if (Pstream::master())
     {
-        names_.clear();
-        names_.insert(name);
-
         filePtrs_.clear();
         filePtrs_.setSize(1);
 
@@ -216,11 +216,11 @@ Foam::functionObjectFile::functionObjectFile
     names_(names),
     filePtrs_()
 {
+    names_.clear();
+    names_.insert(names);
+
     if (Pstream::master())
     {
-        names_.clear();
-        names_.insert(names);
-
         filePtrs_.clear();
         filePtrs_.setSize(names_.size());
 
