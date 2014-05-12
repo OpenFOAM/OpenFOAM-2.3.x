@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -79,9 +79,6 @@ protected:
         //- Velocity field name, default = U
         word UName_;
 
-        //- Density field name, default = rho
-        word rhoName_;
-
 
     // Protected Member Functions
 
@@ -130,6 +127,17 @@ public:
             //- Vector
             virtual void addSup
             (
+                fvMatrix<vector>& eqn,
+                const label fieldI
+            );
+
+
+        // Add explicit and implicit contributions to compressible equation
+
+            //- Vector
+            virtual void addSup
+            (
+                const volScalarField& rho,
                 fvMatrix<vector>& eqn,
                 const label fieldI
             );

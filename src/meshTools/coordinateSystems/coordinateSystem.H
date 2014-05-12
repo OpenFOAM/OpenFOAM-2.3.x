@@ -50,7 +50,7 @@ Description
 
     Type of co-ordinates:
     1) cartesian
-    2) cylindrical
+
 
 See Also
     coordinateSystem and coordinateSystem::New

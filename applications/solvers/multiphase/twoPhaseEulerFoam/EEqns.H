@@ -10,10 +10,10 @@
     fvScalarMatrix he1Eqn
     (
         fvm::ddt(alpha1, rho1, he1) + fvm::div(alphaRhoPhi1, he1)
-      - fvm::Sp(fvc::ddt(alpha1, rho1) + fvc::div(alphaRhoPhi1), he1)
+      - fvm::Sp(contErr1, he1)
 
       + fvc::ddt(alpha1, rho1, K1) + fvc::div(alphaRhoPhi1, K1)
-      - (fvc::ddt(alpha1, rho1) + fvc::div(alphaRhoPhi1))*K1
+      - contErr1*K1
 
       + (
             he1.name() == thermo1.phasePropertyName("e")
@@ -33,15 +33,16 @@
         heatTransferCoeff*(thermo2.T() - thermo1.T())
       + heatTransferCoeff*he1/Cpv1
       - fvm::Sp(heatTransferCoeff/Cpv1, he1)
+      + fvOptions(alpha1, rho1, he1)
     );
 
     fvScalarMatrix he2Eqn
     (
         fvm::ddt(alpha2, rho2, he2) + fvm::div(alphaRhoPhi2, he2)
-      - fvm::Sp(fvc::ddt(alpha2, rho2) + fvc::div(alphaRhoPhi2), he2)
+      - fvm::Sp(contErr2, he2)
 
       + fvc::ddt(alpha2, rho2, K2) + fvc::div(alphaRhoPhi2, K2)
-      - (fvc::ddt(alpha2, rho2) + fvc::div(alphaRhoPhi2))*K2
+      - contErr2*K2
 
       + (
             he2.name() == thermo2.phasePropertyName("e")
@@ -61,12 +62,15 @@
         heatTransferCoeff*(thermo1.T() - thermo2.T())
       + heatTransferCoeff*he2/Cpv2
       - fvm::Sp(heatTransferCoeff/Cpv2, he2)
+      + fvOptions(alpha2, rho2, he2)
     );
 
     he1Eqn.relax();
+    fvOptions.constrain(he1Eqn);
     he1Eqn.solve();
 
     he2Eqn.relax();
+    fvOptions.constrain(he2Eqn);
     he2Eqn.solve();
 
     thermo1.correct();

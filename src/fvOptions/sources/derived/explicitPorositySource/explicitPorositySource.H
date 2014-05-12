@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -34,6 +34,7 @@ Description
     explicitPorositySourceCoeffs
     {
         type            DarcyForchheimer;
+
         DarcyForchheimerCoeffs
         {
             d   d [0 -2 0 0 0 0 0] (5e7 -1000 -1000);
@@ -88,22 +89,6 @@ protected:
         //- Run-time selectable porosity model
         autoPtr<porosityModel> porosityPtr_;
 
-        //- Velocity field name, default = U
-        word UName_;
-
-        //- Density field name (compressible case only), default = rho
-        word rhoName_;
-
-        //- Dynamic viscosity field name (compressible case only)
-        //  default = thermo:mu
-        word muName_;
-
-
-    // Protected Member Functions
-
-        //- Initialise
-        void initialise();
-
 
 private:
 
@@ -143,9 +128,26 @@ public:
 
         // Add explicit and implicit contributions
 
-            //- Vector
+            //- Add implicit contribution to momentum equation
             virtual void addSup
             (
+                fvMatrix<vector>& eqn,
+                const label fieldI
+            );
+
+            //- Add implicit contribution to compressible momentum equation
+            virtual void addSup
+            (
+                const volScalarField& rho,
+                fvMatrix<vector>& eqn,
+                const label fieldI
+            );
+
+            //- Add implicit contribution to phase momentum equation
+            virtual void addSup
+            (
+                const volScalarField& alpha,
+                const volScalarField& rho,
                 fvMatrix<vector>& eqn,
                 const label fieldI
             );

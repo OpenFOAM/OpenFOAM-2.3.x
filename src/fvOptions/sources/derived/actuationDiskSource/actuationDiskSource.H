@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -187,10 +187,22 @@ public:
             }
 
 
-        // Public Functions
+         // Add explicit and implicit contributions
 
-            //- Source term to fvMatrix<vector>
-            virtual void addSup(fvMatrix<vector>& eqn, const label fieldI);
+            //- Source term to momentum equation
+            virtual void addSup
+            (
+                fvMatrix<vector>& eqn,
+                const label fieldI
+            );
+
+            //- Source term to compressible momentum equation
+            virtual void addSup
+            (
+                const volScalarField& rho,
+                fvMatrix<vector>& eqn,
+                const label fieldI
+            );
 
 
         // I-O

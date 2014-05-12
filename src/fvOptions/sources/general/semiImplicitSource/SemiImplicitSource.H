@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -80,9 +80,9 @@ namespace fv
 
 // Forward declaration of classes
 
-
 template<class Type>
 class SemiImplicitSource;
+
 
 // Forward declaration of friend functions
 
@@ -92,6 +92,7 @@ Ostream& operator<<
     Ostream&,
     const SemiImplicitSource<Type>&
 );
+
 
 /*---------------------------------------------------------------------------*\
                      Class SemiImplicitSource Declaration
@@ -184,7 +185,19 @@ public:
         // Evaluation
 
             //- Add explicit contribution to equation
-            virtual void addSup(fvMatrix<Type>& eqn, const label fieldI);
+            virtual void addSup
+            (
+                fvMatrix<Type>& eqn,
+                const label fieldI
+            );
+
+            //- Add explicit contribution to compressible equation
+            virtual void addSup
+            (
+                const volScalarField& rho,
+                fvMatrix<Type>& eqn,
+                const label fieldI
+            );
 
 
         // I-O

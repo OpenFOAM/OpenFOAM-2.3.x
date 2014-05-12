@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -101,7 +101,14 @@ point linearNormal::operator()
     const label layer
 ) const
 {
-    return surfacePoint + layerPoints_[layer - 1]*surfaceNormal;
+    if (layer == 0)
+    {
+        return surfacePoint;
+    }
+    else
+    {
+        return surfacePoint + layerPoints_[layer - 1]*surfaceNormal;
+    }
 }
 
 
