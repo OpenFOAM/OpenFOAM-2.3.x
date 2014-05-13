@@ -566,6 +566,14 @@ void Foam::fv::rotorDiskSource::calculate
 
             // effective angle of attack
             scalar alphaEff = alphaGeom - atan2(-Uc.z(), Uc.y());
+            if (alphaEff > mathematical::pi)
+            {
+                alphaEff -= mathematical::twoPi;
+            }
+            if (alphaEff < -mathematical::pi)
+            {
+                alphaEff += mathematical::twoPi;
+            }
 
             AOAmin = min(AOAmin, alphaEff);
             AOAmax = max(AOAmax, alphaEff);
