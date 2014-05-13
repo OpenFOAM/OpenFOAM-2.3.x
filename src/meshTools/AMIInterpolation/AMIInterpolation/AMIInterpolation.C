@@ -250,7 +250,8 @@ void Foam::AMIInterpolation<SourcePatch, TargetPatch>::normaliseWeights
 
         if (nFace)
         {
-            IInfo<< "AMI: Patch " << patchName
+            Info<< indent
+                << "AMI: Patch " << patchName
                 << " sum(weights) min/max/average = "
                 << gMin(wghtSum) << ", "
                 << gMax(wghtSum) << ", "
@@ -260,7 +261,8 @@ void Foam::AMIInterpolation<SourcePatch, TargetPatch>::normaliseWeights
 
             if (nLow)
             {
-                IInfo<< "AMI: Patch " << patchName
+                Info<< indent
+                    << "AMI: Patch " << patchName
                     << " identified " << nLow
                     << " faces with weights less than " << lowWeightTol
                     << endl;
@@ -803,7 +805,8 @@ void Foam::AMIInterpolation<SourcePatch, TargetPatch>::update
     label srcTotalSize = returnReduce(srcPatch.size(), sumOp<label>());
     label tgtTotalSize = returnReduce(tgtPatch.size(), sumOp<label>());
 
-    IInfo<< "AMI: Creating addressing and weights between "
+    Info<< indent
+        << "AMI: Creating addressing and weights between "
         << srcTotalSize << " source faces and "
         << tgtTotalSize << " target faces"
         << endl;
