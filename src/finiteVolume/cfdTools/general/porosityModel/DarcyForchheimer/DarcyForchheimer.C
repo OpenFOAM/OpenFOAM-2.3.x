@@ -203,9 +203,21 @@ void Foam::porosityModels::DarcyForchheimer::correct
     if (UEqn.dimensions() == dimForce)
     {
         const volScalarField& rho = mesh_.lookupObject<volScalarField>(rhoName);
-        const volScalarField& mu = mesh_.lookupObject<volScalarField>(muName);
 
-        apply(Udiag, Usource, V, rho, mu, U);
+        if (mesh_.foundObject<volScalarField>(muName))
+        {
+            const volScalarField& mu =
+                mesh_.lookupObject<volScalarField>(muName);
+
+            apply(Udiag, Usource, V, rho, mu, U);
+        }
+        else
+        {
+            const volScalarField& nu =
+                mesh_.lookupObject<volScalarField>(nuName);
+
+            apply(Udiag, Usource, V, rho, rho*nu, U);
+        }
     }
     else
     {

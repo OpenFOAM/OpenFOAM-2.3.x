@@ -282,13 +282,6 @@ extern messageStream Info;
     ::Foam::Pout<< "["<< __FILE__ << ":" << __LINE__ << "] "                  \
         << #var " = " << var << ::Foam::endl
 
-/**
- * \def IInfo
- * Indented Info
-*/
-#define IInfo                                                                 \
-    ::Foam::Info<< indent
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

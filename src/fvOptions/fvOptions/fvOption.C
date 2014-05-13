@@ -113,7 +113,7 @@ void Foam::fv::option::setCellSet()
     {
         case smPoints:
         {
-            IInfo<< "- selecting cells using points" << endl;
+            Info<< indent << "- selecting cells using points" << endl;
 
             labelHashSet selectedCells;
 
@@ -141,7 +141,8 @@ void Foam::fv::option::setCellSet()
         }
         case smCellSet:
         {
-            IInfo<< "- selecting cells using cellSet " << cellSetName_ << endl;
+            Info<< indent
+                << "- selecting cells using cellSet " << cellSetName_ << endl;
 
             cellSet selectedCells(mesh_, cellSetName_);
             cells_ = selectedCells.toc();
@@ -150,7 +151,8 @@ void Foam::fv::option::setCellSet()
         }
         case smCellZone:
         {
-            IInfo<< "- selecting cells using cellZone " << cellSetName_ << endl;
+            Info<< indent
+                << "- selecting cells using cellZone " << cellSetName_ << endl;
 
             label zoneID = mesh_.cellZones().findZoneID(cellSetName_);
             if (zoneID == -1)
@@ -168,7 +170,7 @@ void Foam::fv::option::setCellSet()
         {
             if (active_ && master_)
             {
-                IInfo<< "- selecting inter region mapping" << endl;
+                Info<< indent << "- selecting inter region mapping" << endl;
 
                 const fvMesh& nbrMesh =
                     mesh_.time().lookupObject<fvMesh>(nbrRegionName_);
@@ -213,7 +215,7 @@ void Foam::fv::option::setCellSet()
         }
         case smAll:
         {
-            IInfo<< "- selecting all cells" << endl;
+            Info<< indent << "- selecting all cells" << endl;
             cells_ = identity(mesh_.nCells());
 
             break;
@@ -238,7 +240,8 @@ void Foam::fv::option::setCellSet()
         }
         reduce(V_, sumOp<scalar>());
 
-        IInfo<< "- selected " << returnReduce(cells_.size(), sumOp<label>())
+        Info<< indent
+            << "- selected " << returnReduce(cells_.size(), sumOp<label>())
             << " cell(s) with volume " << V_ << nl << endl;
     }
 }
@@ -277,12 +280,12 @@ Foam::fv::option::option
     if (dict_.readIfPresent("timeStart", timeStart_))
     {
         dict_.lookup("duration") >> duration_;
-        IInfo<< "- applying source at time " << timeStart_
+        Info<< indent << "- applying source at time " << timeStart_
             << " for duration " << duration_ << endl;
     }
     else
     {
-        IInfo<< "- applying source for all time" << endl;
+        Info<< indent << "- applying source for all time" << endl;
     }
 
     setSelection(dict_);
@@ -304,7 +307,8 @@ Foam::autoPtr<Foam::fv::option> Foam::fv::option::New
 {
     word modelType(coeffs.lookup("type"));
 
-    IInfo<< "Selecting finite volume options model type " << modelType << endl;
+    Info<< indent
+        << "Selecting finite volume options model type " << modelType << endl;
 
     dictionaryConstructorTable::iterator cstrIter =
         dictionaryConstructorTablePtr_->find(modelType);
