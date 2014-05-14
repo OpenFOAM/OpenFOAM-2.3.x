@@ -154,22 +154,7 @@ Foam::regionCoupledBase::regionCoupledBase
     AMIReverse_(dict.lookupOrDefault<bool>("flipNormals", false)),
     surfPtr_(NULL),
     surfDict_(dict.subOrEmptyDict("surface"))
-{
-    if (nbrPatchName_ == patch_.name())
-    {
-        FatalIOErrorIn
-        (
-            "regionCoupledBase::regionCoupledBase"
-            "("
-                "const polyPatch&, "
-                "const dictionary& "
-            ")",
-            dict
-        )   << "Neighbour patch name " << nbrPatchName_
-            << " cannot be the same as this patch " << patch_.name()
-            << exit(FatalIOError);
-    }
-}
+{}
 
 
 Foam::regionCoupledBase::regionCoupledBase
