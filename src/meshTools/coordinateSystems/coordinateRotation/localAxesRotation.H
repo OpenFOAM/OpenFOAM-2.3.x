@@ -80,7 +80,11 @@ class localAxesRotation
     // Private members
 
         //- Init transformation tensor field
-        void init(const objectRegistry& obr);
+        void init
+        (
+            const objectRegistry& obr,
+            const List<label>& cells = List<label>()
+        );
 
 
 public:
@@ -93,12 +97,21 @@ public:
         //- Construct from dictionary and objectRegistry
         localAxesRotation(const dictionary&, const objectRegistry&);
 
-         //- Construct from dictionary and objectRegistry
+        //- Construct from components for all cells
         localAxesRotation
         (
             const objectRegistry&,
             const vector& axis,
             const point& origin
+        );
+
+        //- Construct from components for list of cells
+        localAxesRotation
+        (
+            const objectRegistry&,
+            const vector& axis,
+            const point& origin,
+            const List<label>& cells
         );
 
         //- Construct from dictionary
@@ -167,16 +180,22 @@ public:
         }
 
         //- Transform vectorField using transformation tensor field
-        virtual tmp<vectorField> transform(const vectorField& st) const;
+        virtual tmp<vectorField> transform(const vectorField& tf) const;
 
         //- Transform vector using transformation tensor
-        virtual vector transform(const vector& st) const;
+        virtual vector transform(const vector& v) const;
+
+        //- Transform vector using transformation tensor for component
+        virtual vector transform(const vector& v, const label cmptI) const;
 
         //- Inverse transform vectorField using transformation tensor field
-        virtual tmp<vectorField> invTransform(const vectorField& st) const;
+        virtual tmp<vectorField> invTransform(const vectorField& vf) const;
 
         //- Inverse transform vector using transformation tensor
-        virtual vector invTransform(const vector& st) const;
+        virtual vector invTransform(const vector& v) const;
+
+        //- Inverse transform vector using transformation tensor for component
+        virtual vector invTransform(const vector& v, const label cmptI) const;
 
         //- Return if the rotation is uniform
         virtual bool uniform() const
@@ -185,15 +204,15 @@ public:
         }
 
         //- Transform tensor field using transformation tensorField
-        virtual tmp<tensorField> transformTensor(const tensorField& st) const;
+        virtual tmp<tensorField> transformTensor(const tensorField& tf) const;
 
         //- Transform tensor using transformation tensorField
-        virtual tensor transformTensor(const tensor& st) const;
+        virtual tensor transformTensor(const tensor& t) const;
 
         //- Transform tensor sub-field using transformation tensorField
         virtual tmp<tensorField> transformTensor
         (
-            const tensorField& st,
+            const tensorField& tf,
             const labelList& cellMap
         ) const;
 
@@ -201,19 +220,18 @@ public:
         // symmetrical tensorField
         virtual tmp<symmTensorField> transformVector
         (
-            const vectorField& st
+            const vectorField& vf
         ) const;
 
         //- Transform vector using transformation tensor and return
         // symmetrical tensor (R & st & R.T())
-        virtual symmTensor transformVector(const vector& st) const;
+        virtual symmTensor transformVector(const vector& v) const;
 
 
     // Write
 
         //- Write
         virtual void write(Ostream&) const;
-
 };
 
 
