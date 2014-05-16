@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,22 +44,24 @@ void Foam::sixDoFRigidBodyMotion::applyRestraints()
                 Info<< "Restraint " << restraints_[rI].name() << ": ";
             }
 
-            // restraint position
+            // Restraint position
             point rP = vector::zero;
 
-            // restraint force
+            // Restraint force
             vector rF = vector::zero;
 
-            // restraint moment
+            // Restraint moment
             vector rM = vector::zero;
 
+            // Accumulate the restraints
             restraints_[rI].restrain(*this, rP, rF, rM);
 
+            // Update the acceleration
             a() += rF/mass_;
 
             // Moments are returned in global axes, transforming to
             // body local to add to torque.
-            tau() += Q().T() & (rM + ((rP - centreOfMass()) ^ rF));
+            tau() += Q().T() & (rM + ((rP - centreOfRotation()) ^ rF));
         }
     }
 }
@@ -75,54 +77,13 @@ Foam::sixDoFRigidBodyMotion::sixDoFRigidBodyMotion()
     constraints_(),
     tConstraints_(tensor::I),
     rConstraints_(tensor::I),
-    initialCentreOfMass_(vector::zero),
+    initialCentreOfRotation_(vector::zero),
     initialQ_(I),
-    momentOfInertia_(diagTensor::one*VSMALL),
     mass_(VSMALL),
+    momentOfInertia_(diagTensor::one*VSMALL),
     aRelax_(1.0),
     aDamp_(1.0),
     report_(false)
-{}
-
-
-Foam::sixDoFRigidBodyMotion::sixDoFRigidBodyMotion
-(
-    const point& centreOfMass,
-    const tensor& Q,
-    const vector& v,
-    const vector& a,
-    const vector& pi,
-    const vector& tau,
-    scalar mass,
-    const point& initialCentreOfMass,
-    const tensor& initialQ,
-    const diagTensor& momentOfInertia,
-    scalar aRelax,
-    scalar aDamp,
-    bool report
-)
-:
-    motionState_
-    (
-        centreOfMass,
-        Q,
-        v,
-        a,
-        pi,
-        tau
-    ),
-    motionState0_(motionState_),
-    restraints_(),
-    constraints_(),
-    tConstraints_(tensor::I),
-    rConstraints_(tensor::I),
-    initialCentreOfMass_(initialCentreOfMass),
-    initialQ_(initialQ),
-    momentOfInertia_(momentOfInertia),
-    mass_(mass),
-    aRelax_(aRelax),
-    aDamp_(aDamp),
-    report_(report)
 {}
 
 
@@ -133,7 +94,7 @@ Foam::sixDoFRigidBodyMotion::sixDoFRigidBodyMotion
 )
 :
     motionState_(stateDict),
-    motionState0_(motionState_),
+    motionState0_(),
     restraints_(),
     constraints_(),
     tConstraints_(tensor::I),
@@ -146,6 +107,7 @@ Foam::sixDoFRigidBodyMotion::sixDoFRigidBodyMotion
             vector(dict.lookup("centreOfMass"))
         )
     ),
+    initialCentreOfRotation_(initialCentreOfMass_),
     initialQ_
     (
         dict.lookupOrDefault
@@ -154,14 +116,35 @@ Foam::sixDoFRigidBodyMotion::sixDoFRigidBodyMotion
             dict.lookupOrDefault("orientation", tensor::I)
         )
     ),
-    momentOfInertia_(dict.lookup("momentOfInertia")),
     mass_(readScalar(dict.lookup("mass"))),
+    momentOfInertia_(dict.lookup("momentOfInertia")),
     aRelax_(dict.lookupOrDefault<scalar>("accelerationRelaxation", 1.0)),
     aDamp_(dict.lookupOrDefault<scalar>("accelerationDamping", 1.0)),
     report_(dict.lookupOrDefault<Switch>("report", false))
 {
     addRestraints(dict);
+
+    // Set constraints and initial centre of rotation
+    // if different to the centre of mass
     addConstraints(dict);
+
+    // If the centres of mass and rotation are different ...
+    vector R(initialCentreOfMass_ - initialCentreOfRotation_);
+    if (magSqr(R) > VSMALL)
+    {
+        // ... correct the moment of inertia tensor using parallel axes theorem
+        momentOfInertia_ += mass_*diag(I*magSqr(R) - sqr(R));
+
+        // ... and if the centre of rotation is not specified for motion state
+        // update it
+        if (!stateDict.found("centreOfRotation"))
+        {
+            motionState_.centreOfRotation() = initialCentreOfRotation_;
+        }
+    }
+
+    // Save the old-time motion state
+    motionState0_ = motionState_;
 }
 
 
@@ -174,19 +157,13 @@ Foam::sixDoFRigidBodyMotion::sixDoFRigidBodyMotion
     motionState0_(sDoFRBM.motionState0_),
     restraints_(sDoFRBM.restraints_),
     constraints_(sDoFRBM.constraints_),
-    initialCentreOfMass_(sDoFRBM.initialCentreOfMass_),
+    initialCentreOfRotation_(sDoFRBM.initialCentreOfRotation_),
     initialQ_(sDoFRBM.initialQ_),
-    momentOfInertia_(sDoFRBM.momentOfInertia_),
     mass_(sDoFRBM.mass_),
+    momentOfInertia_(sDoFRBM.momentOfInertia_),
     aRelax_(sDoFRBM.aRelax_),
     aDamp_(sDoFRBM.aDamp_),
     report_(sDoFRBM.report_)
-{}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-Foam::sixDoFRigidBodyMotion::~sixDoFRigidBodyMotion()
 {}
 
 
@@ -252,10 +229,12 @@ void Foam::sixDoFRigidBodyMotion::addConstraints
                     sixDoFRigidBodyMotionConstraint::New
                     (
                         iter().keyword(),
-                        iter().dict()
+                        iter().dict(),
+                        *this
                     )
                 );
 
+                constraints_[i].setCentreOfRotation(initialCentreOfRotation_);
                 constraints_[i].constrainTranslation(pct);
                 constraints_[i].constrainRotation(pcr);
 
@@ -289,7 +268,7 @@ void Foam::sixDoFRigidBodyMotion::updatePosition
         pi() = rConstraints_ & aDamp_*(pi0() + 0.5*deltaT0*tau());
 
         // Leapfrog move part
-        centreOfMass() = centreOfMass0() + deltaT*v();
+        centreOfRotation() = centreOfRotation0() + deltaT*v();
 
         // Leapfrog orientation adjustment
         Tuple2<tensor, vector> Qpi = rotate(Q0(), pi(), deltaT);
@@ -346,112 +325,30 @@ void Foam::sixDoFRigidBodyMotion::updateAcceleration
 }
 
 
-void Foam::sixDoFRigidBodyMotion::updateVelocity(scalar deltaT)
-{
-    // Second leapfrog velocity adjust part, required after motion and
-    // acceleration calculation
-
-    if (Pstream::master())
-    {
-        v() += tConstraints_ & aDamp_*0.5*deltaT*a();
-        pi() += rConstraints_ & aDamp_*0.5*deltaT*tau();
-
-        if (report_)
-        {
-            status();
-        }
-    }
-
-    Pstream::scatter(motionState_);
-}
-
-
-void Foam::sixDoFRigidBodyMotion::updateAcceleration
-(
-    const pointField& positions,
-    const vectorField& forces,
-    scalar deltaT
-)
-{
-    vector fGlobal = vector::zero;
-
-    vector tauGlobal = vector::zero;
-
-    if (Pstream::master())
-    {
-        fGlobal = sum(forces);
-
-        forAll(positions, i)
-        {
-            tauGlobal += (positions[i] - centreOfMass()) ^ forces[i];
-        }
-    }
-
-    updateAcceleration(fGlobal, tauGlobal, deltaT);
-}
-
-
-Foam::point Foam::sixDoFRigidBodyMotion::predictedPosition
-(
-    const point& pInitial,
-    const vector& deltaForce,
-    const vector& deltaMoment,
-    scalar deltaT
-) const
-{
-    vector vTemp = v() + deltaT*(a() + deltaForce/mass_);
-    vector piTemp = pi() + deltaT*(tau() + (Q().T() & deltaMoment));
-    point centreOfMassTemp = centreOfMass0() + deltaT*vTemp;
-    Tuple2<tensor, vector> QpiTemp = rotate(Q0(), piTemp, deltaT);
-
-    return
-    (
-        centreOfMassTemp
-      + (QpiTemp.first() & initialQ_.T() & (pInitial - initialCentreOfMass_))
-    );
-}
-
-
-Foam::vector Foam::sixDoFRigidBodyMotion::predictedOrientation
-(
-    const vector& vInitial,
-    const vector& deltaMoment,
-    scalar deltaT
-) const
-{
-    vector piTemp = pi() + deltaT*(tau() + (Q().T() & deltaMoment));
-    Tuple2<tensor, vector> QpiTemp = rotate(Q0(), piTemp, deltaT);
-
-    vector o(QpiTemp.first() & initialQ_.T() & vInitial);
-    o /= mag(o);
-
-    return o;
-}
-
-
 void Foam::sixDoFRigidBodyMotion::status() const
 {
-    Info<< "Centre of mass: " << centreOfMass() << nl
+    Info<< "Centre of rotation: " << centreOfRotation() << nl
+        << "Centre of mass: " << centreOfMass() << nl
         << "Linear velocity: " << v() << nl
         << "Angular velocity: " << omega()
         << endl;
 }
 
 
-Foam::tmp<Foam::pointField> Foam::sixDoFRigidBodyMotion::currentPosition
+Foam::tmp<Foam::pointField> Foam::sixDoFRigidBodyMotion::transform
 (
     const pointField& initialPoints
 ) const
 {
     return
     (
-        centreOfMass()
-      + (Q() & initialQ_.T() & (initialPoints - initialCentreOfMass_))
+        centreOfRotation()
+      + (Q() & initialQ_.T() & (initialPoints - initialCentreOfRotation_))
     );
 }
 
 
-Foam::tmp<Foam::pointField> Foam::sixDoFRigidBodyMotion::scaledPosition
+Foam::tmp<Foam::pointField> Foam::sixDoFRigidBodyMotion::transform
 (
     const pointField& initialPoints,
     const scalarField& scale
@@ -460,7 +357,7 @@ Foam::tmp<Foam::pointField> Foam::sixDoFRigidBodyMotion::scaledPosition
     // Calculate the transformation septerion from the initial state
     septernion s
     (
-        centreOfMass() - initialCentreOfMass(),
+        centreOfRotation() - initialCentreOfRotation(),
         quaternion(Q() & initialQ().T())
     );
 
@@ -475,7 +372,7 @@ Foam::tmp<Foam::pointField> Foam::sixDoFRigidBodyMotion::scaledPosition
             // Use solid-body motion where scale = 1
             if (scale[pointi] > 1 - SMALL)
             {
-                points[pointi] = currentPosition(initialPoints[pointi]);
+                points[pointi] = transform(initialPoints[pointi]);
             }
             // Slerp septernion interpolation
             else
@@ -483,31 +380,17 @@ Foam::tmp<Foam::pointField> Foam::sixDoFRigidBodyMotion::scaledPosition
                 septernion ss(slerp(septernion::I, s, scale[pointi]));
 
                 points[pointi] =
-                    initialCentreOfMass()
-                  + ss.transform(initialPoints[pointi] - initialCentreOfMass());
+                    initialCentreOfRotation()
+                  + ss.transform
+                    (
+                        initialPoints[pointi]
+                      - initialCentreOfRotation()
+                    );
             }
         }
     }
 
     return tpoints;
-}
-
-
-bool Foam::sixDoFRigidBodyMotion::read(const dictionary& dict)
-{
-    dict.lookup("momentOfInertia") >> momentOfInertia_;
-    dict.lookup("mass") >> mass_;
-    aRelax_ = dict.lookupOrDefault<scalar>("accelerationRelaxation", 1.0);
-    aDamp_ = dict.lookupOrDefault<scalar>("accelerationDamping", 1.0);
-    report_ = dict.lookupOrDefault<Switch>("report", false);
-
-    restraints_.clear();
-    addRestraints(dict);
-
-    constraints_.clear();
-    addConstraints(dict);
-
-    return true;
 }
 
 

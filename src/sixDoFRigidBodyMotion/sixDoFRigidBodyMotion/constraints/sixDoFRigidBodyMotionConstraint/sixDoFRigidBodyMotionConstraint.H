@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -46,6 +46,7 @@ SourceFiles
 #include "Time.H"
 #include "dictionary.H"
 #include "autoPtr.H"
+#include "point.H"
 #include "pointConstraint.H"
 #include "runTimeSelectionTables.H"
 
@@ -75,6 +76,9 @@ protected:
         //- Constraint model specific coefficient dictionary
         dictionary sDoFRBMCCoeffs_;
 
+        //- Reference to the body motion
+        const sixDoFRigidBodyMotion& motion_;
+
 
 public:
 
@@ -89,8 +93,12 @@ public:
             autoPtr,
             sixDoFRigidBodyMotionConstraint,
             dictionary,
-            (const word& name, const dictionary& sDoFRBMCDict),
-            (name, sDoFRBMCDict)
+            (
+                const word& name,
+                const dictionary& sDoFRBMCDict,
+                const sixDoFRigidBodyMotion& motion
+            ),
+            (name, sDoFRBMCDict, motion)
         );
 
 
@@ -100,7 +108,8 @@ public:
         sixDoFRigidBodyMotionConstraint
         (
             const word& name,
-            const dictionary& sDoFRBMCDict
+            const dictionary& sDoFRBMCDict,
+            const sixDoFRigidBodyMotion& motion
         );
 
         //- Construct and return a clone
@@ -113,7 +122,8 @@ public:
         static autoPtr<sixDoFRigidBodyMotionConstraint> New
         (
             const word& name,
-            const dictionary& sDoFRBMCDict
+            const dictionary& sDoFRBMCDict,
+            const sixDoFRigidBodyMotion& motion
         );
 
 
@@ -128,6 +138,10 @@ public:
         {
             return name_;
         }
+
+        //- Set the centre of rotation if not the centre of mass
+        virtual void setCentreOfRotation(point&) const
+        {}
 
         //- Apply and accumulate translational constraints
         virtual void constrainTranslation(pointConstraint&) const = 0;

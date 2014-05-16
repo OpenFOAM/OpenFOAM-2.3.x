@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,7 +25,8 @@ Class
     Foam::sixDoFRigidBodyMotionConstraints::orientation
 
 Description
-    Fix orientation of body in global space.
+    Orientation constraint:
+        fixed in global space.
 
 SourceFiles
     sixDoFRigidBodyMotionOrientationConstraint.C
@@ -66,7 +67,8 @@ public:
         orientation
         (
             const word& name,
-            const dictionary& sDoFRBMCDict
+            const dictionary& sDoFRBMCDict,
+            const sixDoFRigidBodyMotion& motion
         );
 
         //- Construct and return a clone

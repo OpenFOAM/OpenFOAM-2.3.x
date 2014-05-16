@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -50,11 +50,12 @@ namespace sixDoFRigidBodyMotionConstraints
 Foam::sixDoFRigidBodyMotionConstraints::point::point
 (
     const word& name,
-    const dictionary& sDoFRBMCDict
+    const dictionary& sDoFRBMCDict,
+    const sixDoFRigidBodyMotion& motion
 )
 :
-    sixDoFRigidBodyMotionConstraint(name, sDoFRBMCDict),
-    point_()
+    sixDoFRigidBodyMotionConstraint(name, sDoFRBMCDict, motion),
+    centreOfRotation_()
 {
     read(sDoFRBMCDict);
 }
@@ -67,6 +68,15 @@ Foam::sixDoFRigidBodyMotionConstraints::point::~point()
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
+
+void Foam::sixDoFRigidBodyMotionConstraints::point::setCentreOfRotation
+(
+    Foam::point& CofR
+) const
+{
+    CofR = centreOfRotation_;
+}
+
 
 void Foam::sixDoFRigidBodyMotionConstraints::point::constrainTranslation
 (
@@ -91,7 +101,11 @@ bool Foam::sixDoFRigidBodyMotionConstraints::point::read
 {
     sixDoFRigidBodyMotionConstraint::read(sDoFRBMCDict);
 
-    sDoFRBMCCoeffs_.lookup("point") >> point_;
+    centreOfRotation_ = sDoFRBMCCoeffs_.lookupOrDefault
+    (
+        "centreOfRotation",
+        motion_.initialCentreOfMass()
+    );
 
     return true;
 }
@@ -102,8 +116,8 @@ void Foam::sixDoFRigidBodyMotionConstraints::point::write
     Ostream& os
 ) const
 {
-    os.writeKeyword("point")
-        << point_ << token::END_STATEMENT << nl;
+    os.writeKeyword("centreOfRotation")
+        << centreOfRotation_ << token::END_STATEMENT << nl;
 }
 
 // ************************************************************************* //

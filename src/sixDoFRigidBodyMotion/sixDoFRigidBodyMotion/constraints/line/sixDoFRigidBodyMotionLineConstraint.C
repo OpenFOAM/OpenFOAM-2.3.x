@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -50,11 +50,11 @@ namespace sixDoFRigidBodyMotionConstraints
 Foam::sixDoFRigidBodyMotionConstraints::line::line
 (
     const word& name,
-    const dictionary& sDoFRBMCDict
+    const dictionary& sDoFRBMCDict,
+    const sixDoFRigidBodyMotion& motion
 )
 :
-    sixDoFRigidBodyMotionConstraint(name, sDoFRBMCDict),
-    dir_()
+    sixDoFRigidBodyMotionConstraint(name, sDoFRBMCDict, motion)
 {
     read(sDoFRBMCDict);
 }
@@ -68,12 +68,21 @@ Foam::sixDoFRigidBodyMotionConstraints::line::~line()
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
+void Foam::sixDoFRigidBodyMotionConstraints::line::setCentreOfRotation
+(
+    point& CofR
+) const
+{
+    CofR = centreOfRotation_;
+}
+
+
 void Foam::sixDoFRigidBodyMotionConstraints::line::constrainTranslation
 (
     pointConstraint& pc
 ) const
 {
-    pc.combine(pointConstraint(Tuple2<label, vector>(2, dir_)));
+    pc.combine(pointConstraint(Tuple2<label, vector>(2, direction_)));
 }
 
 
@@ -91,13 +100,19 @@ bool Foam::sixDoFRigidBodyMotionConstraints::line::read
 {
     sixDoFRigidBodyMotionConstraint::read(sDoFRBMCDict);
 
-    sDoFRBMCCoeffs_.lookup("direction") >> dir_;
+    centreOfRotation_ = sDoFRBMCCoeffs_.lookupOrDefault
+    (
+        "centreOfRotation",
+        motion_.initialCentreOfMass()
+    );
 
-    scalar magDir(mag(dir_));
+    sDoFRBMCCoeffs_.lookup("direction") >> direction_;
+
+    scalar magDir(mag(direction_));
 
     if (magDir > VSMALL)
     {
-        dir_ /= magDir;
+        direction_ /= magDir;
     }
     else
     {
@@ -121,8 +136,10 @@ void Foam::sixDoFRigidBodyMotionConstraints::line::write
     Ostream& os
 ) const
 {
+    os.writeKeyword("centreOfRotation")
+        << centreOfRotation_ << token::END_STATEMENT << nl;
     os.writeKeyword("direction")
-        << dir_ << token::END_STATEMENT << nl;
+        << direction_ << token::END_STATEMENT << nl;
 }
 
 // ************************************************************************* //

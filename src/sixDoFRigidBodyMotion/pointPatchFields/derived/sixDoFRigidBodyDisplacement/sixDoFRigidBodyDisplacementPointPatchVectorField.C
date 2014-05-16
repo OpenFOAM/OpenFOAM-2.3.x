@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -222,7 +222,7 @@ void sixDoFRigidBodyDisplacementPointPatchVectorField::updateCoeffs()
     forcesDict.add("patches", wordList(1, ptPatch.name()));
     forcesDict.add("rhoInf", rhoInf_);
     forcesDict.add("rhoName", rhoName_);
-    forcesDict.add("CofR", motion_.centreOfMass());
+    forcesDict.add("CofR", motion_.centreOfRotation());
 
     forces f("forces", db(), forcesDict);
 
@@ -243,14 +243,14 @@ void sixDoFRigidBodyDisplacementPointPatchVectorField::updateCoeffs()
 
     motion_.updateAcceleration
     (
-        ramp*(f.forceEff() + g_*motion_.mass()),
-        ramp*(f.momentEff()),
+        ramp*(f.forceEff() + motion_.mass()*g_),
+        ramp*(f.momentEff() + motion_.mass()*(motion_.momentArm() ^ g_)),
         t.deltaTValue()
     );
 
     Field<vector>::operator=
     (
-        motion_.currentPosition(initialPoints_) - initialPoints_
+        motion_.transform(initialPoints_) - initialPoints_
     );
 
     fixedValuePointPatchField<vector>::updateCoeffs();

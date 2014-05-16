@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,7 +30,7 @@ License
 
 void Foam::sixDoFRigidBodyMotionState::write(dictionary& dict) const
 {
-    dict.add("centreOfMass", centreOfMass_);
+    dict.add("centreOfRotation", centreOfRotation_);
     dict.add("orientation", Q_);
     dict.add("velocity", v_);
     dict.add("acceleration", a_);
@@ -41,8 +41,8 @@ void Foam::sixDoFRigidBodyMotionState::write(dictionary& dict) const
 
 void Foam::sixDoFRigidBodyMotionState::write(Ostream& os) const
 {
-    os.writeKeyword("centreOfMass")
-        << centreOfMass_ << token::END_STATEMENT << nl;
+    os.writeKeyword("centreOfRotation")
+        << centreOfRotation_ << token::END_STATEMENT << nl;
     os.writeKeyword("orientation")
         << Q_ << token::END_STATEMENT << nl;
     os.writeKeyword("velocity")
@@ -63,7 +63,7 @@ Foam::Istream& Foam::operator>>
     Istream& is, sixDoFRigidBodyMotionState& sDoFRBMS
 )
 {
-    is  >> sDoFRBMS.centreOfMass_
+    is  >> sDoFRBMS.centreOfRotation_
         >> sDoFRBMS.Q_
         >> sDoFRBMS.v_
         >> sDoFRBMS.a_
@@ -87,7 +87,7 @@ Foam::Ostream& Foam::operator<<
     const sixDoFRigidBodyMotionState& sDoFRBMS
 )
 {
-    os  << token::SPACE << sDoFRBMS.centreOfMass()
+    os  << token::SPACE << sDoFRBMS.centreOfRotation()
         << token::SPACE << sDoFRBMS.Q()
         << token::SPACE << sDoFRBMS.v()
         << token::SPACE << sDoFRBMS.a()

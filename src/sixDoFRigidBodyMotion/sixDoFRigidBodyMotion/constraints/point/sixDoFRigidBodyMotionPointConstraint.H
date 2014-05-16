@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,7 +25,11 @@ Class
     Foam::sixDoFRigidBodyMotionConstraints::point
 
 Description
-    Point fixed in space.
+    Translation constraint on the centre of rotation:
+        fixed in space.
+
+    If 'centreOfRotation' is not provided in the dictionary the centre of mass
+    is used.
 
 SourceFiles
     sixDoFRigidBodyMotionPointConstraint.C
@@ -56,11 +60,8 @@ class point
 {
     // Private data
 
-        //- Point which is rigidly attached to the body and constrains
-        //  it so that this point remains fixed.  This serves as the
-        //  reference point for displacements as well as the target
-        //  position.
-        Foam::point point_;
+        //- Fixed centre of rotation
+        Foam::point centreOfRotation_;
 
 
 public:
@@ -75,7 +76,8 @@ public:
         point
         (
             const word& name,
-            const dictionary& sDoFRBMCDict
+            const dictionary& sDoFRBMCDict,
+            const sixDoFRigidBodyMotion& motion
         );
 
         //- Construct and return a clone
@@ -93,6 +95,9 @@ public:
 
 
     // Member Functions
+
+        //- Set the centre of rotation to the point
+        virtual void setCentreOfRotation(Foam::point&) const;
 
         //- Apply and accumulate translational constraints
         virtual void constrainTranslation(pointConstraint&) const;

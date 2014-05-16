@@ -28,12 +28,30 @@ License
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
+bool Foam::sixDoFRigidBodyMotion::read(const dictionary& dict)
+{
+    dict.lookup("momentOfInertia") >> momentOfInertia_;
+    dict.lookup("mass") >> mass_;
+    aRelax_ = dict.lookupOrDefault<scalar>("accelerationRelaxation", 1.0);
+    aDamp_ = dict.lookupOrDefault<scalar>("accelerationDamping", 1.0);
+    report_ = dict.lookupOrDefault<Switch>("report", false);
+
+    restraints_.clear();
+    addRestraints(dict);
+
+    constraints_.clear();
+    addConstraints(dict);
+
+    return true;
+}
+
+
 void Foam::sixDoFRigidBodyMotion::write(Ostream& os) const
 {
     motionState_.write(os);
 
-    os.writeKeyword("initialCentreOfMass")
-        << initialCentreOfMass_ << token::END_STATEMENT << nl;
+    os.writeKeyword("initialCentreOfRotation")
+        << initialCentreOfRotation_ << token::END_STATEMENT << nl;
     os.writeKeyword("initialOrientation")
         << initialQ_ << token::END_STATEMENT << nl;
     os.writeKeyword("momentOfInertia")
@@ -92,50 +110,6 @@ void Foam::sixDoFRigidBodyMotion::write(Ostream& os) const
 
         os  << decrIndent << indent << token::END_BLOCK << nl;
     }
-}
-
-
-// * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
-
-Foam::Istream& Foam::operator>>(Istream& is, sixDoFRigidBodyMotion& sDoFRBM)
-{
-    is  >> sDoFRBM.motionState_
-        >> sDoFRBM.initialCentreOfMass_
-        >> sDoFRBM.initialQ_
-        >> sDoFRBM.momentOfInertia_
-        >> sDoFRBM.mass_;
-
-    // Check state of Istream
-    is.check
-    (
-        "Foam::Istream& Foam::operator>>"
-        "(Foam::Istream&, Foam::sixDoFRigidBodyMotion&)"
-    );
-
-    return is;
-}
-
-
-Foam::Ostream& Foam::operator<<
-(
-    Ostream& os,
-    const sixDoFRigidBodyMotion& sDoFRBM
-)
-{
-    os  << sDoFRBM.state()
-        << token::SPACE << sDoFRBM.initialCentreOfMass()
-        << token::SPACE << sDoFRBM.initialQ()
-        << token::SPACE << sDoFRBM.momentOfInertia()
-        << token::SPACE << sDoFRBM.mass();
-
-    // Check state of Ostream
-    os.check
-    (
-        "Foam::Ostream& Foam::operator<<(Foam::Ostream&, "
-        "const Foam::sixDoFRigidBodyMotion&)"
-    );
-
-    return os;
 }
 
 

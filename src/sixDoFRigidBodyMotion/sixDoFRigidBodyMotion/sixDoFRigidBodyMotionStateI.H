@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,9 +25,10 @@ License
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-inline const Foam::point& Foam::sixDoFRigidBodyMotionState::centreOfMass() const
+inline const Foam::point&
+Foam::sixDoFRigidBodyMotionState::centreOfRotation() const
 {
-    return centreOfMass_;
+    return centreOfRotation_;
 }
 
 
@@ -61,9 +62,9 @@ inline const Foam::vector& Foam::sixDoFRigidBodyMotionState::tau() const
 }
 
 
-inline Foam::point& Foam::sixDoFRigidBodyMotionState::centreOfMass()
+inline Foam::point& Foam::sixDoFRigidBodyMotionState::centreOfRotation()
 {
-    return centreOfMass_;
+    return centreOfRotation_;
 }
 
 

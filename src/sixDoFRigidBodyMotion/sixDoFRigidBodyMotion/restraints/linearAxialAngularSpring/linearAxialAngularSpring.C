@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -129,8 +129,8 @@ Foam::sixDoFRigidBodyMotionRestraints::linearAxialAngularSpring::restrain
     restraintForce = vector::zero;
 
     // Not needed to be altered as restraintForce is zero, but set to
-    // centreOfMass to be sure of no spurious moment
-    restraintPosition = motion.centreOfMass();
+    // centreOfRotation to be sure of no spurious moment
+    restraintPosition = motion.centreOfRotation();
 
     if (motion.report())
     {

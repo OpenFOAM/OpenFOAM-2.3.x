@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,7 +29,7 @@ License
 
 Foam::sixDoFRigidBodyMotionState::sixDoFRigidBodyMotionState()
 :
-    centreOfMass_(vector::zero),
+    centreOfRotation_(vector::zero),
     Q_(I),
     v_(vector::zero),
     a_(vector::zero),
@@ -40,29 +40,17 @@ Foam::sixDoFRigidBodyMotionState::sixDoFRigidBodyMotionState()
 
 Foam::sixDoFRigidBodyMotionState::sixDoFRigidBodyMotionState
 (
-    const point& centreOfMass,
-    const tensor& Q,
-    const vector& v,
-    const vector& a,
-    const vector& pi,
-    const vector& tau
-)
-:
-    centreOfMass_(centreOfMass),
-    Q_(Q),
-    v_(v),
-    a_(a),
-    pi_(pi),
-    tau_(tau)
-{}
-
-
-Foam::sixDoFRigidBodyMotionState::sixDoFRigidBodyMotionState
-(
     const dictionary& dict
 )
 :
-    centreOfMass_(dict.lookup("centreOfMass")),
+    centreOfRotation_
+    (
+        dict.lookupOrDefault
+        (
+            "centreOfRotation",
+            dict.lookupOrDefault("centreOfMass", vector::zero)
+        )
+    ),
     Q_(dict.lookupOrDefault("orientation", tensor::I)),
     v_(dict.lookupOrDefault("velocity", vector::zero)),
     a_(dict.lookupOrDefault("acceleration", vector::zero)),
@@ -76,7 +64,7 @@ Foam::sixDoFRigidBodyMotionState::sixDoFRigidBodyMotionState
     const sixDoFRigidBodyMotionState& sDoFRBMS
 )
 :
-    centreOfMass_(sDoFRBMS.centreOfMass()),
+    centreOfRotation_(sDoFRBMS.centreOfRotation()),
     Q_(sDoFRBMS.Q()),
     v_(sDoFRBMS.v()),
     a_(sDoFRBMS.a()),

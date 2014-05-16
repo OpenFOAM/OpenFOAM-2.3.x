@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,11 +39,13 @@ namespace Foam
 Foam::sixDoFRigidBodyMotionConstraint::sixDoFRigidBodyMotionConstraint
 (
     const word& name,
-    const dictionary& sDoFRBMCDict
+    const dictionary& sDoFRBMCDict,
+    const sixDoFRigidBodyMotion& motion
 )
 :
     name_(name),
-    sDoFRBMCCoeffs_(sDoFRBMCDict)
+    sDoFRBMCCoeffs_(sDoFRBMCDict),
+    motion_(motion)
 {}
 
 

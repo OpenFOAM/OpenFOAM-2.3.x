@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,8 +42,8 @@ Description
     url = {http://link.aip.org/link/?JCP/107/5840/1},
     doi = {10.1063/1.474310}
 
-    Can add restraints (i.e. a spring) and constraints (i.e. motion
-    may only be on a plane).
+    Can add restraints (e.g. a spring)
+    and constraints (e.g. motion may only be on a plane).
 
 SourceFiles
     sixDoFRigidBodyMotionI.H
@@ -65,16 +65,6 @@ SourceFiles
 
 namespace Foam
 {
-
-// Forward declaration of classes
-class Istream;
-class Ostream;
-
-// Forward declaration of friend functions and operators
-class sixDoFRigidBodyMotion;
-Istream& operator>>(Istream&, sixDoFRigidBodyMotion&);
-Ostream& operator<<(Ostream&, const sixDoFRigidBodyMotion&);
-
 
 /*---------------------------------------------------------------------------*\
                       Class sixDoFRigidBodyMotion Declaration
@@ -105,15 +95,18 @@ class sixDoFRigidBodyMotion
         //- Centre of mass of initial state
         point initialCentreOfMass_;
 
+        //- Centre of rotation of initial state
+        point initialCentreOfRotation_;
+
         //- Orientation of initial state
         tensor initialQ_;
+
+        //- Mass of the body
+        scalar mass_;
 
         //- Moment of inertia of the body in reference configuration
         //  (Q = I)
         diagTensor momentOfInertia_;
-
-        //- Mass of the body
-        scalar mass_;
 
         //- Acceleration relaxation coefficient
         scalar aRelax_;
@@ -157,54 +150,54 @@ class sixDoFRigidBodyMotion
 
         // Access
 
-            //- Return access to the restraints
+            //- Return the restraints
             inline const PtrList<sixDoFRigidBodyMotionRestraint>&
                 restraints() const;
 
-            //- Return access to the constraints
+            //- Return the constraints
             inline const PtrList<sixDoFRigidBodyMotionConstraint>&
                 constraints() const;
 
-            //- Return access to the initial centre of mass
-            inline const point& initialCentreOfMass() const;
+            //- Return the initial centre of rotation
+            inline const point& initialCentreOfRotation() const;
 
-            //- Return access to the initial orientation
+            //- Return the initial orientation
             inline const tensor& initialQ() const;
 
-            //- Return access to the orientation
+            //- Return the orientation
             inline const tensor& Q() const;
 
-            //- Return access to acceleration
+            //- Return the current acceleration
             inline const vector& a() const;
 
-            //- Return access to angular momentum
+            //- Return the current angular momentum
             inline const vector& pi() const;
 
-            //- Return access to torque
+            //- Return the current torque
             inline const vector& tau() const;
 
-            //- Return access to the orientation at previous time-step
+            //- Return the orientation at previous time-step
             inline const tensor& Q0() const;
 
-            //- Return access to velocity at previous time-step
+            //- Return the velocity at previous time-step
             inline const vector& v0() const;
 
-            //- Return access to acceleration at previous time-step
+            //- Return the acceleration at previous time-step
             inline const vector& a0() const;
 
-            //- Return access to angular momentum at previous time-step
+            //- Return the angular momentum at previous time-step
             inline const vector& pi0() const;
 
-            //- Return access to torque at previous time-step
+            //- Return the torque at previous time-step
             inline const vector& tau0() const;
 
 
         // Edit
 
-            //- Return access to the centre of mass
-            inline point& initialCentreOfMass();
+            //- Return the centre of rotation
+            inline point& initialCentreOfRotation();
 
-            //- Return access to the centre of mass
+            //- Return initial orientation
             inline tensor& initialQ();
 
             //- Return non-const access to the orientation
@@ -230,24 +223,6 @@ public:
         //- Construct null
         sixDoFRigidBodyMotion();
 
-        //- Construct from components
-        sixDoFRigidBodyMotion
-        (
-            const point& centreOfMass,
-            const tensor& Q,
-            const vector& v,
-            const vector& a,
-            const vector& pi,
-            const vector& tau,
-            scalar mass,
-            const point& initialCentreOfMass,
-            const tensor& initialQ,
-            const diagTensor& momentOfInertia,
-            scalar aRelax = 1.0,
-            scalar aDamp = 1.0,
-            bool report = false
-        );
-
         //- Construct from constant and state dictionaries
         sixDoFRigidBodyMotion
         (
@@ -259,129 +234,46 @@ public:
         sixDoFRigidBodyMotion(const sixDoFRigidBodyMotion&);
 
 
-    //- Destructor
-    ~sixDoFRigidBodyMotion();
-
-
     // Member Functions
-
-        //- Add restraints to the motion, public to allow external
-        //  addition of restraints after construction
-        void addRestraints(const dictionary& dict);
-
-        //- Add restraints to the motion, public to allow external
-        //  addition of restraints after construction
-        void addConstraints(const dictionary& dict);
-
-        //- First leapfrog velocity adjust and motion part, required
-        //  before force calculation.  Takes old timestep for variable
-        //  timestep cases.
-        void updatePosition
-        (
-            scalar deltaT,
-            scalar deltaT0
-        );
-
-        //- Second leapfrog velocity adjust part
-        //  required after motion and force calculation
-        void updateAcceleration
-        (
-            const vector& fGlobal,
-            const vector& tauGlobal,
-            scalar deltaT
-        );
-
-        //- Second leapfrog velocity adjust part
-        //  required after motion and force calculation
-        void updateVelocity(scalar deltaT);
-
-        //- Global forces supplied at locations, calculating net force
-        //  and moment
-        void updateAcceleration
-        (
-            const pointField& positions,
-            const vectorField& forces,
-            scalar deltaT
-        );
-
-        //- Transform the given initial state pointField by the current
-        //  motion state
-        tmp<pointField> currentPosition(const pointField& initialPoints) const;
-
-        //- Transform the given initial state pointField by the current
-        //  motion state
-        tmp<pointField> scaledPosition
-        (
-            const pointField& initialPoints,
-            const scalarField& scale
-        ) const;
-
-        //- Transform the given initial state point by the current motion
-        //  state
-        inline point currentPosition(const point& initialPoints) const;
-
-        //- Transform the given initial state direction by the current
-        //  motion state
-        inline vector currentOrientation(const vector& vInitial) const;
-
-        //- Access the orientation tensor, Q.
-        //  globalVector = Q & bodyLocalVector
-        //  bodyLocalVector = Q.T() & globalVector
-        inline const tensor& orientation() const;
-
-        //- Predict the position of the supplied initial state point
-        //  after deltaT given the current motion state and the
-        //  additional supplied force and moment
-        point predictedPosition
-        (
-            const point& initialPoints,
-            const vector& deltaForce,
-            const vector& deltaMoment,
-            scalar deltaT
-        ) const;
-
-        //- Predict the orientation of the supplied initial state
-        //  vector after deltaT given the current motion state and the
-        //  additional supplied moment
-        vector predictedOrientation
-        (
-            const vector& vInitial,
-            const vector& deltaMoment,
-            scalar deltaT
-        ) const;
-
-        //- Return the angular velocity in the global frame
-        inline vector omega() const;
-
-        //- Return the velocity of a position
-        inline point currentVelocity(const point& pt) const;
-
-        //- Report the status of the motion
-        void status() const;
-
 
         // Access
 
-            //- Return access to the motion state
-            inline const sixDoFRigidBodyMotionState& state() const;
+            //- Return the mass
+            inline scalar mass() const;
 
-            //- Return const access to the centre of mass
-            inline const point& centreOfMass() const;
-
-            //- Return const access to the centre of mass at previous time-step
-            inline const point& centreOfMass0() const;
-
-            //- Return access to the inertia tensor
+            //- Return the inertia tensor
             inline const diagTensor& momentOfInertia() const;
 
-            //- Return const access to the mass
-            inline scalar mass() const;
+            //- Return the motion state
+            inline const sixDoFRigidBodyMotionState& state() const;
+
+            //- Return the current centre of rotation
+            inline const point& centreOfRotation() const;
+
+            //- Return the centre of rotation at previous time-step
+            inline const point& centreOfRotation0() const;
+
+            //- Return the initial centre of mass
+            inline const point& initialCentreOfMass() const;
+
+            //- Return the current centre of mass
+            inline point centreOfMass() const;
+
+            //- Return the orientation tensor, Q.
+            //  globalVector = Q & bodyLocalVector
+            //  bodyLocalVector = Q.T() & globalVector
+            inline const tensor& orientation() const;
+
+            //- Return the angular velocity in the global frame
+            inline vector omega() const;
+
+            //- Return the current velocity
+            inline const vector& v() const;
+
+            inline vector momentArm() const;
 
             //- Return the report Switch
             inline bool report() const;
-
-            //- Return access to velocity
-            inline const vector& v() const;
 
 
         // Edit
@@ -389,29 +281,69 @@ public:
             //- Store the motion state at the beginning of the time-step
             inline void newTime();
 
-            //- Return non-const access to the centre of mass
-            inline point& centreOfMass();
+            //- Return non-const access to the centre of rotation
+            inline point& centreOfRotation();
 
-            //- Return non-const access to the inertia tensor
-            inline diagTensor& momentOfInertia();
 
-            //- Return non-const access to the mass
-            inline scalar& mass();
+        // Constraints and Restraints
+
+            //- Add restraints to the motion, public to allow external
+            //  addition of restraints after construction
+            void addRestraints(const dictionary& dict);
+
+            //- Add restraints to the motion, public to allow external
+            //  addition of restraints after construction
+            void addConstraints(const dictionary& dict);
+
+
+        // Update state
+
+            //- First leapfrog velocity adjust and motion part, required
+            //  before force calculation.  Takes old timestep for variable
+            //  timestep cases.
+            void updatePosition(scalar deltaT, scalar deltaT0);
+
+            //- Second leapfrog velocity adjust part
+            //  required after motion and force calculation
+            void updateAcceleration
+            (
+                const vector& fGlobal,
+                const vector& tauGlobal,
+                scalar deltaT
+            );
+
+            //- Report the status of the motion
+            void status() const;
+
+
+        // Transformations
+
+            //- Return the velocity of a position
+            inline point velocity(const point& pt) const;
+
+            //- Transform the given initial state point by the current motion
+            //  state
+            inline point transform(const point& initialPoints) const;
+
+            //- Transform the given initial state pointField by the current
+            //  motion state
+            tmp<pointField> transform(const pointField& initialPoints) const;
+
+            //- Transform the given initial state pointField by the current
+            //  motion state scaled by the given scale
+            tmp<pointField> transform
+            (
+                const pointField& initialPoints,
+                const scalarField& scale
+            ) const;
 
 
         //- Write
         void write(Ostream&) const;
 
-
         //- Read coefficients dictionary and update system parameters,
         //  constraints and restraints but not the current state
         bool read(const dictionary& dict);
-
-
-    // IOstream Operators
-
-        friend Istream& operator>>(Istream&, sixDoFRigidBodyMotion&);
-        friend Ostream& operator<<(Ostream&, const sixDoFRigidBodyMotion&);
 };
 
 

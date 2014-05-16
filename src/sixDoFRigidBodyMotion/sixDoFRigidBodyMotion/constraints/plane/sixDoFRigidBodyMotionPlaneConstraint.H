@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,8 +25,11 @@ Class
     Foam::sixDoFRigidBodyMotionConstraints::plane
 
 Description
-    sixDoFRigidBodyMotionConstraint.  Reference point may only move
-    along a plane.
+    Translation constraint on the centre of rotation:
+        may only move on a plane.
+
+    If 'centreOfRotation' is not provided in the dictionary the centre of mass
+    is used.
 
 SourceFiles
     sixDoFRigidBodyMotionPlaneConstraint.C
@@ -56,6 +59,9 @@ class plane
 {
     // Private data
 
+        //- Centre of rotation on plane
+        point centreOfRotation_;
+
         //- Normal to plane
         vector normal_;
 
@@ -72,7 +78,8 @@ public:
         plane
         (
             const word& name,
-            const dictionary& sDoFRBMCDict
+            const dictionary& sDoFRBMCDict,
+            const sixDoFRigidBodyMotion& motion
         );
 
         //- Construct and return a clone
@@ -90,6 +97,10 @@ public:
 
 
     // Member Functions
+
+        //- Set the centre of rotation to the projection of the
+        //  centre of mass onto the plane
+        virtual void setCentreOfRotation(point&) const;
 
         //- Apply and accumulate translational constraints
         virtual void constrainTranslation(pointConstraint&) const;

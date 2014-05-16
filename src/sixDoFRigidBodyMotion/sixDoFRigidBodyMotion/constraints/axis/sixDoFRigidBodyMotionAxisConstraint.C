@@ -50,10 +50,11 @@ namespace sixDoFRigidBodyMotionConstraints
 Foam::sixDoFRigidBodyMotionConstraints::axis::axis
 (
     const word& name,
-    const dictionary& sDoFRBMCDict
+    const dictionary& sDoFRBMCDict,
+    const sixDoFRigidBodyMotion& motion
 )
 :
-    sixDoFRigidBodyMotionConstraint(name, sDoFRBMCDict),
+    sixDoFRigidBodyMotionConstraint(name, sDoFRBMCDict, motion),
     axis_()
 {
     read(sDoFRBMCDict);

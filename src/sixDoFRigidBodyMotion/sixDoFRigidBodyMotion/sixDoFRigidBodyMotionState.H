@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -69,7 +69,7 @@ class sixDoFRigidBodyMotionState
     // Private data
 
         //- Current position of the centre of mass of the body
-        point centreOfMass_;
+        point centreOfRotation_;
 
         //- Orientation, stored as the rotation tensor to transform
         //  from the body to the global reference frame, i.e.:
@@ -97,17 +97,6 @@ public:
         //- Construct null
         sixDoFRigidBodyMotionState();
 
-        //- Construct from components
-        sixDoFRigidBodyMotionState
-        (
-            const point& centreOfMass,
-            const tensor& Q,
-            const vector& v,
-            const vector& a,
-            const vector& pi,
-            const vector& tau
-        );
-
         //- Construct from dictionary
         sixDoFRigidBodyMotionState(const dictionary& dict);
 
@@ -124,7 +113,7 @@ public:
         // Access
 
             //- Return access to the centre of mass
-            inline const point& centreOfMass() const;
+            inline const point& centreOfRotation() const;
 
             //- Return access to the orientation
             inline const tensor& Q() const;
@@ -145,7 +134,7 @@ public:
         // Edit
 
             //- Return non-const access to the centre of mass
-            inline point& centreOfMass();
+            inline point& centreOfRotation();
 
             //- Return non-const access to the orientation
             inline tensor& Q();

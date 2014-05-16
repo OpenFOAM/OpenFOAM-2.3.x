@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.0                                 |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -46,13 +46,14 @@ sixDoFRigidBodyMotionCoeffs
         yLine
         {
             sixDoFRigidBodyMotionConstraint line;
-            direction       (0 1 0);
+            centreOfRotation    (0.25 0.007 0.125);
+            direction           (0 1 0);
         }
 
         zAxis
         {
             sixDoFRigidBodyMotionConstraint axis;
-            axis            (0 0 1);
+            axis                (0 0 1);
         }
     }
 

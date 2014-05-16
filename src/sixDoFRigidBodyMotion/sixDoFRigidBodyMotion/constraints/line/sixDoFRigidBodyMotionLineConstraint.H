@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,8 +25,11 @@ Class
     Foam::sixDoFRigidBodyMotionConstraints::line
 
 Description
-    sixDoFRigidBodyMotionConstraint.  Reference point may only move
-    along a line.
+    Translation constraint on the centre of rotation:
+        may only move along a line.
+
+    If 'centreOfRotation' is not provided in the dictionary the centre of mass
+    is used.
 
 SourceFiles
     sixDoFRigidBodyMotionLineConstraint.C
@@ -56,8 +59,11 @@ class line
 {
     // Private data
 
+        //- Centre of rotation on line
+        point centreOfRotation_;
+
         //- Direction of the constraining line
-        vector dir_;
+        vector direction_;
 
 
 public:
@@ -72,7 +78,8 @@ public:
         line
         (
             const word& name,
-            const dictionary& sDoFRBMCDict
+            const dictionary& sDoFRBMCDict,
+            const sixDoFRigidBodyMotion& motion
         );
 
         //- Construct and return a clone
@@ -90,6 +97,10 @@ public:
 
 
     // Member Functions
+
+        //- Set the centre of rotation to the projection of the
+        //  centre of mass onto the line
+        virtual void setCentreOfRotation(point&) const;
 
         //- Apply and accumulate translational constraints
         virtual void constrainTranslation(pointConstraint&) const;

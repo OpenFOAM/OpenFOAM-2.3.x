@@ -198,7 +198,7 @@ void Foam::sixDoFRigidBodyMotionSolver::solve()
     forcesDict.add("patches", patches_);
     forcesDict.add("rhoInf", rhoInf_);
     forcesDict.add("rhoName", rhoName_);
-    forcesDict.add("CofR", motion_.centreOfMass());
+    forcesDict.add("CofR", motion_.centreOfRotation());
 
     forces f("forces", db(), forcesDict);
 
@@ -220,14 +220,14 @@ void Foam::sixDoFRigidBodyMotionSolver::solve()
 
     motion_.updateAcceleration
     (
-        ramp*(f.forceEff() + g.value()*motion_.mass()),
-        ramp*(f.momentEff()),
+        ramp*(f.forceEff() + motion_.mass()*g.value()),
+        ramp*(f.momentEff() + motion_.mass()*(motion_.momentArm() ^ g.value())),
         t.deltaTValue()
     );
 
     // Update the displacements
     pointDisplacement_.internalField() =
-        motion_.scaledPosition(points0(), scale_) - points0();
+        motion_.transform(points0(), scale_) - points0();
 
     // Displacement has changed. Update boundary conditions
     pointConstraints::New
