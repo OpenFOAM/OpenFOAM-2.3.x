@@ -139,7 +139,7 @@ void Foam::diameterModels::IATE::correct()
     volScalarField R
     (
         (
-            (2.0/3.0)
+            (1.0/3.0)
            /max
             (
                 fvc::average(phase_ + phase_.oldTime()),
