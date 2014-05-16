@@ -194,7 +194,7 @@ Foam::interfaceProperties::interfaceProperties
     (
         IOobject
         (
-            "K",
+            "interfaceProperties:K",
             alpha1_.time().timeName(),
             alpha1_.mesh()
         ),
