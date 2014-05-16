@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,6 +24,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "SphericalTensor.H"
+#include "SymmTensor.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -291,11 +292,19 @@ inline Cmpt det(const DiagTensor<Cmpt>& t)
 }
 
 
-//- Return the inverse of a symmetric tensor
+//- Return the inverse of a diagonal tensor
 template<class Cmpt>
 inline DiagTensor<Cmpt> inv(const DiagTensor<Cmpt>& dt)
 {
     return DiagTensor<Cmpt>(1.0/dt.xx(), 1.0/dt.yy(), 1.0/dt.zz());
+}
+
+
+//- Return the diagonal of a symmetric tensor as a diagonal tensor
+template<class Cmpt>
+inline DiagTensor<Cmpt> diag(const SymmTensor<Cmpt>& t)
+{
+    return DiagTensor<Cmpt>(t.xx(), t.yy(), t.zz());
 }
 
 
