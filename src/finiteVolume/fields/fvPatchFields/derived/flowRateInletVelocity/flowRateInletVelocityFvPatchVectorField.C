@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -144,38 +144,6 @@ flowRateInletVelocityFvPatchVectorField
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-void Foam::flowRateInletVelocityFvPatchVectorField::updateCoeffs
-(
-    const scalar uniformRho
-)
-{
-    if (updated())
-    {
-        return;
-    }
-
-    const scalar t = db().time().timeOutputValue();
-
-    // a simpler way of doing this would be nice
-    const scalar avgU = -flowRate_->value(t)/gSum(patch().magSf());
-
-    tmp<vectorField> n = patch().nf();
-
-    if (volumetric_ || rhoName_ == "none")
-    {
-        // volumetric flow-rate
-        operator==(n*avgU);
-    }
-    else
-    {
-        // mass flow-rate
-        operator==(n*avgU/uniformRho);
-    }
-
-    fixedValueFvPatchVectorField::updateCoeffs();
-}
-
 
 void Foam::flowRateInletVelocityFvPatchVectorField::updateCoeffs()
 {
