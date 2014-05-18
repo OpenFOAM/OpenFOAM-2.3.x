@@ -98,17 +98,17 @@ void epsilonWallFunctionFvPatchScalarField::setMaster()
 
 void epsilonWallFunctionFvPatchScalarField::createAveragingWeights()
 {
-    if (initialised_)
-    {
-        return;
-    }
-
     const volScalarField& epsilon =
         static_cast<const volScalarField&>(this->dimensionedInternalField());
 
     const volScalarField::GeometricBoundaryField& bf = epsilon.boundaryField();
 
     const fvMesh& mesh = epsilon.mesh();
+
+    if (initialised_ && !mesh.changing())
+    {
+        return;
+    }
 
     volScalarField weights
     (
