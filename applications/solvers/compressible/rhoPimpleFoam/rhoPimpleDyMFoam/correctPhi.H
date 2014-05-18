@@ -46,14 +46,18 @@ if (mesh.changing())
     {
         fvScalarMatrix pcorrEqn
         (
-            fvm::laplacian(rAUf, pcorr) == fvc::div(phi) - divrhoU
+            fvm::ddt(psi, pcorr)
+          + fvc::div(phi)
+          - fvm::laplacian(rAUf, pcorr)
+         ==
+            divrhoU
         );
 
         pcorrEqn.solve();
 
         if (pimple.finalNonOrthogonalIter())
         {
-            phi -= pcorrEqn.flux();
+            phi += pcorrEqn.flux();
         }
     }
 }
