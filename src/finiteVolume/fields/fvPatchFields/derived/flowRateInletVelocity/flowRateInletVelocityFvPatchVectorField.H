@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -71,7 +71,7 @@ Description
         rhoInlet            1.0;
     }
     \endverbatim
-    
+
     The \c flowRate entry is a \c DataEntry type, meaning that it can be
     specified as constant, a polynomial fuction of time, and ...
 
@@ -194,10 +194,6 @@ public:
 
 
     // Member functions
-
-        //- Update the coefficients associated with the patch field given
-        //  uniform density field
-        void updateCoeffs(const scalar uniformRho);
 
         //- Update the coefficients associated with the patch field
         virtual void updateCoeffs();
