@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,6 +27,12 @@ License
 #include "forceSuSp.H"
 #include "IntegrationScheme.H"
 #include "meshTools.H"
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+template<class ParcelType>
+Foam::label Foam::KinematicParcel<ParcelType>::maxTrackAttempts = 1;
+
 
 // * * * * * * * * * * *  Protected Member Functions * * * * * * * * * * * * //
 
@@ -271,7 +277,8 @@ bool Foam::KinematicParcel<ParcelType>::move
     scalar tEnd = (1.0 - p.stepFraction())*trackTime;
     const scalar dtMax = tEnd;
 
-    bool moving = true;
+    bool tracking = true;
+    label nTrackingStalled = 0;
 
     while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
     {
@@ -287,7 +294,7 @@ bool Foam::KinematicParcel<ParcelType>::move
         const label cellI = p.cell();
 
         const scalar magU = mag(U_);
-        if (p.active() && moving && (magU > ROOTVSMALL))
+        if (p.active() && tracking && (magU > ROOTVSMALL))
         {
             const scalar d = dt*magU;
             const scalar dCorr = min(d, maxCo*cellLengthScale[cellI]);
@@ -300,13 +307,25 @@ bool Foam::KinematicParcel<ParcelType>::move
 
         scalar newStepFraction = 1.0 - tEnd/trackTime;
 
-        if
-        (
-            mag(p.stepFraction() - newStepFraction)
-          < particle::minStepFractionTol
-        )
+        if (tracking)
         {
-            moving = false;
+            if
+            (
+                mag(p.stepFraction() - newStepFraction)
+              < particle::minStepFractionTol
+            )
+            {
+                nTrackingStalled++;
+
+                if (nTrackingStalled > maxTrackAttempts)
+                {
+                    tracking = false;
+                }
+            }
+            else
+            {
+                nTrackingStalled = 0;
+            }
         }
 
         p.stepFraction() = newStepFraction;
