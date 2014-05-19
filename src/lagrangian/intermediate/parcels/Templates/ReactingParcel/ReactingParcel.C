@@ -60,14 +60,14 @@ void Foam::ReactingParcel<ParcelType>::calcPhaseChange
     typedef typename TrackData::cloudType::reactingCloudType reactingCloudType;
     PhaseChangeModel<reactingCloudType>& phaseChange = td.cloud().phaseChange();
 
-    if (!phaseChange.active())
+    if (!phaseChange.active() || (YPhase < SMALL))
     {
         return;
     }
 
     scalar Tvap = phaseChange.Tvap(YComponents);
 
-    if (T < Tvap || YPhase < SMALL)
+    if (T < Tvap)
     {
         return;
     }
