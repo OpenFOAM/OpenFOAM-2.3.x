@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -63,7 +63,8 @@ Foam::temperatureCoupledBase::temperatureCoupledBase
 :
     patch_(patch),
     method_(KMethodTypeNames_[calculationType]),
-    kappaName_(kappaName)
+    kappaName_(kappaName),
+    alphaAniName_(alphaAniName_)
 {}
 
 
@@ -75,7 +76,8 @@ Foam::temperatureCoupledBase::temperatureCoupledBase
 :
     patch_(patch),
     method_(KMethodTypeNames_.read(dict.lookup("kappa"))),
-    kappaName_(dict.lookup("kappaName"))
+    kappaName_(dict.lookup("kappaName")),
+    alphaAniName_(dict.lookupOrDefault<word>("alphaAniName","Anialpha"))
 {}
 
 
@@ -136,17 +138,18 @@ Foam::tmp<Foam::scalarField> Foam::temperatureCoupledBase::kappa
             const solidThermo& thermo =
                 mesh.lookupObject<solidThermo>("thermophysicalProperties");
 
-            const vectorField kappa(thermo.Kappa(patch_.index()));
+            const symmTensorField& Anialpha =
+                patch_.lookupPatchField<volSymmTensorField, scalar>
+                (
+                    alphaAniName_
+                );
 
-            tmp<scalarField> tmeanKappa(Tp);
-            scalarField& meanKappa = tmeanKappa();
-            forAll(meanKappa, i)
-            {
-                meanKappa[i] = (kappa[i].x() + kappa[i].y() + kappa[i].z())/3.0;
-            }
+            const symmTensorField kappa =
+                Anialpha*thermo.Cp()().boundaryField()[patch_.index()];
 
-            return meanKappa;
-            break;
+            const vectorField n(patch_.nf());
+
+            return n & kappa & n;
         }
 
         case mtLookup:
