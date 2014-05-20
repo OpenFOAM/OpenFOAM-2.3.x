@@ -118,7 +118,7 @@ filmPyrolysisRadiativeCoupledMixedFvPatchScalarField
 )
 :
     mixedFvPatchScalarField(p, iF),
-    temperatureCoupledBase(patch(), "undefined", "undefined-K"),
+    temperatureCoupledBase(patch(), "undefined", "undefined", "undefined-K"),
     filmRegionName_("surfaceFilmProperties"),
     pyrolysisRegionName_("pyrolysisProperties"),
     TnbrName_("undefined-Tnbr"),
@@ -143,7 +143,7 @@ filmPyrolysisRadiativeCoupledMixedFvPatchScalarField
 )
 :
     mixedFvPatchScalarField(psf, p, iF, mapper),
-    temperatureCoupledBase(patch(), psf.KMethod(), psf.kappaName()),
+    temperatureCoupledBase(patch(), psf),
     filmRegionName_(psf.filmRegionName_),
     pyrolysisRegionName_(psf.pyrolysisRegionName_),
     TnbrName_(psf.TnbrName_),
@@ -224,7 +224,7 @@ filmPyrolysisRadiativeCoupledMixedFvPatchScalarField
 )
 :
     mixedFvPatchScalarField(psf, iF),
-    temperatureCoupledBase(patch(), psf.KMethod(), psf.kappaName()),
+    temperatureCoupledBase(patch(), psf),
     filmRegionName_(psf.filmRegionName_),
     pyrolysisRegionName_(psf.pyrolysisRegionName_),
     TnbrName_(psf.TnbrName_),
