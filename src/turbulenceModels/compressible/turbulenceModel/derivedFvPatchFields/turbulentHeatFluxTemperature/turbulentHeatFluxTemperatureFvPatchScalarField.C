@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -76,7 +76,7 @@ turbulentHeatFluxTemperatureFvPatchScalarField
 )
 :
     fixedGradientFvPatchScalarField(p, iF),
-    temperatureCoupledBase(patch(), "undefined", "undefined-K"),
+    temperatureCoupledBase(patch(), "undefined", "undefined", "undefined-K"),
     heatSource_(hsPower),
     q_(p.size(), 0.0),
     QrName_("undefinedQr")
@@ -93,7 +93,7 @@ turbulentHeatFluxTemperatureFvPatchScalarField
 )
 :
     fixedGradientFvPatchScalarField(ptf, p, iF, mapper),
-    temperatureCoupledBase(patch(), ptf.KMethod(), ptf.kappaName()),
+    temperatureCoupledBase(patch(), ptf),
     heatSource_(ptf.heatSource_),
     q_(ptf.q_, mapper),
     QrName_(ptf.QrName_)
@@ -135,7 +135,7 @@ turbulentHeatFluxTemperatureFvPatchScalarField
 )
 :
     fixedGradientFvPatchScalarField(thftpsf),
-    temperatureCoupledBase(patch(), thftpsf.KMethod(), thftpsf.kappaName()),
+    temperatureCoupledBase(patch(), thftpsf),
     heatSource_(thftpsf.heatSource_),
     q_(thftpsf.q_),
     QrName_(thftpsf.QrName_)
@@ -150,7 +150,7 @@ turbulentHeatFluxTemperatureFvPatchScalarField
 )
 :
     fixedGradientFvPatchScalarField(thftpsf, iF),
-    temperatureCoupledBase(patch(), thftpsf.KMethod(), thftpsf.kappaName()),
+    temperatureCoupledBase(patch(), thftpsf),
     heatSource_(thftpsf.heatSource_),
     q_(thftpsf.q_),
     QrName_(thftpsf.QrName_)

@@ -64,7 +64,7 @@ externalWallHeatFluxTemperatureFvPatchScalarField
 )
 :
     mixedFvPatchScalarField(p, iF),
-    temperatureCoupledBase(patch(), "undefined", "undefined-K"),
+    temperatureCoupledBase(patch(), "undefined", "undefined", "undefined-K"),
     mode_(unknown),
     q_(p.size(), 0.0),
     h_(p.size(), 0.0),
@@ -88,7 +88,7 @@ externalWallHeatFluxTemperatureFvPatchScalarField
 )
 :
     mixedFvPatchScalarField(ptf, p, iF, mapper),
-    temperatureCoupledBase(patch(), ptf.KMethod(), ptf.kappaName()),
+    temperatureCoupledBase(patch(), ptf),
     mode_(ptf.mode_),
     q_(ptf.q_, mapper),
     h_(ptf.h_, mapper),
@@ -194,7 +194,7 @@ externalWallHeatFluxTemperatureFvPatchScalarField
 )
 :
     mixedFvPatchScalarField(tppsf, iF),
-    temperatureCoupledBase(patch(), tppsf.KMethod(), tppsf.kappaName()),
+    temperatureCoupledBase(patch(), tppsf),
     mode_(tppsf.mode_),
     q_(tppsf.q_),
     h_(tppsf.h_),

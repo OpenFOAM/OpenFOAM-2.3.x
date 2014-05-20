@@ -58,13 +58,14 @@ Foam::temperatureCoupledBase::temperatureCoupledBase
 (
     const fvPatch& patch,
     const word& calculationType,
-    const word& kappaName
+    const word& kappaName,
+    const word& alphaAniName
 )
 :
     patch_(patch),
     method_(KMethodTypeNames_[calculationType]),
     kappaName_(kappaName),
-    alphaAniName_(alphaAniName_)
+    alphaAniName_(alphaAniName)
 {}
 
 
@@ -81,6 +82,19 @@ Foam::temperatureCoupledBase::temperatureCoupledBase
 {}
 
 
+Foam::temperatureCoupledBase::temperatureCoupledBase
+(
+    const fvPatch& patch,
+    const temperatureCoupledBase& base
+)
+:
+    patch_(patch),
+    method_(base.method_),
+    kappaName_(base.kappaName_),
+    alphaAniName_(base.alphaAniName_)
+{}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 Foam::tmp<Foam::scalarField> Foam::temperatureCoupledBase::kappa
@@ -89,6 +103,7 @@ Foam::tmp<Foam::scalarField> Foam::temperatureCoupledBase::kappa
 ) const
 {
     const fvMesh& mesh = patch_.boundaryMesh().mesh();
+    const label patchI = patch_.index();
 
     switch (method_)
     {
@@ -101,14 +116,14 @@ Foam::tmp<Foam::scalarField> Foam::temperatureCoupledBase::kappa
                 const turbulenceModel& turbModel =
                     mesh.lookupObject<turbulenceModel>("turbulenceModel");
 
-                return turbModel.kappaEff(patch_.index());
+                return turbModel.kappaEff(patchI);
             }
             else if (mesh.foundObject<fluidThermo>("thermophysicalProperties"))
             {
                 const fluidThermo& thermo =
                     mesh.lookupObject<fluidThermo>("thermophysicalProperties");
 
-                return thermo.kappa(patch_.index());
+                return thermo.kappa(patchI);
             }
             else
             {
@@ -129,7 +144,7 @@ Foam::tmp<Foam::scalarField> Foam::temperatureCoupledBase::kappa
             const solidThermo& thermo =
                 mesh.lookupObject<solidThermo>("thermophysicalProperties");
 
-            return thermo.kappa(patch_.index());
+            return thermo.kappa(patchI);
             break;
         }
 
@@ -138,14 +153,15 @@ Foam::tmp<Foam::scalarField> Foam::temperatureCoupledBase::kappa
             const solidThermo& thermo =
                 mesh.lookupObject<solidThermo>("thermophysicalProperties");
 
-            const symmTensorField& Anialpha =
+            const symmTensorField& alphaAni =
                 patch_.lookupPatchField<volSymmTensorField, scalar>
                 (
                     alphaAniName_
                 );
 
-            const symmTensorField kappa =
-                Anialpha*thermo.Cp()().boundaryField()[patch_.index()];
+            const scalarField& pp = thermo.p().boundaryField()[patchI];
+
+            const symmTensorField kappa(alphaAni*thermo.Cp(pp, Tp, patchI));
 
             const vectorField n(patch_.nf());
 
