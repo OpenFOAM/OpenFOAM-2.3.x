@@ -74,9 +74,9 @@ public:
         };
 
 
-private:
+protected:
 
-    // Private data
+    // Protected data
 
         static const NamedEnum<KMethodType, 4> KMethodTypeNames_;
 
