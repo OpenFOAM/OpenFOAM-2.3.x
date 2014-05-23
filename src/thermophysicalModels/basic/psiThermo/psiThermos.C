@@ -124,6 +124,19 @@ makeThermo
     specie
 );
 
+makeThermo
+(
+    psiThermo,
+    hePsiThermo,
+    pureMixture,
+    sutherlandTransport,
+    sensibleEnthalpy,
+    janafThermo,
+    PengRobinsonGas,
+    specie
+);
+
+
 /* * * * * * * * * * * * * * Internal-energy-based * * * * * * * * * * * * * */
 
 makeThermo
@@ -183,6 +196,18 @@ makeThermo
     sensibleInternalEnergy,
     janafThermo,
     perfectGas,
+    specie
+);
+
+makeThermo
+(
+    psiThermo,
+    hePsiThermo,
+    pureMixture,
+    sutherlandTransport,
+    sensibleInternalEnergy,
+    janafThermo,
+    PengRobinsonGas,
     specie
 );
 

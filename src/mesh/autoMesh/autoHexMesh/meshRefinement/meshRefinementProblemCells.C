@@ -381,69 +381,81 @@ Foam::labelList Foam::meshRefinement::nearestPatch
 {
     const polyBoundaryMesh& patches = mesh_.boundaryMesh();
 
-    // Count number of faces in adaptPatchIDs
-    label nFaces = 0;
-    forAll(adaptPatchIDs, i)
+    labelList nearestAdaptPatch;
+
+    if (adaptPatchIDs.size())
     {
-        const polyPatch& pp = patches[adaptPatchIDs[i]];
-        nFaces += pp.size();
-    }
+        nearestAdaptPatch.setSize(mesh_.nFaces(), adaptPatchIDs[0]);
 
-    // Field on cells and faces.
-    List<topoDistanceData> cellData(mesh_.nCells());
-    List<topoDistanceData> faceData(mesh_.nFaces());
 
-    // Start of changes
-    labelList patchFaces(nFaces);
-    List<topoDistanceData> patchData(nFaces);
-    nFaces = 0;
-    forAll(adaptPatchIDs, i)
-    {
-        label patchI = adaptPatchIDs[i];
-        const polyPatch& pp = patches[patchI];
-
-        forAll(pp, i)
+        // Count number of faces in adaptPatchIDs
+        label nFaces = 0;
+        forAll(adaptPatchIDs, i)
         {
-            patchFaces[nFaces] = pp.start()+i;
-            patchData[nFaces] = topoDistanceData(patchI, 0);
-            nFaces++;
+            const polyPatch& pp = patches[adaptPatchIDs[i]];
+            nFaces += pp.size();
         }
-    }
 
-    // Propagate information inwards
-    FaceCellWave<topoDistanceData> deltaCalc
-    (
-        mesh_,
-        patchFaces,
-        patchData,
-        faceData,
-        cellData,
-        mesh_.globalData().nTotalCells()+1
-    );
+        // Field on cells and faces.
+        List<topoDistanceData> cellData(mesh_.nCells());
+        List<topoDistanceData> faceData(mesh_.nFaces());
 
-    // And extract
-    labelList nearestAdaptPatch(mesh_.nFaces(), adaptPatchIDs[0]);
-
-    bool haveWarned = false;
-    forAll(faceData, faceI)
-    {
-        if (!faceData[faceI].valid(deltaCalc.data()))
+        // Start of changes
+        labelList patchFaces(nFaces);
+        List<topoDistanceData> patchData(nFaces);
+        nFaces = 0;
+        forAll(adaptPatchIDs, i)
         {
-            if (!haveWarned)
+            label patchI = adaptPatchIDs[i];
+            const polyPatch& pp = patches[patchI];
+
+            forAll(pp, i)
             {
-                WarningIn("meshRefinement::nearestPatch(..)")
-                    << "Did not visit some faces, e.g. face " << faceI
-                    << " at " << mesh_.faceCentres()[faceI] << endl
-                    << "Assigning  these cells to patch "
-                    << adaptPatchIDs[0]
-                    << endl;
-                haveWarned = true;
+                patchFaces[nFaces] = pp.start()+i;
+                patchData[nFaces] = topoDistanceData(patchI, 0);
+                nFaces++;
             }
         }
-        else
+
+        // Propagate information inwards
+        FaceCellWave<topoDistanceData> deltaCalc
+        (
+            mesh_,
+            patchFaces,
+            patchData,
+            faceData,
+            cellData,
+            mesh_.globalData().nTotalCells()+1
+        );
+
+        // And extract
+
+        bool haveWarned = false;
+        forAll(faceData, faceI)
         {
-            nearestAdaptPatch[faceI] = faceData[faceI].data();
+            if (!faceData[faceI].valid(deltaCalc.data()))
+            {
+                if (!haveWarned)
+                {
+                    WarningIn("meshRefinement::nearestPatch(..)")
+                        << "Did not visit some faces, e.g. face " << faceI
+                        << " at " << mesh_.faceCentres()[faceI] << endl
+                        << "Assigning  these cells to patch "
+                        << adaptPatchIDs[0]
+                        << endl;
+                    haveWarned = true;
+                }
+            }
+            else
+            {
+                nearestAdaptPatch[faceI] = faceData[faceI].data();
+            }
         }
+    }
+    else
+    {
+        // Use patch 0
+        nearestAdaptPatch.setSize(mesh_.nFaces(), 0);
     }
 
     return nearestAdaptPatch;
