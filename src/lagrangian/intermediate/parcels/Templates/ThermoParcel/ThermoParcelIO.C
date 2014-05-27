@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -58,12 +58,8 @@ Foam::ThermoParcel<ParcelType>::ThermoParcel
         }
         else
         {
-            is.read
-            (
-                reinterpret_cast<char*>(&T_),
-              + sizeof(T_)
-              + sizeof(Cp_)
-            );
+            label size = long(&Cp_) - long(&T_) + sizeof(Cp_);
+            is.read(reinterpret_cast<char*>(&T_), size);
         }
     }
 
@@ -149,11 +145,9 @@ Foam::Ostream& Foam::operator<<
     else
     {
         os  << static_cast<const ParcelType&>(p);
-        os.write
-        (
-            reinterpret_cast<const char*>(&p.T_),
-            sizeof(p.T()) + sizeof(p.Cp())
-        );
+
+        label size = long(&p.Cp_) - long(&p.T_) + sizeof(p.Cp_);
+        os.write(reinterpret_cast<const char*>(&p.T_), size);
     }
 
     // Check state of Ostream

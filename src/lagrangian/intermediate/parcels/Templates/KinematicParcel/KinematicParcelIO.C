@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -76,20 +76,8 @@ Foam::KinematicParcel<ParcelType>::KinematicParcel
         }
         else
         {
-            is.read
-            (
-                reinterpret_cast<char*>(&active_),
-                sizeof(active_)
-              + sizeof(typeId_)
-              + sizeof(nParticle_)
-              + sizeof(d_)
-              + sizeof(dTarget_)
-              + sizeof(U_)
-              + sizeof(rho_)
-              + sizeof(age_)
-              + sizeof(tTurb_)
-              + sizeof(UTurb_)
-            );
+            label size = long(&UTurb_) - long(&active_) + sizeof(UTurb_);
+            is.read(reinterpret_cast<char*>(&active_), size);
         }
     }
 
@@ -248,20 +236,9 @@ Foam::Ostream& Foam::operator<<
     else
     {
         os  << static_cast<const ParcelType&>(p);
-        os.write
-        (
-            reinterpret_cast<const char*>(&p.active_),
-            sizeof(p.active())
-          + sizeof(p.typeId())
-          + sizeof(p.nParticle())
-          + sizeof(p.d())
-          + sizeof(p.dTarget())
-          + sizeof(p.U())
-          + sizeof(p.rho())
-          + sizeof(p.age())
-          + sizeof(p.tTurb())
-          + sizeof(p.UTurb())
-        );
+
+        label size = long(&p.UTurb_) - long(&p.active_) + sizeof(p.UTurb_);
+        os.write(reinterpret_cast<const char*>(&p.active_), size);
     }
 
     // Check state of Ostream
