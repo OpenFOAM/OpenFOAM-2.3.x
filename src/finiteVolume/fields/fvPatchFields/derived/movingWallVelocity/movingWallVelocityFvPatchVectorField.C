@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -107,7 +107,7 @@ void Foam::movingWallVelocityFvPatchVectorField::updateCoeffs()
 
     const fvMesh& mesh = dimensionedInternalField().mesh();
 
-    if (mesh.changing())
+    if (mesh.moving())
     {
         const fvPatch& p = patch();
         const polyPatch& pp = p.patch();
