@@ -1167,7 +1167,7 @@ Foam::dynamicRefineFvMesh::dynamicRefineFvMesh(const IOobject& io)
         }
 
         Info<< "Detected " << returnReduce(nProtected, sumOp<label>())
-            << " cells that are projected from refinement."
+            << " cells that are protected from refinement."
             << " Writing these to cellSet "
             << protectedCells.name()
             << "." << endl;
