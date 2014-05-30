@@ -580,7 +580,7 @@ void Foam::radiation::viewFactor::calculate()
 
                     if (i==j)
                     {
-                        q[i] += (Fmatrix_()[i][j] - 1.0)*sigmaT4 - QrExt[j];
+                        q[i] += (Fmatrix_()[i][j] - 1.0)*sigmaT4;
                     }
                     else
                     {
