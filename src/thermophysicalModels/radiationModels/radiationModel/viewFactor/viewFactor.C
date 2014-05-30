@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -531,7 +531,7 @@ void Foam::radiation::viewFactor::calculate()
                     if (i==j)
                     {
                         C[i][j] = invEj - (invEj - 1.0)*Fmatrix_()[i][j];
-                        q[i] += (Fmatrix_()[i][j] - 1.0)*sigmaT4 - QrExt[j];
+                        q[i] += (Fmatrix_()[i][j] - 1.0)*sigmaT4;
                     }
                     else
                     {
@@ -580,7 +580,7 @@ void Foam::radiation::viewFactor::calculate()
 
                     if (i==j)
                     {
-                        q[i] += (Fmatrix_()[i][j] - 1.0)*sigmaT4 - QrExt[j];
+                        q[i] += (Fmatrix_()[i][j] - 1.0)*sigmaT4;
                     }
                     else
                     {
