@@ -37,8 +37,8 @@ Description
         // Refine field inbetween lower..upper
         lowerRefineLevel 0.001;
         upperRefineLevel 0.999;
-        // If value < unrefineLevel unrefine
-        unrefineLevel   10;
+        // If value < unrefineLevel (default=GREAT) unrefine
+        //unrefineLevel   10;
         // Have slower than 2:1 refinement
         nBufferLayers   1;
         // Refine cells only up to maxRefinement levels
@@ -79,7 +79,7 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class dynamicRefineFvMesh Declaration
+                     Class dynamicRefineFvMesh Declaration
 \*---------------------------------------------------------------------------*/
 
 class dynamicRefineFvMesh
@@ -139,8 +139,8 @@ protected:
             //- Get per cell max of connected point
             scalarField maxPointField(const scalarField&) const;
 
-            //- Get point min of connected cell
-            scalarField minCellField(const volScalarField&) const;
+            //- Get point max of connected cell
+            scalarField maxCellField(const volScalarField&) const;
 
             scalarField cellToPoint(const scalarField& vFld) const;
 

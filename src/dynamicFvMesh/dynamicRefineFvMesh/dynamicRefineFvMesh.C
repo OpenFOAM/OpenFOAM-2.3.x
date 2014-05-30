@@ -59,7 +59,15 @@ Foam::label Foam::dynamicRefineFvMesh::count
         {
             n++;
         }
+
+        // debug also serves to get-around Clang compiler trying to optimsie
+        // out this forAll loop under O3 optimisation
+        if (debug)
+        {
+            Info<< "n=" << n << endl;
+        }
     }
+
     return n;
 }
 
@@ -659,11 +667,11 @@ Foam::dynamicRefineFvMesh::maxPointField(const scalarField& pFld) const
 }
 
 
-// Get min of connected cell
+// Get max of connected cell
 Foam::scalarField
-Foam::dynamicRefineFvMesh::minCellField(const volScalarField& vFld) const
+Foam::dynamicRefineFvMesh::maxCellField(const volScalarField& vFld) const
 {
-    scalarField pFld(nPoints(), GREAT);
+    scalarField pFld(nPoints(), -GREAT);
 
     forAll(pointCells(), pointI)
     {
@@ -671,7 +679,7 @@ Foam::dynamicRefineFvMesh::minCellField(const volScalarField& vFld) const
 
         forAll(pCells, i)
         {
-            pFld[pointI] = min(pFld[pointI], vFld[pCells[i]]);
+            pFld[pointI] = max(pFld[pointI], vFld[pCells[i]]);
         }
     }
     return pFld;
@@ -774,10 +782,11 @@ Foam::labelList Foam::dynamicRefineFvMesh::selectRefineCells
     calculateProtectedCells(unrefineableCell);
 
     // Count current selection
-    label nCandidates = returnReduce(count(candidateCell, 1), sumOp<label>());
+    label nLocalCandidates = count(candidateCell, 1);
+    label nCandidates = returnReduce(nLocalCandidates, sumOp<label>());
 
     // Collect all cells
-    DynamicList<label> candidates(nCells());
+    DynamicList<label> candidates(nLocalCandidates);
 
     if (nCandidates < nTotToRefine)
     {
@@ -1167,7 +1176,7 @@ Foam::dynamicRefineFvMesh::dynamicRefineFvMesh(const IOobject& io)
         }
 
         Info<< "Detected " << returnReduce(nProtected, sumOp<label>())
-            << " cells that are projected from refinement."
+            << " cells that are protected from refinement."
             << " Writing these to cellSet "
             << protectedCells.name()
             << "." << endl;
@@ -1263,25 +1272,28 @@ bool Foam::dynamicRefineFvMesh::update()
             readScalar(refineDict.lookup("lowerRefineLevel"));
         const scalar upperRefineLevel =
             readScalar(refineDict.lookup("upperRefineLevel"));
-        const scalar unrefineLevel =
-            readScalar(refineDict.lookup("unrefineLevel"));
+        const scalar unrefineLevel = refineDict.lookupOrDefault<scalar>
+        (
+            "unrefineLevel",
+            GREAT
+        );
         const label nBufferLayers =
             readLabel(refineDict.lookup("nBufferLayers"));
 
         // Cells marked for refinement or otherwise protected from unrefinement.
         PackedBoolList refineCell(nCells());
 
+        // Determine candidates for refinement (looking at field only)
+        selectRefineCandidates
+        (
+            lowerRefineLevel,
+            upperRefineLevel,
+            vFld,
+            refineCell
+        );
+
         if (globalData().nTotalCells() < maxCells)
         {
-            // Determine candidates for refinement (looking at field only)
-            selectRefineCandidates
-            (
-                lowerRefineLevel,
-                upperRefineLevel,
-                vFld,
-                refineCell
-            );
-
             // Select subset of candidates. Take into account max allowable
             // cells, refinement level, protected cells.
             labelList cellsToRefine
@@ -1352,7 +1364,7 @@ bool Foam::dynamicRefineFvMesh::update()
                 (
                     unrefineLevel,
                     refineCell,
-                    minCellField(vFld)
+                    maxCellField(vFld)
                 )
             );
 
