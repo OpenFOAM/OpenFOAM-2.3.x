@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,7 +31,7 @@ License
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void Foam::nearWallDist::doAll()
+void Foam::nearWallDist::calculate()
 {
     cellDistFuncs wallUtils(mesh_);
 
@@ -101,7 +101,7 @@ Foam::nearWallDist::nearWallDist(const Foam::fvMesh& mesh)
     ),
     mesh_(mesh)
 {
-    doAll();
+    calculate();
 }
 
 
@@ -115,16 +115,28 @@ Foam::nearWallDist::~nearWallDist()
 
 void Foam::nearWallDist::correct()
 {
-    if (mesh_.changing())
+    if (mesh_.topoChanging())
     {
-        // Update size of GeometricBoundaryField
-        forAll(mesh_.boundary(), patchI)
+        const DimensionedField<scalar, volMesh>& V = mesh_.V();
+        const fvBoundaryMesh& bnd = mesh_.boundary();
+
+        this->setSize(bnd.size());
+        forAll(*this, patchI)
         {
-            operator[](patchI).setSize(mesh_.boundary()[patchI].size());
+            this->set
+            (
+                patchI,
+                fvPatchField<scalar>::New
+                (
+                    calculatedFvPatchScalarField::typeName,
+                    bnd[patchI],
+                    V
+                )
+            );
         }
     }
 
-    doAll();
+    calculate();
 }
 
 
