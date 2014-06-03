@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -20,9 +20,6 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
-
-Description
-    Remove a layer of cells and prepare addressing data
 
 \*---------------------------------------------------------------------------*/
 
@@ -87,6 +84,7 @@ bool Foam::layerAdditionRemoval::validCollapse() const
     }
 }
 
+
 void Foam::layerAdditionRemoval::removeCellLayer
 (
     polyTopoChange& ref
@@ -115,7 +113,7 @@ void Foam::layerAdditionRemoval::removeCellLayer
 
     // Remove all the cells from the master layer
     const labelList& mc =
-        topoChanger().mesh().faceZones()[faceZoneID_.index()].masterCells();
+        mesh.faceZones()[faceZoneID_.index()].masterCells();
 
     forAll(mc, faceI)
     {
@@ -205,7 +203,10 @@ void Foam::layerAdditionRemoval::removeCellLayer
 
     labelList ftm = facesToModify.toc();
 
-//Pout<< "faces to modify: " << ftm << endl;
+    if (debug > 1)
+    {
+        Pout<< "faces to modify: " << ftm << endl;
+    }
 
     forAll(ftm, faceI)
     {
@@ -228,9 +229,12 @@ void Foam::layerAdditionRemoval::removeCellLayer
             }
         }
 
-//Pout<< "face label: " << curFaceID
-//    << " old face: " << faces[curFaceID]
-//    << " new face: " << newFace << endl;
+        if (debug > 1)
+        {
+            Pout<< "face label: " << curFaceID
+                << " old face: " << faces[curFaceID]
+                << " new face: " << newFace << endl;
+        }
 
         // Get face zone and its flip
         label modifiedFaceZone = mesh.faceZones().whichZone(curFaceID);
@@ -238,22 +242,15 @@ void Foam::layerAdditionRemoval::removeCellLayer
 
         if (modifiedFaceZone >= 0)
         {
-            modifiedFaceZoneFlip =
-                mesh.faceZones()[modifiedFaceZone].flipMap()
-                [
-                    mesh.faceZones()[modifiedFaceZone].whichFace(curFaceID)
-                ];
+            const faceZone& fz = mesh.faceZones()[modifiedFaceZone];
+            modifiedFaceZoneFlip = fz.flipMap()[fz.whichFace(curFaceID)];
         }
 
-        label newNei;
+        label newNeighbour = -1;
 
         if (curFaceID < mesh.nInternalFaces())
         {
-            newNei = nei[curFaceID];
-        }
-        else
-        {
-            newNei = -1;
+            newNeighbour = nei[curFaceID];
         }
 
         // Modify the face
@@ -264,7 +261,7 @@ void Foam::layerAdditionRemoval::removeCellLayer
                 newFace,                // modified face
                 curFaceID,              // label of face being modified
                 own[curFaceID],         // owner
-                newNei,                 // neighbour
+                newNeighbour,           // neighbour
                 false,                  // face flip
                 mesh.boundaryMesh().whichPatch(curFaceID),// patch for face
                 false,                  // remove from zone
@@ -285,20 +282,34 @@ void Foam::layerAdditionRemoval::removeCellLayer
         // of the cell to be removed
         label masterSideCell = own[mf[faceI]];
 
-        if (mesh.isInternalFace(mf[faceI]) && masterSideCell == mc[faceI])
+        if (masterSideCell == mc[faceI])
         {
-            // Owner cell of the face is being removed.
-            // Grab the neighbour instead
-            masterSideCell = nei[mf[faceI]];
+            if (mesh.isInternalFace(mf[faceI]))
+            {
+                // Owner cell of the face is being removed.
+                // Grab the neighbour instead
+                masterSideCell = nei[mf[faceI]];
+            }
+            else
+            {
+                masterSideCell = -1;
+            }
         }
 
         label slaveSideCell = own[ftc[faceI]];
 
-        if (mesh.isInternalFace(ftc[faceI]) && slaveSideCell == mc[faceI])
+        if (slaveSideCell == mc[faceI])
         {
-            // Owner cell of the face is being removed.
-            // Grab the neighbour instead
-            slaveSideCell = nei[ftc[faceI]];
+            if (mesh.isInternalFace(ftc[faceI]))
+            {
+                // Owner cell of the face is being removed.
+                // Grab the neighbour instead
+                slaveSideCell = nei[ftc[faceI]];
+            }
+            else
+            {
+                slaveSideCell = -1;
+            }
         }
 
         // Find out if the face needs to be flipped
@@ -374,15 +385,18 @@ void Foam::layerAdditionRemoval::removeCellLayer
             zoneFlip = !zoneFlip;
         }
 
-// Pout<< "Modifying face " << mf[faceI]
-//     << " newFace: " << newFace << nl
-//     << " newOwner: " << newOwner
-//     << " newNeighbour: " << newNeighbour
-//     << " flipFace: " << flipFace
-//     << " newPatchID: " << newPatchID
-//     << " newZoneID: " << newZoneID << nl
-//     << " oldOwn: " << own[mf[faceI]]
-//     << " oldNei: " << nei[mf[faceI]] << endl;
+        if (debug > 1)
+        {
+            Pout<< "Modifying face " << mf[faceI]
+                << " newFace: " << newFace << nl
+                << " newOwner: " << newOwner
+                << " newNeighbour: " << newNeighbour
+                << " flipFace: " << flipFace
+                << " newPatchID: " << newPatchID
+                << " newZoneID: " << newZoneID << nl
+                << " oldOwn: " << own[mf[faceI]]
+                << " oldNei: " << nei[mf[faceI]] << endl;
+        }
 
         ref.setAction
         (

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,9 +27,6 @@ License
 #include "demandDrivenData.H"
 #include "polyMesh.H"
 #include "mapPolyMesh.H"
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -168,7 +165,7 @@ void Foam::faceMapper::calcAddressing() const
         }
 
 
-        // Grab inserted points (for them the size of addressing is still zero)
+        // Grab inserted faces (for them the size of addressing is still zero)
 
         insertedFaceLabelsPtr_ = new labelList(mesh_.nFaces());
         labelList& insertedFaces = *insertedFaceLabelsPtr_;
@@ -411,15 +408,6 @@ const Foam::labelList& Foam::faceMapper::oldPatchSizes() const
 {
     return mpm_.oldPatchSizes();
 }
-
-
-// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * Friend Functions  * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
 
 
 // ************************************************************************* //
