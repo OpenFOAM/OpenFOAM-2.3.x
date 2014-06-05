@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -51,6 +51,11 @@ class wedgePointPatch
 :
     public facePointPatch
 {
+    // Private data
+
+        //- Local reference cast into the symmetryPlane patch
+        const wedgePolyPatch& wedgePolyPatch_;
+
 
 public:
 
@@ -65,10 +70,7 @@ public:
         (
             const polyPatch& patch,
             const pointBoundaryMesh& bm
-        )
-        :
-            facePointPatch(patch, bm)
-        {}
+        );
 
 
     // Member Functions
@@ -85,6 +87,12 @@ public:
             const label pointi,
             pointConstraint&
         ) const;
+
+        //- Return symmetry plane normal
+        const vector& n() const
+        {
+            return wedgePolyPatch_.n();
+        }
 };
 
 

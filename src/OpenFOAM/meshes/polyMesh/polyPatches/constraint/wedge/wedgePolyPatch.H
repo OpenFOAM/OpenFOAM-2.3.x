@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -59,7 +59,10 @@ class wedgePolyPatch
         vector centreNormal_;
 
         //- Normal to the patch
-        vector patchNormal_;
+        vector n_;
+
+        //- Cosine of the wedge angle
+        scalar cosAngle_;
 
         //- Face transformation tensor
         tensor faceT_;
@@ -67,8 +70,13 @@ class wedgePolyPatch
         //- Neighbour-cell transformation tensor
         tensor cellT_;
 
-        //- Calculate the above tensors
-        void initTransforms();
+
+protected:
+
+    // Protected Member Functions
+
+        //- Calculate the patch geometry
+        virtual void calcGeometry(PstreamBuffers&);
 
 
 public:
@@ -180,9 +188,15 @@ public:
             }
 
             //- Return the normal to the patch
-            const vector& patchNormal() const
+            const vector& n() const
             {
-                return patchNormal_;
+                return n_;
+            }
+
+            //- Return the cosine of the wedge angle
+            scalar cosAngle() const
+            {
+                return cosAngle_;
             }
 
             //- Return face transformation tensor

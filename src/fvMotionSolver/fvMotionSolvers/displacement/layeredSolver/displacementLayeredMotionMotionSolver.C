@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,6 +30,8 @@ License
 #include "PointEdgeWave.H"
 #include "syncTools.H"
 #include "interpolationTable.H"
+#include "mapPolyMesh.H"
+#include "pointConstraints.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -111,11 +113,13 @@ void Foam::displacementLayeredMotionMotionSolver::calcZoneMask
             0
         );
 
-
-        Info<< "On cellZone " << cz.name()
-            << " marked " << returnReduce(nPoints, sumOp<label>())
-            << " points and " << returnReduce(nEdges, sumOp<label>())
-            << " edges." << endl;
+        if (debug)
+        {
+            Info<< "On cellZone " << cz.name()
+                << " marked " << returnReduce(nPoints, sumOp<label>())
+                << " points and " << returnReduce(nEdges, sumOp<label>())
+                << " edges." << endl;
+        }
     }
 }
 
@@ -239,14 +243,21 @@ Foam::displacementLayeredMotionMotionSolver::faceZoneEvaluate
         {
             FatalIOErrorIn
             (
-                "displacementLayeredMotionMotionSolver::faceZoneEvaluate(..)",
+                "displacementLayeredMotionMotionSolver::faceZoneEvaluate"
+                "("
+                    "const faceZone&, "
+                    "const labelList&, "
+                    "const dictionary&, "
+                    "const PtrList<pointVectorField>&, "
+                    "const label"
+                ") const",
                 *this
-            )   << "slip can only be used on second faceZonePatch of pair."
+            )   << "slip can only be used on second faceZone patch of pair.  "
                 << "FaceZone:" << fz.name()
                 << exit(FatalIOError);
         }
         // Use field set by previous bc
-        fld = vectorField(patchDisp[patchI-1], meshPoints);
+        fld = vectorField(patchDisp[patchI - 1], meshPoints);
     }
     else if (type == "follow")
     {
@@ -269,7 +280,14 @@ Foam::displacementLayeredMotionMotionSolver::faceZoneEvaluate
     {
         FatalIOErrorIn
         (
-            "displacementLayeredMotionMotionSolver::faceZoneEvaluate(..)",
+            "displacementLayeredMotionMotionSolver::faceZoneEvaluate"
+            "("
+                "const faceZone&, "
+                "const labelList&, "
+                "const dictionary&, "
+                "const PtrList<pointVectorField>&, "
+                "const label"
+            ") const",
             *this
         )   << "Unknown faceZonePatch type " << type << " for faceZone "
             << fz.name() << exit(FatalIOError);
@@ -295,9 +313,9 @@ void Foam::displacementLayeredMotionMotionSolver::cellZoneSolve
         FatalIOErrorIn
         (
             "displacementLayeredMotionMotionSolver::"
-            "correctBoundaryConditions(..)",
+            "cellZoneSolve(const label, const dictionary&)",
             *this
-        )   << "Can only handle 2 faceZones (= patches) per cellZone. "
+        )   << "Two faceZones (patches) must be specifed per cellZone. "
             << " cellZone:" << cellZoneI
             << " patches:" << patchesDict.toc()
             << exit(FatalIOError);
@@ -317,7 +335,7 @@ void Foam::displacementLayeredMotionMotionSolver::cellZoneSolve
             FatalIOErrorIn
             (
                 "displacementLayeredMotionMotionSolver::"
-                "correctBoundaryConditions(..)",
+                "cellZoneSolve(const label, const dictionary&)",
                 *this
             )   << "Cannot find faceZone " << faceZoneName
                 << endl << "Valid zones are " << mesh().faceZones().names()
@@ -386,14 +404,17 @@ void Foam::displacementLayeredMotionMotionSolver::cellZoneSolve
             patchI
         );
 
-
-Info<< "For cellZone:" << cellZoneI
-    << " for faceZone:" << fz.name() << " nPoints:" << tseed().size()
-    << " have patchField:"
-    << " max:" << gMax(tseed())
-    << " min:" << gMin(tseed())
-    << " avg:" << gAverage(tseed())
-    << endl;
+        if (debug)
+        {
+            Info<< "For cellZone:" << cellZoneI
+                << " for faceZone:" << fz.name()
+                << " nPoints:" << tseed().size()
+                << " have patchField:"
+                << " max:" << gMax(tseed())
+                << " min:" << gMin(tseed())
+                << " avg:" << gAverage(tseed())
+                << endl;
+        }
 
         // Set distance and transported value
         walkStructured
@@ -417,16 +438,15 @@ Info<< "For cellZone:" << cellZoneI
 
     // Solve
     // ~~~~~
-    // solving the interior is just interpolating
 
     if (debug)
     {
-        // Get normalised distance
+        // Normalised distance
         pointScalarField distance
         (
             IOobject
             (
-                "distance",
+                mesh().cellZones()[cellZoneI].name() + ":distance",
                 mesh().time().timeName(),
                 mesh(),
                 IOobject::NO_READ,
@@ -434,40 +454,66 @@ Info<< "For cellZone:" << cellZoneI
                 false
             ),
             pointMesh::New(mesh()),
-            dimensionedScalar("distance", dimLength, 0.0)
+            dimensionedScalar("zero", dimLength, 0.0)
         );
+
         forAll(distance, pointI)
+        {
+            scalar d1 = patchDist[0][pointI];
+            scalar d2 = patchDist[1][pointI];
+            if (d1 + d2 > SMALL)
+            {
+                scalar s = d1/(d1 + d2);
+                distance[pointI] = s;
+            }
+        }
+
+        Info<< "Writing " << pointScalarField::typeName
+            << distance.name() << " to "
+            << mesh().time().timeName() << endl;
+        distance.write();
+    }
+
+
+    const word interpolationScheme = zoneDict.lookup("interpolationScheme");
+
+    if (interpolationScheme == "oneSided")
+    {
+        forAll(pointDisplacement_, pointI)
+        {
+            if (isZonePoint[pointI])
+            {
+                pointDisplacement_[pointI] = patchDisp[0][pointI];
+            }
+        }
+    }
+    else if (interpolationScheme == "linear")
+    {
+        forAll(pointDisplacement_, pointI)
         {
             if (isZonePoint[pointI])
             {
                 scalar d1 = patchDist[0][pointI];
                 scalar d2 = patchDist[1][pointI];
-                if (d1+d2 > SMALL)
-                {
-                    scalar s = d1/(d1+d2);
-                    distance[pointI] = s;
-                }
+                scalar s = d1/(d1 + d2 + VSMALL);
+
+                const vector& pd1 = patchDisp[0][pointI];
+                const vector& pd2 = patchDisp[1][pointI];
+
+                pointDisplacement_[pointI] = (1 - s)*pd1 + s*pd2;
             }
         }
-        Info<< "Writing distance pointScalarField to "
-            << mesh().time().timeName() << endl;
-        distance.write();
     }
-
-    // Average
-    forAll(pointDisplacement_, pointI)
+    else
     {
-        if (isZonePoint[pointI])
-        {
-            scalar d1 = patchDist[0][pointI];
-            scalar d2 = patchDist[1][pointI];
-
-            scalar s = d1/(d1+d2+VSMALL);
-
-            pointDisplacement_[pointI] =
-                (1-s)*patchDisp[0][pointI]
-              + s*patchDisp[1][pointI];
-        }
+        FatalErrorIn
+        (
+            "displacementLayeredMotionMotionSolver::"
+            "cellZoneSolve(const label, const dictionary&)"
+        )
+            << "Invalid interpolationScheme: " << interpolationScheme
+            << ". Valid schemes are 'oneSided' and 'linear'"
+            << exit(FatalError);
     }
 }
 
@@ -502,23 +548,19 @@ Foam::displacementLayeredMotionMotionSolver::curPoints() const
         points0() + pointDisplacement_.internalField()
     );
 
-    twoDCorrectPoints(tcurPoints());
-
     return tcurPoints;
 }
 
 
 void Foam::displacementLayeredMotionMotionSolver::solve()
 {
-    // The points have moved so before interpolation update
-    // the motionSolver accordingly
+    // The points have moved so before interpolation update the motionSolver
     movePoints(mesh().points());
 
     // Apply boundary conditions
     pointDisplacement_.boundaryField().updateCoeffs();
 
-    // Apply all regions (=cellZones)
-
+    // Solve motion on all regions (=cellZones)
     const dictionary& regionDicts = coeffDict().subDict("regions");
     forAllConstIter(dictionary, regionDicts, regionIter)
     {
@@ -527,14 +569,13 @@ void Foam::displacementLayeredMotionMotionSolver::solve()
 
         label zoneI = mesh().cellZones().findZoneID(cellZoneName);
 
-        Info<< "solve : zone:" << cellZoneName << " index:" << zoneI
-            << endl;
+        Info<< "solving for zone: " << cellZoneName << endl;
 
         if (zoneI == -1)
         {
             FatalIOErrorIn
             (
-                "displacementLayeredMotionMotionSolver::solve(..)",
+                "displacementLayeredMotionMotionSolver::solve()",
                 *this
             )   << "Cannot find cellZone " << cellZoneName
                 << endl << "Valid zones are " << mesh().cellZones().names()
@@ -545,7 +586,9 @@ void Foam::displacementLayeredMotionMotionSolver::solve()
     }
 
     // Update pointDisplacement for solved values
-    pointDisplacement_.correctBoundaryConditions();
+    const pointConstraints& pcs =
+        pointConstraints::New(pointDisplacement_.mesh());
+    pcs.constrainDisplacement(pointDisplacement_, false);
 }
 
 
@@ -555,6 +598,27 @@ void Foam::displacementLayeredMotionMotionSolver::updateMesh
 )
 {
     displacementMotionSolver::updateMesh(mpm);
+
+    const vectorField displacement(this->newPoints() - points0_);
+
+    forAll(points0_, pointI)
+    {
+        label oldPointI = mpm.pointMap()[pointI];
+
+        if (oldPointI >= 0)
+        {
+            label masterPointI = mpm.reversePointMap()[oldPointI];
+
+            if ((masterPointI != pointI))
+            {
+                // newly inserted point in this cellZone
+
+                // need to set point0 so that it represents the position that
+                // it would have had if it had existed for all time
+                points0_[pointI] -= displacement[pointI];
+            }
+        }
+    }
 }
 
 
