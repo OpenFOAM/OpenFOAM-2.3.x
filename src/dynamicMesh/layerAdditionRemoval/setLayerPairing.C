@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -88,10 +88,14 @@ bool Foam::layerAdditionRemoval::setLayerPairing() const
 
     facesPairingPtr_ = new labelList(mf.size(), -1);
     labelList& ftc = *facesPairingPtr_;
-    // Pout<< "meshPoints: " << meshPoints << nl
-    //      << "localPoints: "
-    //     << mesh.faceZones()[faceZoneID_.index()]().localPoints()
-    //     << endl;
+
+    if (debug > 1)
+    {
+        Pout<< "meshPoints: " << meshPoints << nl
+            << "localPoints: "
+            << mesh.faceZones()[faceZoneID_.index()]().localPoints()
+            << endl;
+    }
 
     // For all faces, create the mapping
     label nPointErrors = 0;
@@ -119,12 +123,15 @@ bool Foam::layerAdditionRemoval::setLayerPairing() const
             continue;
         }
 
-// Pout<< "curMasterFace: " << faces[mf[faceI]] << nl
-//     << "cell shape: " << mesh.cellShapes()[mc[faceI]] << nl
-//     << "curLocalFace: " << curLocalFace << nl
-//     << "lidFace: " << lidFace
-//     << " master index: " << lidFace.masterIndex()
-//     << " oppositeIndex: " << lidFace.oppositeIndex() << endl;
+        if (debug > 1)
+        {
+            Pout<< "curMasterFace: " << faces[mf[faceI]] << nl
+                << "cell shape: " << mesh.cellShapes()[mc[faceI]] << nl
+                << "curLocalFace: " << curLocalFace << nl
+                << "lidFace: " << lidFace
+                << " master index: " << lidFace.masterIndex()
+                << " oppositeIndex: " << lidFace.oppositeIndex() << endl;
+        }
 
         // Grab the opposite face for face collapse addressing
         ftc[faceI] = lidFace.oppositeIndex();
@@ -145,17 +152,20 @@ bool Foam::layerAdditionRemoval::setLayerPairing() const
                 if (ptc[clp] != lidFace[pointI])
                 {
                     nPointErrors++;
-//                     Pout<< "Topological error in cell layer pairing.  "
-//                         << "This mesh is either topologically incorrect "
-//                         << "or the master afce layer is not defined "
-//                         << "consistently.  Please check the "
-//                         << "face zone flip map." << nl
-//                         << "First index: " << ptc[clp]
-//                         << " new index: " << lidFace[pointI] << endl;
+
+                    if (debug > 1)
+                    {
+                        Pout<< "Topological error in cell layer pairing.  "
+                            << "This mesh is either topologically incorrect "
+                            << "or the master face layer is not defined "
+                            << "consistently.  Please check the "
+                            << "face zone flip map." << nl
+                            << "First index: " << ptc[clp]
+                            << " new index: " << lidFace[pointI] << endl;
+                    }
                 }
             }
         }
-//         Pout<< "ptc: " << ptc << endl;
     }
 
     reduce(nPointErrors, sumOp<label>());

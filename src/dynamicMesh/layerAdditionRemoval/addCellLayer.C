@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,7 +35,6 @@ License
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-//- Calculate the offset to the next layer
 Foam::tmp<Foam::vectorField> Foam::layerAdditionRemoval::extrusionDir() const
 {
     const polyMesh& mesh = topoChanger().mesh();
@@ -79,6 +78,7 @@ Foam::tmp<Foam::vectorField> Foam::layerAdditionRemoval::extrusionDir() const
 
         extrusionDir = minLayerThickness_*masterFaceLayer.pointNormals();
     }
+
     return textrusionDir;
 }
 
@@ -120,7 +120,7 @@ void Foam::layerAdditionRemoval::addCellLayer
 
     // Get the extrusion direction for the added points
 
-    tmp<vectorField> tpointOffsets = extrusionDir();
+    const vectorField pointOffsets(extrusionDir());
 
     // Add the new points
     labelList addedPoints(mp.size());
@@ -135,7 +135,7 @@ void Foam::layerAdditionRemoval::addCellLayer
                 polyAddPoint
                 (
                     points[mp[pointI]]                  // point
-                  + addDelta_*tpointOffsets()[pointI],
+                  + addDelta_*pointOffsets[pointI],
                     mp[pointI],                         // master point
                     -1,                                 // zone for point
                     true                                // supports a cell
@@ -143,14 +143,18 @@ void Foam::layerAdditionRemoval::addCellLayer
             );
     }
 
-    // Pout<< "mp: " << mp << " addedPoints: " << addedPoints << endl;
+    if (debug > 1)
+    {
+        Pout<< "mp: " << mp << " addedPoints: " << addedPoints << endl;
+    }
+
     // Create the cells
 
     const labelList& mc =
         mesh.faceZones()[faceZoneID_.index()].masterCells();
     const labelList& sc =
         mesh.faceZones()[faceZoneID_.index()].slaveCells();
-    // Pout<< "mc: " << mc << " sc: " << sc << endl;
+
     const labelList& mf = mesh.faceZones()[faceZoneID_.index()];
     const boolList& mfFlip = mesh.faceZones()[faceZoneID_.index()].flipMap();
 
@@ -231,10 +235,13 @@ void Foam::layerAdditionRemoval::addCellLayer
             )
         );
 
-        // Pout<< "adding face: " << newFace
-        //     << " own: " << mc[faceI]
-        //     << " nei: " << addedCells[faceI]
-        //     << endl;
+        if (debug > 1)
+        {
+            Pout<< "adding face: " << newFace
+                << " own: " << mc[faceI]
+                << " nei: " << addedCells[faceI]
+                << endl;
+        }
     }
 
     // Modify the faces from the master zone for the new neighbour
@@ -267,10 +274,14 @@ void Foam::layerAdditionRemoval::addCellLayer
                 )
             );
 
-            // Pout<< "Modifying a boundary face. Face: " << curfaceID
-            //     << " flip: " << mfFlip[faceI]
-            //     << endl;
+            if (debug > 1)
+            {
+                Pout<< "Modifying a boundary face. Face: " << curfaceID
+                    << " flip: " << mfFlip[faceI]
+                    << endl;
+            }
         }
+
         // If slave cell is owner, the face remains the same (but with
         // a new neighbour - the newly created cell).  Otherwise, the
         // face is flipped.
@@ -293,10 +304,13 @@ void Foam::layerAdditionRemoval::addCellLayer
                 )
             );
 
-            // Pout<< "modify face, no flip " << curfaceID
-            //     << " own: " << own[curfaceID]
-            //     << " nei: " << addedCells[faceI]
-            //     << endl;
+            if (debug > 1)
+            {
+                Pout<< "modify face, no flip " << curfaceID
+                    << " own: " << own[curfaceID]
+                    << " nei: " << addedCells[faceI]
+                    << endl;
+            }
         }
         else
         {
@@ -317,10 +331,13 @@ void Foam::layerAdditionRemoval::addCellLayer
                 )
             );
 
-            // Pout<< "modify face, with flip " << curfaceID
-            //     << " own: " << own[curfaceID]
-            //     << " nei: " << addedCells[faceI]
-            //     << endl;
+            if (debug > 1)
+            {
+                Pout<< "modify face, with flip " << curfaceID
+                    << " own: " << own[curfaceID]
+                    << " nei: " << addedCells[faceI]
+                    << endl;
+            }
         }
     }
 
@@ -362,10 +379,13 @@ void Foam::layerAdditionRemoval::addCellLayer
             )
         );
 
-        // Pout<< "Add internal face off edge: " << newFace
-        //     << " own: " << addedCells[edgeFaces[curEdgeID][0]]
-        //     << " nei: " << addedCells[edgeFaces[curEdgeID][1]]
-        //     << endl;
+        if (debug > 1)
+        {
+            Pout<< "Add internal face off edge: " << newFace
+                << " own: " << addedCells[edgeFaces[curEdgeID][0]]
+                << " nei: " << addedCells[edgeFaces[curEdgeID][1]]
+                << endl;
+        }
     }
 
     // Prepare creation of faces from boundary edges.
@@ -448,10 +468,13 @@ void Foam::layerAdditionRemoval::addCellLayer
             )
         );
 
-        // Pout<< "add boundary face: " << newFace
-        //     << " into patch " << patchID
-        //     << " own: " << addedCells[edgeFaces[curEdgeID][0]]
-        //     << endl;
+        if (debug > 1)
+        {
+            Pout<< "add boundary face: " << newFace
+                << " into patch " << patchID
+                << " own: " << addedCells[edgeFaces[curEdgeID][0]]
+                << endl;
+        }
     }
 
     // Modify the remaining faces of the master cells to reconnect to the new
@@ -562,12 +585,15 @@ void Foam::layerAdditionRemoval::addCellLayer
                     )
                 );
 
-                // Pout<< "modifying stick-out face. Internal Old face: "
-                //     << oldFace
-                //     << " new face: " << newFace
-                //     << " own: " << own[curFaceID]
-                //     << " nei: " << nei[curFaceID]
-                //     << endl;
+                if (debug > 1)
+                {
+                    Pout<< "modifying stick-out face. Internal Old face: "
+                        << oldFace
+                        << " new face: " << newFace
+                        << " own: " << own[curFaceID]
+                        << " nei: " << nei[curFaceID]
+                        << endl;
+                }
             }
             else
             {
@@ -588,22 +614,24 @@ void Foam::layerAdditionRemoval::addCellLayer
                     )
                 );
 
-                // Pout<< "modifying stick-out face. Boundary Old face: "
-                //     << oldFace
-                //     << " new face: " << newFace
-                //     << " own: " << own[curFaceID]
-                //     << " patch: "
-                //     << mesh.boundaryMesh().whichPatch(curFaceID)
-                //     << endl;
+                if (debug > 1)
+                {
+                    Pout<< "modifying stick-out face. Boundary Old face: "
+                        << oldFace
+                        << " new face: " << newFace
+                        << " own: " << own[curFaceID]
+                        << " patch: "
+                        << mesh.boundaryMesh().whichPatch(curFaceID)
+                        << endl;
+                }
             }
         }
     }
 
     if (debug)
     {
-        Pout<< "void layerAdditionRemoval::addCellLayer("
-            << "polyTopoChange& ref) const "
-            << " for object " << name() << " : "
+        Pout<< "void layerAdditionRemoval::addCellLayer(polyTopoChange&) const "
+            << " for object " << name() << ": "
             << "Finished adding cell layer" << endl;
     }
 }

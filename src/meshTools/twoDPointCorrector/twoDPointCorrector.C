@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,25 +28,19 @@ License
 #include "wedgePolyPatch.H"
 #include "emptyPolyPatch.H"
 #include "SubField.H"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
+#include "meshTools.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-const scalar twoDPointCorrector::edgeOrthogonalityTol = 1.0 - 1e-4;
+const Foam::scalar Foam::twoDPointCorrector::edgeOrthogonalityTol = 1.0 - 1e-4;
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void twoDPointCorrector::calcAddressing() const
+void Foam::twoDPointCorrector::calcAddressing() const
 {
     // Find geometry normal
     planeNormalPtr_ = new vector(0, 0, 0);
     vector& pn = *planeNormalPtr_;
-
-    bool isWedge = false;
 
     // Algorithm:
     // Attempt to find wedge patch and work out the normal from it.
@@ -61,9 +55,15 @@ void twoDPointCorrector::calcAddressing() const
     {
         if (isA<wedgePolyPatch>(patches[patchI]))
         {
-            isWedge = true;
+            isWedge_ = true;
 
-            pn = refCast<const wedgePolyPatch>(patches[patchI]).centreNormal();
+            const wedgePolyPatch& wp =
+                refCast<const wedgePolyPatch>(patches[patchI]);
+
+            pn = wp.centreNormal();
+
+            wedgeAxis_ = wp.axis();
+            wedgeAngle_ = mag(acos(wp.cosAngle()));
 
             if (polyMesh::debug)
             {
@@ -75,7 +75,7 @@ void twoDPointCorrector::calcAddressing() const
     }
 
     // Try to find an empty patch with faces
-    if (!isWedge)
+    if (!isWedge_)
     {
         forAll(patches, patchI)
         {
@@ -96,11 +96,8 @@ void twoDPointCorrector::calcAddressing() const
 
     if (mag(pn) < VSMALL)
     {
-        FatalErrorIn
-        (
-            "twoDPointCorrector::twoDPointCorrector(const polyMesh& mesh, "
-            "const vector& n)"
-        )   << "Cannot determine normal vector from patches."
+        FatalErrorIn("twoDPointCorrector::calcAddressing()")
+            << "Cannot determine normal vector from patches."
             << abort(FatalError);
     }
     else
@@ -125,9 +122,9 @@ void twoDPointCorrector::calcAddressing() const
 
     forAll(meshEdges, edgeI)
     {
-        vector edgeVector =
-            meshEdges[edgeI].vec(meshPoints)/
-            (meshEdges[edgeI].mag(meshPoints) + VSMALL);
+        const edge& e = meshEdges[edgeI];
+
+        vector edgeVector = e.vec(meshPoints)/(e.mag(meshPoints) + VSMALL);
 
         if (mag(edgeVector & pn) > edgeOrthogonalityTol)
         {
@@ -141,15 +138,12 @@ void twoDPointCorrector::calcAddressing() const
     // Construction check: number of points in a read 2-D or wedge geometry
     // should be odd and the number of edges normal to the plane should be
     // exactly half the number of points
-    if (!isWedge)
+    if (!isWedge_)
     {
         if (meshPoints.size() % 2 != 0)
         {
-            WarningIn
-            (
-                "twoDPointCorrector::twoDPointCorrector("
-                "const polyMesh& mesh, const vector& n)"
-            )   << "the number of vertices in the geometry "
+            WarningIn("twoDPointCorrector::calcAddressing()")
+                << "the number of vertices in the geometry "
                 << "is odd - this should not be the case for a 2-D case. "
                 << "Please check the geometry."
                 << endl;
@@ -157,11 +151,8 @@ void twoDPointCorrector::calcAddressing() const
 
         if (2*nNormalEdges != meshPoints.size())
         {
-            WarningIn
-            (
-                "twoDPointCorrector::twoDPointCorrector("
-                "const polyMesh& mesh, const vector& n)"
-            )   << "The number of points in the mesh is "
+            WarningIn("twoDPointCorrector::calcAddressing()")
+                << "The number of points in the mesh is "
                 << "not equal to twice the number of edges normal to the plane "
                 << "- this may be OK only for wedge geometries.\n"
                 << "    Please check the geometry or adjust "
@@ -174,21 +165,38 @@ void twoDPointCorrector::calcAddressing() const
 }
 
 
-void twoDPointCorrector::clearAddressing() const
+void Foam::twoDPointCorrector::clearAddressing() const
 {
     deleteDemandDrivenData(planeNormalPtr_);
     deleteDemandDrivenData(normalEdgeIndicesPtr_);
 }
 
 
+void Foam::twoDPointCorrector::snapToWedge
+(
+    const vector& n,
+    const point& A,
+    point& p
+) const
+{
+    scalar ADash = mag(A - wedgeAxis_*(wedgeAxis_ & A));
+    vector pDash = ADash*tan(wedgeAngle_)*planeNormal();
+
+    p = A + sign(n & p)*pDash;
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-twoDPointCorrector::twoDPointCorrector(const polyMesh& mesh)
+Foam::twoDPointCorrector::twoDPointCorrector(const polyMesh& mesh)
 :
     MeshObject<polyMesh, Foam::UpdateableMeshObject, twoDPointCorrector>(mesh),
     required_(mesh_.nGeometricD() == 2),
     planeNormalPtr_(NULL),
-    normalEdgeIndicesPtr_(NULL)
+    normalEdgeIndicesPtr_(NULL),
+    isWedge_(false),
+    wedgeAxis_(vector::zero),
+    wedgeAngle_(0.0)
 {}
 
 
@@ -203,7 +211,7 @@ Foam::twoDPointCorrector::~twoDPointCorrector()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-direction twoDPointCorrector::normalDir() const
+Foam::direction Foam::twoDPointCorrector::normalDir() const
 {
     const vector& pn = planeNormal();
 
@@ -231,8 +239,7 @@ direction twoDPointCorrector::normalDir() const
 }
 
 
-// Return plane normal
-const vector& twoDPointCorrector::planeNormal() const
+const Foam::vector& Foam::twoDPointCorrector::planeNormal() const
 {
     if (!planeNormalPtr_)
     {
@@ -243,8 +250,7 @@ const vector& twoDPointCorrector::planeNormal() const
 }
 
 
-// Return indices of normal edges.
-const labelList& twoDPointCorrector::normalEdgeIndices() const
+const Foam::labelList& Foam::twoDPointCorrector::normalEdgeIndices() const
 {
     if (!normalEdgeIndicesPtr_)
     {
@@ -255,7 +261,7 @@ const labelList& twoDPointCorrector::normalEdgeIndices() const
 }
 
 
-void twoDPointCorrector::correctPoints(pointField& p) const
+void Foam::twoDPointCorrector::correctPoints(pointField& p) const
 {
     if (!required_) return;
 
@@ -277,16 +283,25 @@ void twoDPointCorrector::correctPoints(pointField& p) const
         point& pEnd = p[meshEdges[neIndices[edgeI]].end()];
 
         // calculate average point position
-        const point A = 0.5*(pStart + pEnd);
+        point A = 0.5*(pStart + pEnd);
+        meshTools::constrainToMeshCentre(mesh_, A);
 
-        // correct point locations
-        pStart = A + pn*(pn & (pStart - A));
-        pEnd = A + pn*(pn & (pEnd - A));
+        if (isWedge_)
+        {
+            snapToWedge(pn, A, pStart);
+            snapToWedge(pn, A, pEnd);
+        }
+        else
+        {
+            // correct point locations
+            pStart = A + pn*(pn & (pStart - A));
+            pEnd = A + pn*(pn & (pEnd - A));
+        }
     }
 }
 
 
-void twoDPointCorrector::correctDisplacement
+void Foam::twoDPointCorrector::correctDisplacement
 (
     const pointField& p,
     vectorField& disp
@@ -316,29 +331,36 @@ void twoDPointCorrector::correctDisplacement
         point pEnd = p[endPointI] + disp[endPointI];
 
         // calculate average point position
-        const point A = 0.5*(pStart + pEnd);
+        point A = 0.5*(pStart + pEnd);
+        meshTools::constrainToMeshCentre(mesh_, A);
 
-        // correct point locations
-        disp[startPointI] = (A + pn*(pn & (pStart - A))) - p[startPointI];
-        disp[endPointI] = (A + pn*(pn & (pEnd - A))) - p[endPointI];
+        if (isWedge_)
+        {
+            snapToWedge(pn, A, pStart);
+            snapToWedge(pn, A, pEnd);
+            disp[startPointI] = pStart - p[startPointI];
+            disp[endPointI] = pEnd - p[endPointI];
+        }
+        else
+        {
+            // correct point locations
+            disp[startPointI] = (A + pn*(pn & (pStart - A))) - p[startPointI];
+            disp[endPointI] = (A + pn*(pn & (pEnd - A))) - p[endPointI];
+        }
     }
 }
 
 
-void twoDPointCorrector::updateMesh(const mapPolyMesh&)
+void Foam::twoDPointCorrector::updateMesh(const mapPolyMesh&)
 {
     clearAddressing();
 }
 
 
-bool twoDPointCorrector::movePoints()
+bool Foam::twoDPointCorrector::movePoints()
 {
     return true;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

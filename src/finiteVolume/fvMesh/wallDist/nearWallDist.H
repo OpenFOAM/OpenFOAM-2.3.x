@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -38,7 +38,6 @@ SourceFiles
 
 #include "volFields.H"
 
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -47,7 +46,7 @@ namespace Foam
 class fvMesh;
 
 /*---------------------------------------------------------------------------*\
-                           Class nearWallDist Declaration
+                        Class nearWallDist Declaration
 \*---------------------------------------------------------------------------*/
 
 class nearWallDist
@@ -62,8 +61,8 @@ class nearWallDist
 
     // Private Member Functions
 
-        //- Do all calculations.
-        void doAll();
+        //- Do all calculations
+        void calculate();
 
         //- Disallow default bitwise copy construct
         nearWallDist(const nearWallDist&);
