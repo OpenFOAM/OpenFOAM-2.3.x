@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -34,6 +34,76 @@ namespace Foam
 }
 
 
+// * * * * * * * * * * * * * Protected Data Members * * * * * * * * * * * * * //
+
+Foam::IOobject Foam::displacementMotionSolver::points0IO
+(
+    const polyMesh& mesh
+) const
+{
+    const word instance =
+        time().findInstance
+        (
+            mesh.meshDir(),
+            "points0",
+            IOobject::READ_IF_PRESENT
+        );
+
+    if (instance != time().constant())
+    {
+        // points0 written to a time folder
+
+        return
+            IOobject
+            (
+                "points0",
+                instance,
+                polyMesh::meshSubDir,
+                mesh,
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE,
+                false
+            );
+    }
+    else
+    {
+        // check that points0 are actually in constant directory
+
+        IOobject io
+        (
+            "points0",
+            instance,
+            polyMesh::meshSubDir,
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE,
+            false
+        );
+
+        if (io.headerOk())
+        {
+            return io;
+        }
+        else
+        {
+            // copy of original mesh points
+
+            return
+                IOobject
+                (
+                    "points",
+                    instance,
+                    polyMesh::meshSubDir,
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::NO_WRITE,
+                    false
+                );
+        }
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::displacementMotionSolver::displacementMotionSolver
@@ -49,29 +119,14 @@ Foam::displacementMotionSolver::displacementMotionSolver
         IOobject
         (
             "pointDisplacement",
-            mesh.time().timeName(),
+            time().timeName(),
             mesh,
             IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
         pointMesh::New(mesh)
     ),
-    points0_
-    (
-        pointIOField
-        (
-            IOobject
-            (
-                "points",
-                mesh.time().constant(),
-                polyMesh::meshSubDir,
-                mesh,
-                IOobject::MUST_READ,
-                IOobject::NO_WRITE,
-                false
-            )
-        )
-    )
+    points0_(pointIOField(points0IO(mesh)))
 {
     if (points0_.size() != mesh.nPoints())
     {
@@ -81,7 +136,8 @@ Foam::displacementMotionSolver::displacementMotionSolver
             "displacementMotionSolver\n"
             "(\n"
             "    const polyMesh&,\n"
-            "    const IOdictionary&\n"
+            "    const IOdictionary&,\n"
+            "    const word&\n"
             ")"
         )   << "Number of points in mesh " << mesh.nPoints()
             << " differs from number of points " << points0_.size()
@@ -90,7 +146,7 @@ Foam::displacementMotionSolver::displacementMotionSolver
                 IOobject
                 (
                     "points",
-                    mesh.time().constant(),
+                    time().constant(),
                     polyMesh::meshSubDir,
                     mesh,
                     IOobject::MUST_READ,
@@ -118,7 +174,7 @@ void Foam::displacementMotionSolver::movePoints(const pointField&)
 
 void Foam::displacementMotionSolver::updateMesh(const mapPolyMesh& mpm)
 {
-    // pointMesh already updates pointFields.
+    // pointMesh already updates pointFields
 
     motionSolver::updateMesh(mpm);
 
@@ -136,7 +192,7 @@ void Foam::displacementMotionSolver::updateMesh(const mapPolyMesh& mpm)
 
     // Note: boundBox does reduce
     const vector span0 = boundBox(points0_).span();
-    const vector span  = boundBox(points).span();
+    const vector span = boundBox(points).span();
 
     vector scaleFactors(cmptDivide(span0, span));
 
@@ -156,11 +212,11 @@ void Foam::displacementMotionSolver::updateMesh(const mapPolyMesh& mpm)
             }
             else
             {
-                // New point. Assume motion is scaling.
+                // New point - assume motion is scaling
                 newPoints0[pointI] = points0_[oldPointI] + cmptMultiply
                 (
                     scaleFactors,
-                    points[pointI]-points[masterPointI]
+                    points[pointI] - points[masterPointI]
                 );
             }
         }
@@ -170,12 +226,21 @@ void Foam::displacementMotionSolver::updateMesh(const mapPolyMesh& mpm)
             (
                 "displacementMotionSolver::updateMesh"
                 "(const mapPolyMesh&)"
-            )   << "Cannot work out coordinates of introduced vertices."
-                << " New vertex " << pointI << " at coordinate "
+            )   << "Cannot determine co-ordinates of introduced vertices."
+                << " New vertex " << pointI << " at co-ordinate "
                 << points[pointI] << exit(FatalError);
         }
     }
+
+    twoDCorrectPoints(newPoints0);
+
     points0_.transfer(newPoints0);
+
+    // points0 changed - set to write and check-in to database
+    points0_.rename("points0");
+    points0_.writeOpt() = IOobject::AUTO_WRITE;
+    points0_.instance() = time().timeName();
+    points0_.checkIn();
 }
 
 

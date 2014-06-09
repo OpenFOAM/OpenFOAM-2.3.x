@@ -23,66 +23,74 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "TomiyamaAnalytic.H"
-#include "phasePair.H"
+#include "BSplineEdge.H"
 #include "addToRunTimeSelectionTable.H"
+
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace dragModels
-{
-    defineTypeNameAndDebug(TomiyamaAnalytic, 0);
-    addToRunTimeSelectionTable(dragModel, TomiyamaAnalytic, dictionary);
-}
+    defineTypeNameAndDebug(BSplineEdge, 0);
+
+    addToRunTimeSelectionTable
+    (
+        curvedEdge,
+        BSplineEdge,
+        Istream
+    );
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::dragModels::TomiyamaAnalytic::TomiyamaAnalytic
+Foam::BSplineEdge::BSplineEdge
 (
-    const dictionary& dict,
-    const phasePair& pair,
-    const bool registerObject
+    const pointField& points,
+    const label start,
+    const label end,
+    const pointField& internalPoints
 )
 :
-    dragModel(dict, pair, registerObject),
-    residualRe_("residualRe", dimless, dict.lookup("residualRe")),
-    residualEo_("residualEo", dimless, dict.lookup("residualEo")),
-    residualE_("residualE", dimless, dict.lookup("residualE"))
+    curvedEdge(points, start, end),
+    BSpline(appendEndPoints(points, start, end, internalPoints))
 {}
+
+
+Foam::BSplineEdge::BSplineEdge(const pointField& points, Istream& is)
+:
+    curvedEdge(points, is),
+    BSpline(appendEndPoints(points, start_, end_, pointField(is)))
+{
+    token t(is);
+    is.putBack(t);
+
+    // discard unused start/end tangents
+    if (t == token::BEGIN_LIST)
+    {
+        vector tangent0Ignored(is);
+        vector tangent1Ignored(is);
+    }
+}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::dragModels::TomiyamaAnalytic::~TomiyamaAnalytic()
+Foam::BSplineEdge::~BSplineEdge()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::tmp<Foam::volScalarField>
-Foam::dragModels::TomiyamaAnalytic::CdRe() const
+Foam::point Foam::BSplineEdge::position(const scalar mu) const
 {
-    volScalarField Eo(max(pair_.Eo(), residualEo_));
-    volScalarField E(max(pair_.E(), residualE_));
+    return BSpline::position(mu);
+}
 
-    volScalarField OmEsq(max(scalar(1) - sqr(E), sqr(residualE_)));
-    volScalarField rtOmEsq(sqrt(OmEsq));
 
-    volScalarField F(max(asin(rtOmEsq) - E*rtOmEsq, residualE_)/OmEsq);
-
-    return
-        (8.0/3.0)
-       *Eo
-       /(
-            Eo*pow(E, 2.0/3.0)/OmEsq
-          + 16*pow(E, 4.0/3.0)
-        )
-       /sqr(F)
-       *max(pair_.Re(), residualRe_);
+Foam::scalar Foam::BSplineEdge::length() const
+{
+    return BSpline::length();
 }
 
 

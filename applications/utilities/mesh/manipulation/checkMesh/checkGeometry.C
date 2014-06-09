@@ -19,7 +19,7 @@ Foam::label Foam::findOppositeWedge
 {
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
-    scalar wppCosAngle = wpp.centreNormal()&wpp.patchNormal();
+    scalar wppCosAngle = wpp.cosAngle();
 
     forAll(patches, patchI)
     {
@@ -30,13 +30,11 @@ Foam::label Foam::findOppositeWedge
          && isA<wedgePolyPatch>(patches[patchI])
         )
         {
-            const wedgePolyPatch& pp = refCast<const wedgePolyPatch>
-            (
-                patches[patchI]
-            );
+            const wedgePolyPatch& pp =
+                refCast<const wedgePolyPatch>(patches[patchI]);
 
             // Calculate (cos of) angle to wpp (not pp!) centre normal
-            scalar ppCosAngle = wpp.centreNormal()&pp.patchNormal();
+            scalar ppCosAngle = wpp.centreNormal() & pp.n();
 
             if
             (
@@ -73,12 +71,10 @@ bool Foam::checkWedges
     {
         if (patches[patchI].size() && isA<wedgePolyPatch>(patches[patchI]))
         {
-            const wedgePolyPatch& pp = refCast<const wedgePolyPatch>
-            (
-                patches[patchI]
-            );
+            const wedgePolyPatch& pp =
+                refCast<const wedgePolyPatch>(patches[patchI]);
 
-            scalar wedgeAngle = acos(pp.centreNormal()&pp.patchNormal());
+            scalar wedgeAngle = acos(pp.cosAngle());
 
             if (report)
             {
@@ -100,10 +96,8 @@ bool Foam::checkWedges
                 return true;
             }
 
-            const wedgePolyPatch& opp = refCast<const wedgePolyPatch>
-            (
-                patches[oppositePatchI]
-            );
+            const wedgePolyPatch& opp =
+                refCast<const wedgePolyPatch>(patches[oppositePatchI]);
 
 
             if (mag(opp.axis() & pp.axis()) < (1-1e-3))
@@ -140,7 +134,7 @@ bool Foam::checkWedges
             forAll(pp.meshPoints(), i)
             {
                 const point& pt = p[pp.meshPoints()[i]];
-                scalar d = mag((pt-p0) & pp.patchNormal());
+                scalar d = mag((pt - p0) & pp.n());
 
                 if (d > sqrt(SMALL))
                 {
@@ -385,10 +379,8 @@ bool Foam::checkCoupledPoints
     {
         if (patches[patchI].coupled())
         {
-            const coupledPolyPatch& cpp = refCast<const coupledPolyPatch>
-            (
-                patches[patchI]
-            );
+            const coupledPolyPatch& cpp =
+                refCast<const coupledPolyPatch>(patches[patchI]);
 
             if (cpp.owner())
             {

@@ -921,7 +921,6 @@ Foam::polyMesh::cellTree() const
 }
 
 
-// Add boundary patches. Constructor helper
 void Foam::polyMesh::addPatches
 (
     const List<polyPatch*>& p,
@@ -968,7 +967,6 @@ void Foam::polyMesh::addPatches
 }
 
 
-// Add mesh zones. Constructor helper
 void Foam::polyMesh::addZones
 (
     const List<pointZone*>& pz,
@@ -1084,7 +1082,6 @@ const Foam::labelList& Foam::polyMesh::faceNeighbour() const
 }
 
 
-// Return old mesh motion points
 const Foam::pointField& Foam::polyMesh::oldPoints() const
 {
     if (oldPointsPtr_.empty())
@@ -1129,11 +1126,14 @@ Foam::tmp<Foam::scalarField> Foam::polyMesh::movePoints
 
     points_ = newPoints;
 
+    bool moveError = false;
     if (debug)
     {
         // Check mesh motion
         if (checkMeshMotion(points_, true))
         {
+            moveError = true;
+
             Info<< "tmp<scalarField> polyMesh::movePoints"
                 << "(const pointField&) : "
                 << "Moving the mesh with given points will "
@@ -1175,6 +1175,12 @@ Foam::tmp<Foam::scalarField> Foam::polyMesh::movePoints
     meshObject::movePoints<pointMesh>(*this);
 
     const_cast<Time&>(time()).functionObjects().movePoints(*this);
+
+
+    if (debug && moveError)
+    {
+        write();
+    }
 
     return sweptVols;
 }
@@ -1219,7 +1225,6 @@ Foam::label& Foam::polyMesh::comm()
 }
 
 
-// Remove all files and some subdirs (eg, sets)
 void Foam::polyMesh::removeFiles(const fileName& instanceDir) const
 {
     fileName meshFilesPath = thisDb().time().path()/instanceDir/meshDir();

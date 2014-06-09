@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,21 +22,21 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::wedgePointPatch
+    Foam::BSplineEdge
 
 Description
-    Wedge front and back plane patch.
+    A curvedEdge interface for B-splines.
 
 SourceFiles
-    wedgePointPatch.C
+    BSplineEdge.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef wedgePointPatch_H
-#define wedgePointPatch_H
+#ifndef BSplineEdge_H
+#define BSplineEdge_H
 
-#include "facePointPatch.H"
-#include "wedgePolyPatch.H"
+#include "curvedEdge.H"
+#include "BSpline.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -44,55 +44,56 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                       Class wedgePointPatch Declaration
+                      Class BSplineEdge Declaration
 \*---------------------------------------------------------------------------*/
 
-class wedgePointPatch
+class BSplineEdge
 :
-    public facePointPatch
+    public curvedEdge,
+    public BSpline
 {
-    // Private data
+    // Private Member Functions
 
-        //- Local reference cast into the symmetryPlane patch
-        const wedgePolyPatch& wedgePolyPatch_;
+        //- Disallow default bitwise copy construct
+        BSplineEdge(const BSplineEdge&);
+
+        //- Disallow default bitwise assignment
+        void operator=(const BSplineEdge&);
 
 
 public:
 
     //- Runtime type information
-    TypeName(wedgePolyPatch::typeName_());
+    TypeName("BSpline");
 
 
     // Constructors
 
-        //- Construct from polyPatch
-        wedgePointPatch
+        //- Construct from components
+        BSplineEdge
         (
-            const polyPatch& patch,
-            const pointBoundaryMesh& bm
+            const pointField&,
+            const label start,
+            const label end,
+            const pointField& internalPoints
         );
+
+        //- Construct from Istream, setting pointsList
+        BSplineEdge(const pointField&, Istream&);
+
+
+    //- Destructor
+    virtual ~BSplineEdge();
 
 
     // Member Functions
 
-        //- Return the constraint type this pointPatch implements.
-        virtual const word& constraintType() const
-        {
-            return type();
-        }
+        //- Return the point position corresponding to the curve parameter
+        //  0 <= lambda <= 1
+        virtual point position(const scalar) const;
 
-        //- Accumulate the effect of constraint direction of this patch
-        virtual void applyConstraint
-        (
-            const label pointi,
-            pointConstraint&
-        ) const;
-
-        //- Return symmetry plane normal
-        const vector& n() const
-        {
-            return wedgePolyPatch_.n();
-        }
+        //- Return the length of the spline curve (not implemented)
+        virtual scalar length() const;
 };
 
 

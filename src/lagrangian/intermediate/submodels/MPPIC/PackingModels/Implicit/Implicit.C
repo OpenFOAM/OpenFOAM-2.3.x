@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,6 +25,10 @@ License
 
 #include "Implicit.H"
 #include "fixedValueFvsPatchField.H"
+#include "fvmDdt.H"
+#include "fvmDiv.H"
+#include "fvmLaplacian.H"
+#include "fvcReconstruct.H"
 #include "volPointInterpolation.H"                                              
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //

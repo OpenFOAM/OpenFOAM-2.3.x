@@ -52,7 +52,7 @@ Foam::aspectRatioModels::TomiyamaAspectRatio::TomiyamaAspectRatio
     const orderedPhasePair& pair
 )
 :
-    aspectRatioModel(dict, pair),
+    VakhrushevEfremov(dict, pair),
     yWall_(pair.phase1().mesh().lookupObject<volScalarField>("yWall"))
 {}
 
@@ -69,7 +69,7 @@ Foam::tmp<Foam::volScalarField>
 Foam::aspectRatioModels::TomiyamaAspectRatio::E() const
 {
     return
-        pair_.Eo()
+        VakhrushevEfremov::E()
        *max
        (
            scalar(1) - 0.35*yWall_/pair_.dispersed().d(),

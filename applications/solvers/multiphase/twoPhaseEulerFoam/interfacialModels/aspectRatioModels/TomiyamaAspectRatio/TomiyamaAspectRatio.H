@@ -44,7 +44,7 @@ SourceFiles
 #ifndef TomiyamaAspectRatio_H
 #define TomiyamaAspectRatio_H
 
-#include "aspectRatioModel.H"
+#include "VakhrushevEfremov.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -59,7 +59,7 @@ namespace aspectRatioModels
 
 class TomiyamaAspectRatio
 :
-    public aspectRatioModel
+    public VakhrushevEfremov
 {
 private:
 

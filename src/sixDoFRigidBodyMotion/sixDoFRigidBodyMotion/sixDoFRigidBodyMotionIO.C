@@ -30,8 +30,8 @@ License
 
 bool Foam::sixDoFRigidBodyMotion::read(const dictionary& dict)
 {
-    dict.lookup("momentOfInertia") >> momentOfInertia_;
     dict.lookup("mass") >> mass_;
+    dict.lookup("momentOfInertia") >> momentOfInertia_;
     aRelax_ = dict.lookupOrDefault<scalar>("accelerationRelaxation", 1.0);
     aDamp_ = dict.lookupOrDefault<scalar>("accelerationDamping", 1.0);
     report_ = dict.lookupOrDefault<Switch>("report", false);
@@ -50,16 +50,18 @@ void Foam::sixDoFRigidBodyMotion::write(Ostream& os) const
 {
     motionState_.write(os);
 
-    os.writeKeyword("initialCentreOfRotation")
-        << initialCentreOfRotation_ << token::END_STATEMENT << nl;
-    os.writeKeyword("initialOrientation")
+    os.writeKeyword("centreOfMass")
+        << initialCentreOfMass_ << token::END_STATEMENT << nl;
+    os.writeKeyword("orientation")
         << initialQ_ << token::END_STATEMENT << nl;
-    os.writeKeyword("momentOfInertia")
-        << momentOfInertia_ << token::END_STATEMENT << nl;
     os.writeKeyword("mass")
         << mass_ << token::END_STATEMENT << nl;
+    os.writeKeyword("momentOfInertia")
+        << momentOfInertia_ << token::END_STATEMENT << nl;
     os.writeKeyword("accelerationRelaxation")
         << aRelax_ << token::END_STATEMENT << nl;
+    os.writeKeyword("accelerationDamping")
+        << aDamp_ << token::END_STATEMENT << nl;
     os.writeKeyword("report")
         << report_ << token::END_STATEMENT << nl;
 
