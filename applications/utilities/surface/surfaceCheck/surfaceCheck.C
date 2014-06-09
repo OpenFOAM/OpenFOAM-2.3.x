@@ -31,12 +31,10 @@ Description
 
 #include "triangle.H"
 #include "triSurface.H"
-#include "triSurfaceTools.H"
 #include "triSurfaceSearch.H"
 #include "argList.H"
 #include "OFstream.H"
 #include "OBJstream.H"
-#include "surfaceIntersection.H"
 #include "SortableList.H"
 #include "PatchTools.H"
 #include "vtkSurfaceWriter.H"
@@ -223,7 +221,7 @@ int main(int argc, char *argv[])
     // write bounding box corners
     if (args.optionFound("blockMesh"))
     {
-        pointField cornerPts(boundBox(surf.points()).points());
+        pointField cornerPts(boundBox(surf.points(), false).points());
 
         Info<<"// blockMeshDict info" << nl
             <<"vertices\n(" << nl;
