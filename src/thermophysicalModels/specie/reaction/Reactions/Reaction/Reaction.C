@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -113,7 +113,7 @@ void Foam::Reaction<ReactionThermo>::setThermo
 {
     if (rhs_.size() > 0)
     {
-        ReactionThermo::operator=
+        ReactionThermo::thermoType::operator=
         (
             rhs_[0].stoichCoeff*(*thermoDatabase[species_[rhs_[0].index]])
         );
@@ -149,7 +149,7 @@ Foam::Reaction<ReactionThermo>::Reaction
     const HashPtrTable<ReactionThermo>& thermoDatabase
 )
 :
-    ReactionThermo(*thermoDatabase[species[0]]),
+    ReactionThermo::thermoType(*thermoDatabase[species[0]]),
     name_("un-named-reaction-" + Foam::name(getNewReactionID())),
     species_(species),
     lhs_(lhs),
@@ -166,7 +166,7 @@ Foam::Reaction<ReactionThermo>::Reaction
     const speciesTable& species
 )
 :
-    ReactionThermo(r),
+    ReactionThermo::thermoType(r),
     name_(r.name() + "Copy"),
     species_(species),
     lhs_(r.lhs_),
@@ -320,7 +320,7 @@ Foam::Reaction<ReactionThermo>::Reaction
     Istream& is
 )
 :
-    ReactionThermo(*thermoDatabase[species[0]]),
+    ReactionThermo::thermoType(*thermoDatabase[species[0]]),
     name_("un-named-reaction" + Foam::name(getNewReactionID())),
     species_(species)
 {
@@ -337,7 +337,7 @@ Foam::Reaction<ReactionThermo>::Reaction
     const dictionary& dict
 )
 :
-    ReactionThermo(*thermoDatabase[species[0]]),
+    ReactionThermo::thermoType(*thermoDatabase[species[0]]),
     name_(dict.dictName()),
     species_(species)
 {

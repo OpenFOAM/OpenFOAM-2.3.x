@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -20,9 +20,6 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
-
-Description
-    Wedge front and back plane patch
 
 \*---------------------------------------------------------------------------*/
 
@@ -46,6 +43,19 @@ namespace Foam
 }
 
 
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::wedgePointPatch::wedgePointPatch
+(
+    const polyPatch& patch,
+    const pointBoundaryMesh& bm
+)
+:
+    facePointPatch(patch, bm),
+    wedgePolyPatch_(refCast<const wedgePolyPatch>(patch))
+{}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void Foam::wedgePointPatch::applyConstraint
@@ -54,7 +64,7 @@ void Foam::wedgePointPatch::applyConstraint
     pointConstraint& pc
 ) const
 {
-    pc.applyConstraint(pointNormals()[pointi]);
+    pc.applyConstraint(wedgePolyPatch_.n());
 }
 
 

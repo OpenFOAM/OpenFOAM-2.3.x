@@ -62,15 +62,39 @@ Foam::liftModels::Moraga::~Moraga()
 
 Foam::tmp<Foam::volScalarField> Foam::liftModels::Moraga::Cl() const
 {
-    volScalarField ReSqrSr
+    volScalarField Re(pair_.Re());
+
+    volScalarField sqrSr
     (
-        pair_.Re()
-       *sqr(pair_.dispersed().d())
+        sqr(pair_.dispersed().d())
        /pair_.continuous().nu()
        *mag(fvc::grad(pair_.continuous().U()))
     );
 
-    return 0.2*exp(- ReSqrSr/3.6e5 - 0.12)*exp(ReSqrSr/3.0e7);
+    if
+    (
+        min(Re).value() < 1200.0
+     || max(Re).value() > 18800.0
+     || min(sqrSr).value() < 0.0016
+     || max(sqrSr).value() > 0.04
+    )
+    {
+        WarningIn
+        (
+            "Foam::tmp<Foam::volScalarField> "
+            "Foam::liftModels::Moraga::Cl() const"
+        )   << "Re and/or Sr are out of the range of applicability of the "
+            << "Moraga model. Clamping to range bounds"
+            << endl;
+    }
+
+    Re.min(1200.0);
+    Re.max(18800.0);
+
+    sqrSr.min(0.0016);
+    sqrSr.max(0.04);
+
+    return 0.2*exp(- Re*sqrSr/3.6e5 - 0.12)*exp(Re*sqrSr/3.0e7);
 }
 
 

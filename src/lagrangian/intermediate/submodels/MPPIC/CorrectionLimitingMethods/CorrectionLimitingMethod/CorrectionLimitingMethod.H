@@ -35,7 +35,7 @@ SourceFiles
 #ifndef CorrectionLimitingMethod_H
 #define CorrectionLimitingMethod_H
 
-#include "fvCFD.H"
+#include "volFieldsFwd.H"
 #include "dictionary.H"
 #include "runTimeSelectionTables.H"
 

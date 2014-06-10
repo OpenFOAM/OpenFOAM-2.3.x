@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -56,7 +56,7 @@ namespace Foam
 class polyMesh;
 
 /*---------------------------------------------------------------------------*\
-                        Class twoDPointCorrector Declaration
+                     Class twoDPointCorrector Declaration
 \*---------------------------------------------------------------------------*/
 
 class twoDPointCorrector
@@ -74,6 +74,15 @@ class twoDPointCorrector
         //- Indices of edges normal to plane
         mutable labelList* normalEdgeIndicesPtr_;
 
+        //- Flag to indicate a wedge geometry
+        mutable bool isWedge_;
+
+        //- Wedge axis (if wedge geometry)
+        mutable vector wedgeAxis_;
+
+        //- Wedge angle (if wedge geometry)
+        mutable scalar wedgeAngle_;
+
 
     // Private Member Functions
 
@@ -89,6 +98,9 @@ class twoDPointCorrector
 
         //- Clear addressing
         void clearAddressing() const;
+
+        //- Snap a point to the wedge patch(es)
+        void snapToWedge(const vector& n, const point& A, point& p) const;
 
 
     // Static data members

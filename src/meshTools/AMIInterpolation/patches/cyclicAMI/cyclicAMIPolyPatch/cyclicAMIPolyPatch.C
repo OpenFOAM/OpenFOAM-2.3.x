@@ -463,6 +463,7 @@ void Foam::cyclicAMIPolyPatch::movePoints
 void Foam::cyclicAMIPolyPatch::initUpdateMesh(PstreamBuffers& pBufs)
 {
     polyPatch::initUpdateMesh(pBufs);
+    AMIPtr_.clear();
 }
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,7 +35,9 @@ SourceFiles
 #ifndef TimeScaleModel_H
 #define TimeScaleModel_H
 
-#include "fvCFD.H"
+#include "constants.H"
+#include "Field.H"
+#include "FieldField.H"
 #include "dictionary.H"
 #include "runTimeSelectionTables.H"
 
