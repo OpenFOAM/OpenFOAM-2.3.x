@@ -531,12 +531,12 @@ void Foam::radiation::viewFactor::calculate()
                     if (i==j)
                     {
                         C[i][j] = invEj - (invEj - 1.0)*Fmatrix_()[i][j];
-                        q[i] += (Fmatrix_()[i][j] - 1.0)*sigmaT4;
+                        q[i] += (Fmatrix_()[i][j] - 1.0)*sigmaT4 - QrExt[j];
                     }
                     else
                     {
                         C[i][j] = (1.0 - invEj)*Fmatrix_()[i][j];
-                        q[i] += Fmatrix_()[i][j]*sigmaT4 - QrExt[j];
+                        q[i] += Fmatrix_()[i][j]*sigmaT4;
                     }
 
                 }
@@ -580,11 +580,11 @@ void Foam::radiation::viewFactor::calculate()
 
                     if (i==j)
                     {
-                        q[i] += (Fmatrix_()[i][j] - 1.0)*sigmaT4;
+                        q[i] += (Fmatrix_()[i][j] - 1.0)*sigmaT4  - QrExt[j];
                     }
                     else
                     {
-                        q[i] += Fmatrix_()[i][j]*sigmaT4 - QrExt[j];
+                        q[i] += Fmatrix_()[i][j]*sigmaT4;
                     }
                 }
             }
