@@ -129,17 +129,10 @@ JohnsonJacksonParticleThetaFvPatchScalarField
             << abort(FatalError);
     }
 
-    if (dict.found("value"))
-    {
-        fvPatchScalarField::operator=
-        (
-            scalarField("value", dict, p.size())
-        );
-    }
-    else
-    {
-        evaluate();
-    }
+    fvPatchScalarField::operator=
+    (
+        scalarField("value", dict, p.size())
+    );
 }
 
 
