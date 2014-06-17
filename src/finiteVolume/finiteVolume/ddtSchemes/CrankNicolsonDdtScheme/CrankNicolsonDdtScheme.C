@@ -978,7 +978,7 @@ CrankNicolsonDdtScheme<Type>::fvmDdt
 
         fvm.source() =
         (
-            rDtCoef*rho.internalField()*vf.oldTime().internalField()
+            rDtCoef*rho.oldTime().internalField()*vf.oldTime().internalField()
           + offCentre_(ddt0.internalField())
         )*mesh().V0();
     }
@@ -1079,8 +1079,8 @@ CrankNicolsonDdtScheme<Type>::fvmDdt
         fvm.source() =
         (
             rDtCoef
-           *alpha.internalField()
-           *rho.internalField()
+           *alpha.oldTime().internalField()
+           *rho.oldTime().internalField()
            *vf.oldTime().internalField()
           + offCentre_(ddt0.internalField())
         )*mesh().V0();
