@@ -102,17 +102,10 @@ JohnsonJacksonParticleSlipFvPatchVectorField
             << abort(FatalError);
     }
 
-    if (dict.found("value"))
-    {
-        fvPatchVectorField::operator=
-        (
-            vectorField("value", dict, p.size())
-        );
-    }
-    else
-    {
-        partialSlipFvPatchVectorField::evaluate();
-    }
+    fvPatchVectorField::operator=
+    (
+        vectorField("value", dict, p.size())
+    );
 }
 
 

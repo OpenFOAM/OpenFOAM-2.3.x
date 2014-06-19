@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -412,6 +412,12 @@ void Foam::Cloud<ParticleType>::autoMap
     // Reset stored data that relies on the mesh
 //    polyMesh_.clearCellTree();
     cellWallFacesPtr_.clear();
+
+    // Ask for the tetBasePtIs to trigger all processors to build
+    // them, otherwise, if some processors have no particles then
+    // there is a comms mismatch.
+    polyMesh_.tetBasePtIs();
+
 
     forAllIter(typename Cloud<ParticleType>, *this, pIter)
     {
