@@ -33,6 +33,8 @@ Foam::PengRobinsonGas<Specie>::PengRobinsonGas(Istream& is)
 :
     Specie(is),
     Tc_(readScalar(is)),
+    Vc_(readScalar(is)),
+    Zc_(readScalar(is)),
     Pc_(readScalar(is)),
     omega_(readScalar(is))
 {
@@ -48,9 +50,13 @@ Foam::PengRobinsonGas<Specie>::PengRobinsonGas
 :
     Specie(dict),
     Tc_(readScalar(dict.subDict("equationOfState").lookup("Tc"))),
+    Vc_(readScalar(dict.subDict("equationOfState").lookup("Vc"))),
+    Zc_(1.0),
     Pc_(readScalar(dict.subDict("equationOfState").lookup("Pc"))),
     omega_(readScalar(dict.subDict("equationOfState").lookup("omega")))
-{}
+{
+    Zc_ = Pc_*Vc_/(specie::RR*Tc_);
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -74,6 +80,8 @@ Foam::Ostream& Foam::operator<<
 {
     os  << static_cast<const Specie&>(pg)
         << token::SPACE << pg.Tc_
+        << token::SPACE << pg.Vc_
+        << token::SPACE << pg.Zc_
         << token::SPACE << pg.Pc_
         << token::SPACE << pg.omega_;
 
