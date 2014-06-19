@@ -154,16 +154,14 @@ void Foam::directMethod::calculateAddressing
     // transfer addressing into persistent storage
     forAll(srcToTgtCellAddr, i)
     {
-        scalar v = srcVc[i];
+        srcToTgtCellWght[i] = scalarList(srcToTgt[i].size(), srcVc[i]);
         srcToTgtCellAddr[i].transfer(srcToTgt[i]);
-        srcToTgtCellWght[i] = scalarList(1, v);
     }
 
     forAll(tgtToSrcCellAddr, i)
     {
-        scalar v = tgtVc[i];
+        tgtToSrcCellWght[i] = scalarList(tgtToSrc[i].size(), tgtVc[i]);
         tgtToSrcCellAddr[i].transfer(tgtToSrc[i]);
-        tgtToSrcCellWght[i] = scalarList(1, v);
     }
 }
 
