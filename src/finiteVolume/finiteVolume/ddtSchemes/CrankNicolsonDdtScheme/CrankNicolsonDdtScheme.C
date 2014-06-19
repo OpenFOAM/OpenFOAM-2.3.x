@@ -1426,7 +1426,22 @@ tmp<surfaceScalarField> CrankNicolsonDdtScheme<Type>::meshPhi
             coef0_(meshPhi0)*mesh().phi().oldTime() - offCentre_(meshPhi0());
     }
 
-    return coef_(meshPhi0)*mesh().phi() - offCentre_(meshPhi0());
+    return tmp<surfaceScalarField>
+    (
+        new surfaceScalarField
+        (
+            IOobject
+            (
+                mesh().phi().name(),
+                mesh().time().timeName(),
+                mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            coef_(meshPhi0)*mesh().phi() - offCentre_(meshPhi0())
+        )
+    );
 }
 
 

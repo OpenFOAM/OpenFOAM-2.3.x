@@ -845,7 +845,10 @@ tmp<surfaceScalarField> SLTSDdtScheme<Type>::meshPhi
             (
                 "meshPhi",
                 mesh().time().timeName(),
-                mesh()
+                mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
             ),
             mesh(),
             dimensionedScalar("0", dimVolume/dimTime, 0.0)
