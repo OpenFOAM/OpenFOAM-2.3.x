@@ -52,7 +52,7 @@ void Foam::sixDoFRigidBodyMotion::write(Ostream& os) const
 
     os.writeKeyword("centreOfMass")
         << initialCentreOfMass_ << token::END_STATEMENT << nl;
-    os.writeKeyword("orientation")
+    os.writeKeyword("initialOrientation")
         << initialQ_ << token::END_STATEMENT << nl;
     os.writeKeyword("mass")
         << mass_ << token::END_STATEMENT << nl;
