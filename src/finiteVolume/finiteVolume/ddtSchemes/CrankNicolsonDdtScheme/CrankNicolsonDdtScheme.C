@@ -978,7 +978,7 @@ CrankNicolsonDdtScheme<Type>::fvmDdt
 
         fvm.source() =
         (
-            rDtCoef*rho.internalField()*vf.oldTime().internalField()
+            rDtCoef*rho.oldTime().internalField()*vf.oldTime().internalField()
           + offCentre_(ddt0.internalField())
         )*mesh().V0();
     }
@@ -1079,8 +1079,8 @@ CrankNicolsonDdtScheme<Type>::fvmDdt
         fvm.source() =
         (
             rDtCoef
-           *alpha.internalField()
-           *rho.internalField()
+           *alpha.oldTime().internalField()
+           *rho.oldTime().internalField()
            *vf.oldTime().internalField()
           + offCentre_(ddt0.internalField())
         )*mesh().V0();
@@ -1426,7 +1426,22 @@ tmp<surfaceScalarField> CrankNicolsonDdtScheme<Type>::meshPhi
             coef0_(meshPhi0)*mesh().phi().oldTime() - offCentre_(meshPhi0());
     }
 
-    return coef_(meshPhi0)*mesh().phi() - offCentre_(meshPhi0());
+    return tmp<surfaceScalarField>
+    (
+        new surfaceScalarField
+        (
+            IOobject
+            (
+                mesh().phi().name(),
+                mesh().time().timeName(),
+                mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            coef_(meshPhi0)*mesh().phi() - offCentre_(meshPhi0())
+        )
+    );
 }
 
 

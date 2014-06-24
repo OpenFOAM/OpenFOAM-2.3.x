@@ -21,7 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
-
 \*---------------------------------------------------------------------------*/
 
 #include "PengRobinsonGas.H"
@@ -34,12 +33,16 @@ inline Foam::PengRobinsonGas<Specie>::PengRobinsonGas
 (
     const Specie& sp,
     const scalar& Tc,
+    const scalar& Vc,
+    const scalar& Zc,
     const scalar& Pc,
     const scalar& omega
 )
 :
     Specie(sp),
     Tc_(Tc),
+    Vc_(Vc),
+    Zc_(Zc),
     Pc_(Pc),
     omega_(omega)
 {}
@@ -55,9 +58,11 @@ inline Foam::PengRobinsonGas<Specie>::PengRobinsonGas
 )
 :
     Specie(name, pg),
-    Tc_(pg.Tc),
-    Pc_(pg.Pc),
-    omega_(pg.omega)
+    Tc_(pg.Tc_),
+    Pc_(pg.Pc_),
+    Vc_(pg.Vc_),
+    Zc_(pg.Zc_),
+    omega_(pg.omega_)
 {}
 
 
@@ -95,6 +100,7 @@ Foam::PengRobinsonGas<Specie>::New
         new PengRobinsonGas<Specie>(dict)
     );
 }
+
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -214,7 +220,9 @@ inline void Foam::PengRobinsonGas<Specie>::operator+=
     scalar molr2 = pg.nMoles()/this->nMoles();
 
     Tc_ = molr1*Tc_ + molr2*pg.Tc_;
-    Pc_ = molr1*Pc_ + molr2*pg.Pc_;
+    Vc_ = molr1*Vc_ + molr2*pg.Vc_;
+    Zc_ = molr1*Zc_ + molr2*pg.Zc_;
+    Pc_ = specie::RR*Zc_*Tc_/Vc_;
     omega_ = molr1*omega_ + molr2*pg.omega_;
 }
 
@@ -233,7 +241,9 @@ inline void Foam::PengRobinsonGas<Specie>::operator-=
     scalar molr2 = pg.nMoles()/this->nMoles();
 
     Tc_ = molr1*Tc_ - molr2*pg.Tc_;
-    Pc_ = molr1*Pc_ - molr2*pg.Pc_;
+    Vc_ = molr1*Vc_ - molr2*pg.Vc_;
+    Zc_ = molr1*Zc_ - molr2*pg.Zc_;
+    Pc_ = specie::RR*Zc_*Tc_/Vc_;
     omega_ = molr1*omega_ - molr2*pg.omega_;
 }
 
@@ -259,12 +269,18 @@ Foam::PengRobinsonGas<Specie> Foam::operator+
     scalar molr1 = pg1.nMoles()/nMoles;
     scalar molr2 = pg2.nMoles()/nMoles;
 
+    const scalar Tc = molr1*pg1.Tc_ + molr2*pg2.Tc_;
+    const scalar Vc = molr1*pg1.Vc_ + molr2*pg2.Vc_;
+    const scalar Zc = molr1*pg1.Zc_ + molr2*pg2.Zc_;
+
     return PengRobinsonGas<Specie>
     (
         static_cast<const Specie&>(pg1)
       + static_cast<const Specie&>(pg2),
-        molr1*pg1.Tc_ + molr2*pg2.Tc_,
-        molr1*pg1.Pc_ + molr2*pg2.Pc_,
+        Tc,
+        Vc,
+        Zc,
+        specie::RR*Zc*Tc/Vc,
         molr1*pg1.omega_ + molr2*pg2.omega_
     );
 }
@@ -281,12 +297,18 @@ Foam::PengRobinsonGas<Specie> Foam::operator-
     scalar molr1 = pg1.nMoles()/nMoles;
     scalar molr2 = pg2.nMoles()/nMoles;
 
+    const scalar Tc = molr1*pg1.Tc_ + molr2*pg2.Tc_;
+    const scalar Vc = molr1*pg1.Vc_ + molr2*pg2.Vc_;
+    const scalar Zc = molr1*pg1.Zc_ + molr2*pg2.Zc_;
+
     return PengRobinsonGas<Specie>
     (
         static_cast<const Specie&>(pg1)
       - static_cast<const Specie&>(pg2),
-        molr1*pg1.Tc_ - molr2*pg2.Tc_,
-        molr1*pg1.Pc_ - molr2*pg2.Pc_,
+        Tc,
+        Vc,
+        Zc,
+        specie::RR*Zc*Tc/Vc,
         molr1*pg1.omega_ - molr2*pg2.omega_
     );
 }
@@ -303,6 +325,8 @@ Foam::PengRobinsonGas<Specie> Foam::operator*
     (
         s*static_cast<const Specie&>(pg),
         pg.Tc_,
+        pg.Vc_,
+        pg.Zc_,
         pg.Pc_,
         pg.omega_
     );

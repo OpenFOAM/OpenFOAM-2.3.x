@@ -98,10 +98,16 @@ class PengRobinsonGas
         //- Critical Temperature [K]
         scalar Tc_;
 
+        //- Critical volume [m^3/kmol]
+        scalar Vc_;
+
+        //- Critical compression factor [-]
+        scalar Zc_;
+
         //- Critical Pressure [Pa]
         scalar Pc_;
 
-        //- Accentric factor [-]
+        //- Acentric factor [-]
         scalar omega_;
 
 
@@ -114,6 +120,8 @@ public:
         (
             const Specie& sp,
             const scalar& Tc,
+            const scalar& Vc,
+            const scalar& Zc,
             const scalar& Pc,
             const scalar& omega
         );
@@ -163,7 +171,7 @@ public:
             //- Return compressibility rho/p [s^2/m^2]
             inline scalar psi(scalar p, scalar T) const;
 
-            //- Return compression factor []
+            //- Return compression factor [-]
             inline scalar Z(scalar p, scalar T) const;
 
             //- Return (cp - cv) [J/(kmol K]

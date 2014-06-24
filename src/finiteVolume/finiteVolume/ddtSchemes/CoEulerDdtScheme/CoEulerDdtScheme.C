@@ -843,7 +843,9 @@ tmp<surfaceScalarField> CoEulerDdtScheme<Type>::meshPhi
             (
                 "meshPhi",
                 mesh().time().timeName(),
-                mesh()
+                mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
             ),
             mesh(),
             dimensionedScalar("0", dimVolume/dimTime, 0.0)
