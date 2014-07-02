@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,6 +47,7 @@ Description
 #include "fvMesh.H"
 #include "MeshedSurfaces.H"
 #include "globalIndex.H"
+#include "cellSet.H"
 
 #include "extrudedMesh.H"
 #include "extrudeModel.H"
@@ -192,6 +193,23 @@ void updateFaceLabels(const mapPolyMesh& map, labelList& faceLabels)
 }
 
 
+void updateCellSet(const mapPolyMesh& map, labelHashSet& cellLabels)
+{
+    const labelList& reverseMap = map.reverseCellMap();
+
+    labelHashSet newCellLabels(2*cellLabels.size());
+
+    forAll(cellLabels, i)
+    {
+        label oldCellI = cellLabels[i];
+
+        if (reverseMap[oldCellI] >= 0)
+        {
+            newCellLabels.insert(reverseMap[oldCellI]);
+        }
+    }
+    cellLabels.transfer(newCellLabels);
+}
 
 
 int main(int argc, char *argv[])
@@ -269,6 +287,9 @@ int main(int argc, char *argv[])
     labelList frontPatchFaces;
     word backPatchName;
     labelList backPatchFaces;
+
+    // Optional added cells (get written to cellSet)
+    labelHashSet addedCellsSet;
 
     if (mode == PATCH || mode == MESH)
     {
@@ -670,11 +691,33 @@ int main(int argc, char *argv[])
             map().reverseFaceMap(),
             backPatchFaces
         );
+
+        // Store added cells
+        if (mode == MESH)
+        {
+            const labelListList addedCells
+            (
+                layerExtrude.addedCells
+                (
+                    meshFromMesh,
+                    layerExtrude.layerFaces()
+                )
+            );
+            forAll(addedCells, faceI)
+            {
+                const labelList& aCells = addedCells[faceI];
+                forAll(aCells, i)
+                {
+                    addedCellsSet.insert(aCells[i]);
+                }
+            }
+        }
     }
     else
     {
         // Read from surface
         fileName surfName(dict.lookup("surface"));
+        surfName.expand();
 
         Info<< "Extruding surfaceMesh read from file " << surfName << nl
             << endl;
@@ -810,6 +853,7 @@ int main(int argc, char *argv[])
             // Update stored data
             updateFaceLabels(map(), frontPatchFaces);
             updateFaceLabels(map(), backPatchFaces);
+            updateCellSet(map(), addedCellsSet);
 
             // Move mesh (if inflation used)
             if (map().hasMotionPoints())
@@ -913,6 +957,9 @@ int main(int argc, char *argv[])
         // Update fields
         mesh.updateMesh(map);
 
+        // Update local data
+        updateCellSet(map(), addedCellsSet);
+
         // Move mesh (if inflation used)
         if (map().hasMotionPoints())
         {
@@ -927,6 +974,21 @@ int main(int argc, char *argv[])
     {
         FatalErrorIn(args.executable()) << "Failed writing mesh"
             << exit(FatalError);
+    }
+
+    // Need writing cellSet
+    label nAdded = returnReduce(addedCellsSet.size(), sumOp<label>());
+    if (nAdded > 0)
+    {
+        cellSet addedCells(mesh, "addedCells", addedCellsSet);
+        Info<< "Writing added cells to cellSet " << addedCells.name()
+            << nl << endl;
+        if (!addedCells.write())
+        {
+            FatalErrorIn(args.executable()) << "Failed writing cellSet"
+                << addedCells.name()
+                << exit(FatalError);
+        }
     }
 
     Info<< "End\n" << endl;
