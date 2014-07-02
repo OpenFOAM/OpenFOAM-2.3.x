@@ -30,7 +30,7 @@ License
 template<class SourcePatch, class TargetPatch>
 void Foam::directAMI<SourcePatch, TargetPatch>::appendToDirectSeeds
 (
-    boolList& mapFlag,
+    labelList& mapFlag,
     labelList& srcTgtSeed,
     DynamicList<label>& srcSeeds,
     DynamicList<label>& nonOverlapFaces,
@@ -50,19 +50,32 @@ void Foam::directAMI<SourcePatch, TargetPatch>::appendToDirectSeeds
     {
         label srcI = srcNbr[i];
 
-        if (mapFlag[srcI] && srcTgtSeed[srcI] == -1)
+        if ((mapFlag[srcI] == 0) && (srcTgtSeed[srcI] == -1))
         {
+            // first attempt: match by comparing face centres
             const face& srcF = this->srcPatch_[srcI];
-            const vector srcN = srcF.normal(srcPoints);
+            const point& srcC = srcCf[srcI];
+
+            scalar tol = GREAT;
+            forAll(srcF, fpI)
+            {
+                const point& p = srcPoints[srcF[fpI]];
+                scalar d2 = magSqr(p - srcC);
+                if (d2 < tol)
+                {
+                    tol = d2;
+                }
+            }
+            tol = max(SMALL, 0.0001*sqrt(tol));
 
             bool found = false;
             forAll(tgtNbr, j)
             {
                 label tgtI = tgtNbr[j];
                 const face& tgtF = this->tgtPatch_[tgtI];
-                pointHit ray = tgtF.ray(srcCf[srcI], srcN, tgtPoints);
+                const point tgtC = tgtF.centre(tgtPoints);
 
-                if (ray.hit())
+                if (mag(srcC - tgtC) < tol)
                 {
                     // new match - append to lists
                     found = true;
@@ -74,11 +87,57 @@ void Foam::directAMI<SourcePatch, TargetPatch>::appendToDirectSeeds
                 }
             }
 
+            // second attempt: match by shooting a ray into the tgt face
             if (!found)
             {
-                // no match available for source face srcI
-                mapFlag[srcI] = false;
+                const vector srcN = srcF.normal(srcPoints);
+
+                forAll(tgtNbr, j)
+                {
+                    label tgtI = tgtNbr[j];
+                    const face& tgtF = this->tgtPatch_[tgtI];
+                    pointHit ray = tgtF.ray(srcCf[srcI], srcN, tgtPoints);
+
+                    if (ray.hit())
+                    {
+                        // new match - append to lists
+                        found = true;
+
+                        srcTgtSeed[srcI] = tgtI;
+                        srcSeeds.append(srcI);
+
+                        break;
+                    }
+                }
+            }
+
+            // no match available for source face srcI
+            if (!found)
+            {
+                mapFlag[srcI] = -1;
                 nonOverlapFaces.append(srcI);
+
+                if (debug)
+                {
+                    Pout<< "source face not found: id=" << srcI
+                        << " centre=" << srcCf[srcI]
+                        << " normal=" << srcF.normal(srcPoints)
+                        << " points=" << srcF.points(srcPoints)
+                        << endl;
+
+                    Pout<< "target neighbours:" << nl;
+                    forAll(tgtNbr, j)
+                    {
+                        label tgtI = tgtNbr[j];
+                        const face& tgtF = this->tgtPatch_[tgtI];
+
+                        Pout<< "face id: " << tgtI
+                            << " centre=" << tgtF.centre(tgtPoints)
+                            << " normal=" << tgtF.normal(tgtPoints)
+                            << " points=" << tgtF.points(tgtPoints)
+                            << endl;
+                    }
+                }
             }
         }
     }
@@ -92,6 +151,36 @@ void Foam::directAMI<SourcePatch, TargetPatch>::appendToDirectSeeds
     {
         srcFaceI = -1;
         tgtFaceI = -1;
+    }
+}
+
+
+template<class SourcePatch, class TargetPatch>
+void Foam::directAMI<SourcePatch, TargetPatch>::restartAdvancingFront
+(
+    labelList& mapFlag,
+    DynamicList<label>& nonOverlapFaces,
+    label& srcFaceI,
+    label& tgtFaceI
+) const
+{
+    forAll(mapFlag, faceI)
+    {
+        if (mapFlag[faceI] == 0)
+        {
+            tgtFaceI = this->findTargetFace(faceI);
+
+            if (tgtFaceI < 0)
+            {
+                mapFlag[faceI] = -1;
+                nonOverlapFaces.append(faceI);
+            }
+            else
+            {
+                srcFaceI = faceI;
+                break;
+            }
+        }
     }
 }
 
@@ -176,15 +265,19 @@ void Foam::directAMI<SourcePatch, TargetPatch>::calculate
     srcTgtSeed[srcFaceI] = tgtFaceI;
 
     // list to keep track of whether src face can be mapped
-    boolList mapFlag(srcAddr.size(), true);
+    // 1 = mapped, 0 = untested, -1 = cannot map
+    labelList mapFlag(srcAddr.size(), 0);
 
+    label nTested = 0;
     DynamicList<label> nonOverlapFaces;
     do
     {
         srcAddr[srcFaceI].append(tgtFaceI);
         tgtAddr[tgtFaceI].append(srcFaceI);
 
-        mapFlag[srcFaceI] = false;
+        mapFlag[srcFaceI] = 1;
+
+        nTested++;
 
         // Do advancing front starting from srcFaceI, tgtFaceI
         appendToDirectSeeds
@@ -196,6 +289,12 @@ void Foam::directAMI<SourcePatch, TargetPatch>::calculate
             srcFaceI,
             tgtFaceI
         );
+
+        if (srcFaceI < 0 && nTested < this->srcPatch_.size())
+        {
+            restartAdvancingFront(mapFlag, nonOverlapFaces, srcFaceI, tgtFaceI);
+        }
+
     } while (srcFaceI >= 0);
 
     if (nonOverlapFaces.size() != 0)
@@ -211,14 +310,16 @@ void Foam::directAMI<SourcePatch, TargetPatch>::calculate
     forAll(srcAddr, i)
     {
         scalar magSf = this->srcMagSf_[i];
-        srcAddress[i].transfer(srcAddr[i]);
+//        srcWeights[i] = scalarList(srcAddr[i].size(), magSf);
         srcWeights[i] = scalarList(1, magSf);
+        srcAddress[i].transfer(srcAddr[i]);
     }
     forAll(tgtAddr, i)
     {
         scalar magSf = this->tgtMagSf_[i];
-        tgtAddress[i].transfer(tgtAddr[i]);
+//        tgtWeights[i] = scalarList(tgtAddr[i].size(), magSf);
         tgtWeights[i] = scalarList(1, magSf);
+        tgtAddress[i].transfer(tgtAddr[i]);
     }
 }
 
