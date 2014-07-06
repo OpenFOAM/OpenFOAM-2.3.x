@@ -46,15 +46,6 @@ wedgeFvPatch::wedgeFvPatch(const polyPatch& patch, const fvBoundaryMesh& bm)
 {}
 
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-Foam::tmp<Foam::vectorField> Foam::wedgeFvPatch::delta() const
-{
-    const vectorField nHat(nf());
-    return nHat*(nHat & (Cf() - Cn()));
-}
-
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
