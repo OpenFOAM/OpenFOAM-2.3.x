@@ -99,11 +99,10 @@ void Foam::fieldValues::faceSource::setFaceZoneFaces()
 
     const faceZone& fZone = mesh().faceZones()[zoneId];
 
-    faceId_.setSize(fZone.size());
-    facePatchId_.setSize(fZone.size());
-    faceSign_.setSize(fZone.size());
+    DynamicList<label> faceIds(fZone.size());
+    DynamicList<label> facePatchIds(fZone.size());
+    DynamicList<label> faceSigns(fZone.size());
 
-    label count = 0;
     forAll(fZone, i)
     {
         label faceI = fZone[i];
@@ -145,27 +144,26 @@ void Foam::fieldValues::faceSource::setFaceZoneFaces()
         {
             if (fZone.flipMap()[i])
             {
-                faceSign_[count] = -1;
+                faceSigns.append(-1);
             }
             else
             {
-                faceSign_[count] = 1;
+                faceSigns.append(1);
             }
-            faceId_[count] = faceId;
-            facePatchId_[count] = facePatchId;
-            count++;
+            faceIds.append(faceId);
+            facePatchIds.append(facePatchId);
         }
     }
 
-    faceId_.setSize(count);
-    facePatchId_.setSize(count);
-    faceSign_.setSize(count);
+    faceId_.transfer(faceIds);
+    facePatchId_.transfer(facePatchIds);
+    faceSign_.transfer(faceSigns);
     nFaces_ = returnReduce(faceId_.size(), sumOp<label>());
 
     if (debug)
     {
         Pout<< "Original face zone size = " << fZone.size()
-            << ", new size = " << count << endl;
+            << ", new size = " << faceId_.size() << endl;
     }
 }
 
@@ -445,12 +443,43 @@ void Foam::fieldValues::faceSource::initialise(const dictionary& dict)
 
     if (dict.readIfPresent("weightField", weightFieldName_))
     {
-        Info<< "    weight field = " << weightFieldName_;
+        Info<< "    weight field = " << weightFieldName_ << nl;
+    }
+
+    if (dict.found("orientedWeightField"))
+    {
+        if (weightFieldName_ == "none")
+        {
+            dict.lookup("orientedWeightField") >>  weightFieldName_;
+            Info<< "    weight field = " << weightFieldName_ << nl;
+            orientWeightField_ = true;
+        }
+        else
+        {
+            FatalIOErrorIn
+            (
+                "void Foam::fieldValues::faceSource::initialise"
+                "("
+                    "const dictionary&"
+                ")",
+                dict
+            )
+                << "Either weightField or orientedWeightField can be supplied, "
+                << "but not both"
+                << exit(FatalIOError);
+        }
+    }
+
+    List<word> orientedFields;
+    if (dict.readIfPresent("orientedFields", orientedFields))
+    {
+        orientedFieldsStart_ = fields_.size();
+        fields_.append(orientedFields);
     }
 
     if (dict.readIfPresent("scaleFactor", scaleFactor_))
     {
-        Info<< "    scale factor = " << scaleFactor_;
+        Info<< "    scale factor = " << scaleFactor_ << nl;
     }
 
     Info<< nl << endl;
@@ -581,6 +610,8 @@ Foam::fieldValues::faceSource::faceSource
     source_(sourceTypeNames_.read(dict.lookup("source"))),
     operation_(operationTypeNames_.read(dict.lookup("operation"))),
     weightFieldName_("none"),
+    orientWeightField_(false),
+    orientedFieldsStart_(labelMax),
     scaleFactor_(1.0),
     nFaces_(0),
     faceId_(),
@@ -628,24 +659,42 @@ void Foam::fieldValues::faceSource::write()
             totalArea = gSum(filterField(mesh().magSf(), false));
         }
 
-
         if (Pstream::master())
         {
             file() << obr_.time().value() << tab << totalArea;
         }
 
+        // construct weight field
+        scalarField weightField(faceId_.size(), 1.0);
+        if (weightFieldName_ != "none")
+        {
+            weightField =
+                getFieldValues<scalar>
+                (
+                    weightFieldName_,
+                    true,
+                    orientWeightField_
+                );
+        }
+
+        // Combine onto master
+        combineFields(weightField);
+
+        // process the fields
         forAll(fields_, i)
         {
             const word& fieldName = fields_[i];
-            bool processed = false;
+            bool ok = false;
 
-            processed = processed || writeValues<scalar>(fieldName);
-            processed = processed || writeValues<vector>(fieldName);
-            processed = processed || writeValues<sphericalTensor>(fieldName);
-            processed = processed || writeValues<symmTensor>(fieldName);
-            processed = processed || writeValues<tensor>(fieldName);
+            bool orient = i >= orientedFieldsStart_;
+            ok = ok || writeValues<scalar>(fieldName, weightField, orient);
+            ok = ok || writeValues<vector>(fieldName, weightField, orient);
+            ok = ok
+              || writeValues<sphericalTensor>(fieldName, weightField, orient);
+            ok = ok || writeValues<symmTensor>(fieldName, weightField, orient);
+            ok = ok || writeValues<tensor>(fieldName, weightField, orient);
 
-            if (!processed)
+            if (!ok)
             {
                 WarningIn("void Foam::fieldValues::faceSource::write()")
                     << "Requested field " << fieldName

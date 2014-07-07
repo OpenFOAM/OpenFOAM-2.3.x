@@ -67,9 +67,19 @@ private:
             //- Append to list of src face seed indices
             void appendToDirectSeeds
             (
-                boolList& mapFlag,
+                labelList& mapFlag,
                 labelList& srcTgtSeed,
                 DynamicList<label>& srcSeeds,
+                DynamicList<label>& nonOverlapFaces,
+                label& srcFaceI,
+                label& tgtFaceI
+            ) const;
+
+            //- Restart the advancing front - typically happens for
+            //  disconnected regions
+            void restartAdvancingFront
+            (
+                labelList& mapFlag,
                 DynamicList<label>& nonOverlapFaces,
                 label& srcFaceI,
                 label& tgtFaceI
