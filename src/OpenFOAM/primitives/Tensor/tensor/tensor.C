@@ -150,7 +150,7 @@ Foam::vector Foam::eigenValues(const tensor& t)
             if (R2 < Q3)
             {
                 scalar sqrtQ = sqrt(Q);
-                scalar theta = acos(R/(Q*sqrtQ));
+                scalar theta = acos(min(1.0, max(-1.0, R/(Q*sqrtQ))));
 
                 scalar m2SqrtQ = -2*sqrtQ;
                 scalar aBy3 = a/3;
@@ -344,7 +344,7 @@ Foam::vector Foam::eigenValues(const symmTensor& t)
             if (R2 < Q3)
             {
                 scalar sqrtQ = sqrt(Q);
-                scalar theta = acos(R/(Q*sqrtQ));
+                scalar theta = acos(min(1.0, max(-1.0, R/(Q*sqrtQ))));
 
                 scalar m2SqrtQ = -2*sqrtQ;
                 scalar aBy3 = a/3;
