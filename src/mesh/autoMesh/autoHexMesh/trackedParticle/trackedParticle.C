@@ -103,8 +103,12 @@ bool Foam::trackedParticle::move
     scalar tEnd = (1.0 - stepFraction())*trackTime;
     scalar dtMax = tEnd;
 
-    if (tEnd <= SMALL)
+    if (tEnd <= SMALL && onBoundary())
     {
+        // This is a hack to handle particles reaching their endpoint
+        // on a processor boundary. If the endpoint is on a processor face
+        // it currently gets transferred backwards and forwards infinitely.
+
         // Remove the particle
         td.keepParticle = false;
     }
