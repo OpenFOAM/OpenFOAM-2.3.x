@@ -18621,7 +18621,7 @@ T_Tritium__(g)
     specie
     {
         nMoles          1;
-        molWeight       47.9;
+        molWeight       3.016;
     }
     thermodynamics
     {
