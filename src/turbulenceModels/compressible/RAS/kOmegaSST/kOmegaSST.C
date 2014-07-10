@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -130,7 +130,7 @@ kOmegaSST::kOmegaSST
         (
             "alphaK1",
             coeffDict_,
-            0.85034
+            0.85
         )
     ),
     alphaK2_
@@ -157,7 +157,7 @@ kOmegaSST::kOmegaSST
         (
             "alphaOmega2",
             coeffDict_,
-            0.85616
+            0.856
         )
     ),
     Prt_
@@ -175,7 +175,7 @@ kOmegaSST::kOmegaSST
         (
             "gamma1",
             coeffDict_,
-            0.5532
+            5.0/9.0
         )
     ),
     gamma2_
@@ -184,7 +184,7 @@ kOmegaSST::kOmegaSST
         (
             "gamma2",
             coeffDict_,
-            0.4403
+            0.44
         )
     ),
     beta1_
@@ -458,7 +458,12 @@ void kOmegaSST::correct()
       + fvm::div(phi_, omega_)
       - fvm::laplacian(DomegaEff(F1), omega_)
      ==
-        rhoGammaF1*GbyMu
+        rhoGammaF1
+       *min
+        (
+            GbyMu,
+            (c1_/a1_)*betaStar_*omega_*max(a1_*omega_, b1_*F23()*sqrt(S2))
+        )
       - fvm::SuSp((2.0/3.0)*rhoGammaF1*divU, omega_)
       - fvm::Sp(rho_*beta(F1)*omega_, omega_)
       - fvm::SuSp

@@ -72,15 +72,15 @@ Description
     \verbatim
         kOmegaSSTCoeffs
         {
-            alphaK1     0.85034;
+            alphaK1     0.85;
             alphaK2     1.0;
             alphaOmega1 0.5;
-            alphaOmega2 0.85616;
+            alphaOmega2 0.856;
             beta1       0.075;
             beta2       0.0828;
             betaStar    0.09;
-            gamma1      0.5532;
-            gamma2      0.4403;
+            gamma1      5/9;
+            gamma2      0.44;
             a1          0.31;
             b1          1.0;
             c1          10.0;
