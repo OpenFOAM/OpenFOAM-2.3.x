@@ -236,9 +236,7 @@ Type Foam::fieldValues::faceSource::processSameTypeValues
                 scalar mean = component(meanValue, d);
                 scalar& res = setComponent(result, d);
 
-                res =
-                    sqrt(sum(magSf*sqr(vals - mean))/(magSf.size()*sum(magSf)))
-                   /mean;
+                res = sqrt(sum(magSf*sqr(vals - mean))/sum(magSf))/mean;
             }
 
             break;
