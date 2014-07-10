@@ -114,6 +114,13 @@ tmp<scalarField> nutURoughWallFunctionFvPatchScalarField::calcYPlus
                 scalar yPlusLast = 0.0;
                 scalar dKsPlusdYPlus = roughnessHeight_/y[facei];
 
+                // Enforce the roughnessHeight to be less than the distance to
+                // the first cell centre
+                if (dKsPlusdYPlus > 1)
+                {
+                    dKsPlusdYPlus = 1;
+                }
+
                 // Additional tuning parameter - nominally = 1
                 dKsPlusdYPlus *= roughnessFactor_;
 

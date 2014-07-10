@@ -42,7 +42,7 @@ Description
         \omega_{log} | omega in logarithmic region
     \endvartable
 
-    Model described by Eq.(15) of:
+    Model described by Eqs.(14, 15) of:
     \verbatim
         Menter, F., Esch, T.
         "Elements of Industrial Heat Transfer Prediction"
