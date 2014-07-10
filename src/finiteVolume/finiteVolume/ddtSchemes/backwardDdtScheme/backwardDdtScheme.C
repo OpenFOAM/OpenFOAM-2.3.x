@@ -976,7 +976,22 @@ tmp<surfaceScalarField> backwardDdtScheme<Type>::meshPhi
     // Coefficient for t-1/2 (between times n and 0)
     scalar coefftn_0 = 1 + coefft0_00;
 
-    return coefftn_0*mesh().phi() - coefft0_00*mesh().phi().oldTime();
+    return tmp<surfaceScalarField>
+    (
+        new surfaceScalarField
+        (
+            IOobject
+            (
+                mesh().phi().name(),
+                mesh().time().timeName(),
+                mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            coefftn_0*mesh().phi() - coefft0_00*mesh().phi().oldTime()
+        )
+    );
 }
 
 

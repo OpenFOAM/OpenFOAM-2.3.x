@@ -140,7 +140,9 @@ const Foam::scalarField& Foam::fvPatch::magSf() const
 
 Foam::tmp<Foam::vectorField> Foam::fvPatch::delta() const
 {
-    return Cf() - Cn();
+    // Use patch-normal delta for all non-coupled BCs
+    const vectorField nHat(nf());
+    return nHat*(nHat & (Cf() - Cn()));
 }
 
 

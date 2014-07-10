@@ -83,9 +83,6 @@ public:
             {
                 return wedgePolyPatch_.cellT();
             }
-
-            //- Return cell-centre to face normal vector
-            virtual tmp<vectorField> delta() const;
 };
 
 
