@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -133,7 +133,7 @@ Foam::atomicWeightTable::atomicWeights[atomicWeightTable::nElements] =
     {"Fm", 253.00000},
     {"D",    2.01410},
     {"e",    5.45e-4},
-    {"T",    3.01604},
+    {"T",    3.01604}
 };
 
 
