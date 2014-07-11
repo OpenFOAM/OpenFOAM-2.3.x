@@ -57,8 +57,8 @@ set foamInstall = $HOME/$WM_PROJECT
 if ( ! $?FOAM_INST_DIR ) setenv FOAM_INST_DIR $foamInstall
 
 #- Compiler location:
-#    foamCompiler= system | ThirdParty (OpenFOAM)
-set foamCompiler=system
+#    foamCompiler = system | ThirdParty (OpenFOAM)
+setenv foamCompiler system
 
 #- Compiler:
 #    WM_COMPILER = Gcc | Gcc45 | Gcc46 | Gcc47 | Clang | Icc (Intel icc)
