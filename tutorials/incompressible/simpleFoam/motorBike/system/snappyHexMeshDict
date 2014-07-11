@@ -314,6 +314,8 @@ meshQualityControls
 // Write flags
 writeFlags
 (
+    scalarLevels
+    layerSets
     layerFields     // write volScalarField for layer coverage
 );
 

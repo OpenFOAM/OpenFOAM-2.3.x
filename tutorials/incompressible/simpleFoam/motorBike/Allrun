@@ -21,7 +21,7 @@ ls -d processor* | xargs -i rm -rf ./{}/0 $1
 ls -d processor* | xargs -i cp -r 0.org ./{}/0 $1
 
 runParallel patchSummary 6
-runParallel potentialFoam 6 -noFunctionObjects -writep
+runParallel potentialFoam 6 -noFunctionObjects
 runParallel $(getApplication) 6
 
 runApplication reconstructParMesh -constant
