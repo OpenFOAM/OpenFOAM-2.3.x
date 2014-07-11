@@ -542,6 +542,7 @@ endif
 # cleanup environment:
 # ~~~~~~~~~~~~~~~~~~~~
 #- keep _foamAddPath _foamAddLib _foamAddMan
-unset foamCompiler minBufferSize
+unset minBufferSize
+unsetenv foamCompiler
 
 # ----------------------------------------------------------------- end-of-file

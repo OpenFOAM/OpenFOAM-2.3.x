@@ -546,7 +546,7 @@ void Foam::FaceCellWave<Type, TrackingData>::handleProcPatches()
             sendFacesInfo
         );
 
-        if (debug)
+        if (debug & 2)
         {
             Pout<< " Processor patch " << patchI << ' ' << procPatch.name()
                 << " communicating with " << procPatch.neighbProcNo()
@@ -581,7 +581,7 @@ void Foam::FaceCellWave<Type, TrackingData>::handleProcPatches()
             fromNeighbour >> receiveFaces >> receiveFacesInfo;
         }
 
-        if (debug)
+        if (debug & 2)
         {
             Pout<< " Processor patch " << patchI << ' ' << procPatch.name()
                 << " communicating with " << procPatch.neighbProcNo()
@@ -672,7 +672,7 @@ void Foam::FaceCellWave<Type, TrackingData>::handleCyclicPatches()
                 );
             }
 
-            if (debug)
+            if (debug & 2)
             {
                 Pout<< " Cyclic patch " << patchI << ' ' << cycPatch.name()
                     << "  Changed : " << nReceiveFaces
@@ -1028,7 +1028,7 @@ Foam::label Foam::FaceCellWave<Type, TrackingData>::faceToCell()
     // Handled all changed faces by now
     nChangedFaces_ = 0;
 
-    if (debug)
+    if (debug & 2)
     {
         Pout<< " Changed cells            : " << nChangedCells_ << endl;
     }
@@ -1110,7 +1110,7 @@ Foam::label Foam::FaceCellWave<Type, TrackingData>::cellToFace()
         handleProcPatches();
     }
 
-    if (debug)
+    if (debug & 2)
     {
         Pout<< " Changed faces            : " << nChangedFaces_ << endl;
     }
@@ -1151,7 +1151,7 @@ Foam::label Foam::FaceCellWave<Type, TrackingData>::iterate(const label maxIter)
     {
         if (debug)
         {
-            Pout<< " Iteration " << iter << endl;
+            Info<< " Iteration " << iter << endl;
         }
 
         nEvals_ = 0;
@@ -1160,7 +1160,7 @@ Foam::label Foam::FaceCellWave<Type, TrackingData>::iterate(const label maxIter)
 
         if (debug)
         {
-            Pout<< " Total changed cells      : " << nCells << endl;
+            Info<< " Total changed cells      : " << nCells << endl;
         }
 
         if (nCells == 0)
@@ -1172,7 +1172,7 @@ Foam::label Foam::FaceCellWave<Type, TrackingData>::iterate(const label maxIter)
 
         if (debug)
         {
-            Pout<< " Total changed faces      : " << nFaces << nl
+            Info<< " Total changed faces      : " << nFaces << nl
                 << " Total evaluations        : " << nEvals_ << nl
                 << " Remaining unvisited cells: " << nUnvisitedCells_ << nl
                 << " Remaining unvisited faces: " << nUnvisitedFaces_ << endl;
