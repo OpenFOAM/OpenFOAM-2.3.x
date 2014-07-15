@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -78,12 +78,12 @@ public:
 
     // Member Functions
 
-        const word phase1Name() const
+        const word& phase1Name() const
         {
             return phase1Name_;
         }
 
-        const word phase2Name() const
+        const word& phase2Name() const
         {
             return phase2Name_;
         }

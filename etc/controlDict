@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.0.0                                 |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -40,7 +40,7 @@ InfoSwitches
     writeDictionaries 0;
 
     // Allow case-supplied C++ code (#codeStream, codedFixedValue)
-    allowSystemOperations   0;
+    allowSystemOperations   1;
 }
 
 
