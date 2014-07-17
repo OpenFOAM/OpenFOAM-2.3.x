@@ -71,8 +71,8 @@ PIMPLE
     momentumPredictor   yes;
     correctPhi          yes;
     transSonic          no;
-    nOuterCorrectors    1;
-    nCorrectors         3;
+    nOuterCorrectors    2;
+    nCorrectors         1;
     nNonOrthogonalCorrectors 0;
     nAlphaCorr          1;
     nAlphaSubCycles     2;
