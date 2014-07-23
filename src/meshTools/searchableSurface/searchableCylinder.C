@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -662,21 +662,61 @@ void Foam::searchableCylinder::getNormal
             vector v(info[i].hitPoint() - point1_);
 
             // Decompose sample-point1 into normal and parallel component
-            scalar parallel = v & unitDir_;
+            scalar parallel = (v & unitDir_);
 
-            if (parallel < 0)
+            // Remove the parallel component and normalise
+            v -= parallel*unitDir_;
+            scalar magV = mag(v);
+
+            if (parallel <= 0)
             {
-                normal[i] = -unitDir_;
+                if ((magV-radius_) < mag(parallel))
+                {
+                    // above endcap
+                    normal[i] = -unitDir_;
+                }
+                else
+                {
+                    normal[i] = v/mag(v);
+                }
             }
-            else if (parallel > magDir_)
+            else if (parallel <= 0.5*magDir_)
             {
-                normal[i] = -unitDir_;
+                // See if endcap closer or sidewall
+                if (parallel <= mag(magV-radius_))
+                {
+                    // above endcap
+                    normal[i] = -unitDir_;
+                }
+                else
+                {
+                    normal[i] = v/mag(v);
+                }
             }
-            else
+            else if (parallel <= magDir_)
             {
-                // Remove the parallel component
-                v -= parallel*unitDir_;
-                normal[i] = v/mag(v);
+                // See if endcap closer or sidewall
+                if ((magDir_-parallel) <= mag(magV-radius_))
+                {
+                    // above endcap
+                    normal[i] = unitDir_;
+                }
+                else
+                {
+                    normal[i] = v/mag(v);
+                }
+            }
+            else    // beyong cylinder
+            {
+                if ((magV-radius_) < (parallel-magDir_))
+                {
+                    // above endcap
+                    normal[i] = unitDir_;
+                }
+                else
+                {
+                    normal[i] = v/mag(v);
+                }
             }
         }
     }
