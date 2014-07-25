@@ -18,4 +18,6 @@
     TEqn.solve();
 
     mixture.correct();
+
+    Info<< "min(T) " << min(T).value() << endl;
 }
