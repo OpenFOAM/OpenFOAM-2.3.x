@@ -672,41 +672,41 @@ void Foam::searchableCylinder::getNormal
             {
                 if ((magV-radius_) < mag(parallel))
                 {
-                    // above endcap
+                    // either above endcap (magV<radius) or outside but closer
                     normal[i] = -unitDir_;
                 }
                 else
                 {
-                    normal[i] = v/mag(v);
+                    normal[i] = v/magV;
                 }
             }
             else if (parallel <= 0.5*magDir_)
             {
                 // See if endcap closer or sidewall
-                if (parallel <= mag(magV-radius_))
+                if (magV >= radius_ || (radius_-magV) < parallel)
                 {
-                    // above endcap
-                    normal[i] = -unitDir_;
+                    normal[i] = v/magV;
                 }
                 else
                 {
-                    normal[i] = v/mag(v);
+                    // closer to endcap
+                    normal[i] = -unitDir_;
                 }
             }
             else if (parallel <= magDir_)
             {
                 // See if endcap closer or sidewall
-                if ((magDir_-parallel) <= mag(magV-radius_))
+                if (magV >= radius_ || (radius_-magV) < (magDir_-parallel))
                 {
-                    // above endcap
-                    normal[i] = unitDir_;
+                    normal[i] = v/magV;
                 }
                 else
                 {
-                    normal[i] = v/mag(v);
+                    // closer to endcap
+                    normal[i] = unitDir_;
                 }
             }
-            else    // beyong cylinder
+            else    // beyond cylinder
             {
                 if ((magV-radius_) < (parallel-magDir_))
                 {
@@ -715,7 +715,7 @@ void Foam::searchableCylinder::getNormal
                 }
                 else
                 {
-                    normal[i] = v/mag(v);
+                    normal[i] = v/magV;
                 }
             }
         }
