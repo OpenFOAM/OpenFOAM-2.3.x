@@ -531,6 +531,36 @@ Foam::autoPtr<Foam::mapPolyMesh> Foam::meshRefinement::createBaffles
 }
 
 
+void Foam::meshRefinement::checkZoneFaces() const
+{
+    const faceZoneMesh& fZones = mesh_.faceZones();
+
+    const polyBoundaryMesh& pbm = mesh_.boundaryMesh();
+
+    forAll(pbm, patchI)
+    {
+        const polyPatch& pp = pbm[patchI];
+
+        if (isA<processorPolyPatch>(pp))
+        {
+            forAll(pp, i)
+            {
+                label faceI = pp.start()+i;
+                label zoneI = fZones.whichZone(faceI);
+
+                if (zoneI != -1)
+                {
+                    FatalErrorIn("meshRefinement::checkZoneFaces")
+                        << "face:" << faceI << " on patch " << pp.name()
+                        << " is in zone " << fZones[zoneI].name()
+                        << exit(FatalError);
+                }
+            }
+        }
+    }
+}
+
+
 Foam::autoPtr<Foam::mapPolyMesh> Foam::meshRefinement::createZoneBaffles
 (
     const labelList& globalToMasterPatch,
