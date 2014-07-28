@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -158,6 +158,15 @@ public:
             //- Explicit and implicit matrix contributions
             virtual void addSup
             (
+                fvMatrix<${TemplateType}>& eqn,
+                const label fieldI
+            );
+
+            //- Explicit and implicit matrix contributions for compressible
+            //  equations
+            virtual void addSup
+            (
+                const volScalarField& rho,
                 fvMatrix<${TemplateType}>& eqn,
                 const label fieldI
             );
