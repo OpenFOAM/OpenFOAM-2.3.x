@@ -870,6 +870,9 @@ public:
                 const labelList& neiPatch
             );
 
+            //- Debug helper: check faceZones are not on processor patches
+            void checkZoneFaces() const;
+
             //- Create baffles for faces straddling zoned surfaces. Return
             //  baffles.
             autoPtr<mapPolyMesh> createZoneBaffles

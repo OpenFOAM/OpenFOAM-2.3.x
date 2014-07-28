@@ -1248,6 +1248,12 @@ void Foam::autoRefineDriver::doRefine
             decomposer_,
             distributor_
         );
+
+
+        if (debug)
+        {
+            meshRefiner_.checkZoneFaces();
+        }
     }
 }
 

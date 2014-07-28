@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.0                                 |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -71,12 +71,9 @@ PIMPLE
     momentumPredictor   yes;
     correctPhi          yes;
     transSonic          no;
-    nOuterCorrectors    1;
-    nCorrectors         3;
+    nOuterCorrectors    2;
+    nCorrectors         1;
     nNonOrthogonalCorrectors 0;
-    nAlphaCorr          1;
-    nAlphaSubCycles     2;
-    cAlpha              1;
 }
 
 relaxationFactors
