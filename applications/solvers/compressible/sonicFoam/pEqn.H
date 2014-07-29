@@ -9,8 +9,8 @@ HbyA = rAU*UEqn.H();
 surfaceScalarField phid
 (
     "phid",
-    fvc::interpolate(psi)*
-    (
+    fvc::interpolate(psi)
+   *(
         (mesh.Sf() & fvc::interpolate(HbyA))
       + rhorAUf*fvc::ddtCorr(rho, U, phi)/fvc::interpolate(rho)
     )
@@ -29,8 +29,6 @@ while (pimple.correctNonOrthogonal())
      ==
         fvOptions(psi, p, rho.name())
     );
-
-    fvOptions.constrain(pEqn);
 
     pEqn.solve();
 

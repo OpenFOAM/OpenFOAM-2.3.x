@@ -24,6 +24,9 @@ License
 Application
     sonicFoam
 
+Group
+    grpCompressibleSolvers
+
 Description
     Transient solver for trans-sonic/supersonic, laminar or turbulent flow
     of a compressible gas.
@@ -43,11 +46,12 @@ int main(int argc, char *argv[])
     #include "setRootCase.H"
     #include "createTime.H"
     #include "createMesh.H"
+
+    pimpleControl pimple(mesh);
+
     #include "createFields.H"
     #include "createFvOptions.H"
     #include "initContinuityErrs.H"
-
-    pimpleControl pimple(mesh);
 
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
