@@ -275,7 +275,11 @@ bool Foam::KinematicParcel<ParcelType>::move
     const scalar maxCo = td.cloud().solution().maxCo();
 
     scalar tEnd = (1.0 - p.stepFraction())*trackTime;
-    const scalar dtMax = maxCo*trackTime;
+    scalar dtMax = trackTime;
+    if (td.cloud().solution().transient())
+    {
+        dtMax *= maxCo;
+    }
 
     bool tracking = true;
     label nTrackingStalled = 0;
