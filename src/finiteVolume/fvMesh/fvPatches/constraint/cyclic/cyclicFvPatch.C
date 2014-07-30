@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,13 +39,12 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Make patch weighting factors
 void Foam::cyclicFvPatch::makeWeights(scalarField& w) const
 {
     const cyclicFvPatch& nbrPatch = neighbFvPatch();
 
-    const scalarField deltas(nf() & fvPatch::delta());
-    const scalarField nbrDeltas(nbrPatch.nf() & nbrPatch.fvPatch::delta());
+    const scalarField deltas(nf()&coupledFvPatch::delta());
+    const scalarField nbrDeltas(nbrPatch.nf()&nbrPatch.coupledFvPatch::delta());
 
     forAll(deltas, facei)
     {
@@ -57,11 +56,10 @@ void Foam::cyclicFvPatch::makeWeights(scalarField& w) const
 }
 
 
-// Return delta (P to N) vectors across coupled patch
 Foam::tmp<Foam::vectorField> Foam::cyclicFvPatch::delta() const
 {
-    const vectorField patchD(fvPatch::delta());
-    const vectorField nbrPatchD(neighbFvPatch().fvPatch::delta());
+    const vectorField patchD(coupledFvPatch::delta());
+    const vectorField nbrPatchD(neighbFvPatch().coupledFvPatch::delta());
 
     tmp<vectorField> tpdv(new vectorField(patchD.size()));
     vectorField& pdv = tpdv();

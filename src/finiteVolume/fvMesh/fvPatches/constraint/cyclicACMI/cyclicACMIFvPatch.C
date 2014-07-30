@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,6 +35,7 @@ namespace Foam
     defineTypeNameAndDebug(cyclicACMIFvPatch, 0);
     addToRunTimeSelectionTable(fvPatch, cyclicACMIFvPatch, polyPatch);
 }
+
 
 // * * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * //
 
@@ -82,13 +83,13 @@ void Foam::cyclicACMIFvPatch::makeWeights(scalarField& w) const
         const cyclicACMIFvPatch& nbrPatch = neighbFvPatch();
         const fvPatch& nbrPatchNonOverlap = nonOverlapPatch();
 
-        const scalarField deltas(nf() & fvPatch::delta());
+        const scalarField deltas(nf() & coupledFvPatch::delta());
 
         const scalarField nbrDeltas
         (
             interpolate
             (
-                nbrPatch.nf() & nbrPatch.fvPatch::delta(),
+                nbrPatch.nf() & nbrPatch.coupledFvPatch::delta(),
                 nbrPatchNonOverlap.nf() & nbrPatchNonOverlap.delta()
             )
         );
@@ -124,13 +125,13 @@ Foam::tmp<Foam::vectorField> Foam::cyclicACMIFvPatch::delta() const
         const cyclicACMIFvPatch& nbrPatchCoupled = neighbFvPatch();
         const fvPatch& nbrPatchNonOverlap = nonOverlapPatch();
 
-        const vectorField patchD(fvPatch::delta());
+        const vectorField patchD(coupledFvPatch::delta());
 
         vectorField nbrPatchD
         (
             interpolate
             (
-                nbrPatchCoupled.fvPatch::delta(),
+                nbrPatchCoupled.coupledFvPatch::delta(),
                 nbrPatchNonOverlap.delta()
             )
         );
@@ -175,7 +176,7 @@ Foam::tmp<Foam::vectorField> Foam::cyclicACMIFvPatch::delta() const
     }
     else
     {
-        return fvPatch::delta();
+        return coupledFvPatch::delta();
     }
 }
 

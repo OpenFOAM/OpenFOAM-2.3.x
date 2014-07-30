@@ -11,17 +11,16 @@ surfaceScalarField phid
     "phid",
     fvc::interpolate(psi)
    *(
-        (
-            (fvc::interpolate(HbyA) & mesh.Sf())
-          + rhorAUf*fvc::ddtCorr(rho, U, rhoUf)/fvc::interpolate(rho)
-        )
+       (mesh.Sf() & fvc::interpolate(HbyA))
+     + rhorAUf*fvc::ddtCorr(rho, U, rhoUf)/fvc::interpolate(rho)
     )
 );
 
 fvc::makeRelative(phid, psi, U);
 fvOptions.makeRelative(fvc::interpolate(psi), phid);
 
-for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
+// Non-orthogonal pressure corrector loop
+while (pimple.correctNonOrthogonal())
 {
     fvScalarMatrix pEqn
     (
@@ -32,13 +31,15 @@ for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
         fvOptions(psi, p, rho.name())
     );
 
-    fvOptions.constrain(pEqn);
-
     pEqn.solve();
 
-    phi = pEqn.flux();
+    if (pimple.finalNonOrthogonalIter())
+    {
+        phi = pEqn.flux();
+    }
 }
 
+#include "rhoEqn.H"
 #include "compressibleContinuityErrs.H"
 
 U = HbyA - rAU*fvc::grad(p);

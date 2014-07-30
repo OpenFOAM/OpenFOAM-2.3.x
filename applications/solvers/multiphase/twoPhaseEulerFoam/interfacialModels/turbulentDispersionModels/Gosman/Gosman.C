@@ -83,7 +83,7 @@ Foam::turbulentDispersionModels::Gosman::F() const
         );
 
     return
-      - 0.75
+        0.75
        *drag.CdRe()
        *pair_.dispersed()
        *pair_.continuous().nu()
