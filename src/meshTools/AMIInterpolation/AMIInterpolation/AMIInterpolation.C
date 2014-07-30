@@ -805,6 +805,17 @@ void Foam::AMIInterpolation<SourcePatch, TargetPatch>::update
     label srcTotalSize = returnReduce(srcPatch.size(), sumOp<label>());
     label tgtTotalSize = returnReduce(tgtPatch.size(), sumOp<label>());
 
+    if (srcTotalSize == 0)
+    {
+        if (debug)
+        {
+            Info<< "AMI: no source faces present - no addressing constructed"
+                << endl;
+        }
+
+        return;
+    }
+
     Info<< indent
         << "AMI: Creating addressing and weights between "
         << srcTotalSize << " source faces and "
