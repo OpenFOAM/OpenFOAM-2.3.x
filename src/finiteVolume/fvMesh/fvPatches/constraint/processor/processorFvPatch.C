@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,20 +27,18 @@ License
 #include "addToRunTimeSelectionTable.H"
 #include "transformField.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-defineTypeNameAndDebug(processorFvPatch, 0);
-addToRunTimeSelectionTable(fvPatch, processorFvPatch, polyPatch);
+    defineTypeNameAndDebug(processorFvPatch, 0);
+    addToRunTimeSelectionTable(fvPatch, processorFvPatch, polyPatch);
+}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-void processorFvPatch::makeWeights(scalarField& w) const
+void Foam::processorFvPatch::makeWeights(scalarField& w) const
 {
     if (Pstream::parRun())
     {
@@ -56,7 +54,8 @@ void processorFvPatch::makeWeights(scalarField& w) const
             - procPolyPatch_.neighbFaceCellCentres())
         );
 
-        w = neighbFaceCentresCn/((nf()&fvPatch::delta()) + neighbFaceCentresCn);
+        w = neighbFaceCentresCn
+           /((nf()&coupledFvPatch::delta()) + neighbFaceCentresCn);
     }
     else
     {
@@ -65,7 +64,7 @@ void processorFvPatch::makeWeights(scalarField& w) const
 }
 
 
-tmp<vectorField> processorFvPatch::delta() const
+Foam::tmp<Foam::vectorField> Foam::processorFvPatch::delta() const
 {
     if (Pstream::parRun())
     {
@@ -73,7 +72,7 @@ tmp<vectorField> processorFvPatch::delta() const
         if (parallel())
         {
             return
-                fvPatch::delta()
+                coupledFvPatch::delta()
               - (
                     procPolyPatch_.neighbFaceCentres()
                   - procPolyPatch_.neighbFaceCellCentres()
@@ -82,7 +81,7 @@ tmp<vectorField> processorFvPatch::delta() const
         else
         {
             return
-                fvPatch::delta()
+                coupledFvPatch::delta()
               - transform
                 (
                     forwardT(),
@@ -95,12 +94,12 @@ tmp<vectorField> processorFvPatch::delta() const
     }
     else
     {
-        return fvPatch::delta();
+        return coupledFvPatch::delta();
     }
 }
 
 
-tmp<labelField> processorFvPatch::interfaceInternalField
+Foam::tmp<Foam::labelField> Foam::processorFvPatch::interfaceInternalField
 (
     const labelUList& internalData
 ) const
@@ -109,7 +108,7 @@ tmp<labelField> processorFvPatch::interfaceInternalField
 }
 
 
-void processorFvPatch::initInternalFieldTransfer
+void Foam::processorFvPatch::initInternalFieldTransfer
 (
     const Pstream::commsTypes commsType,
     const labelUList& iF
@@ -119,7 +118,7 @@ void processorFvPatch::initInternalFieldTransfer
 }
 
 
-tmp<labelField> processorFvPatch::internalFieldTransfer
+Foam::tmp<Foam::labelField> Foam::processorFvPatch::internalFieldTransfer
 (
     const Pstream::commsTypes commsType,
     const labelUList&
@@ -128,9 +127,5 @@ tmp<labelField> processorFvPatch::internalFieldTransfer
     return receive<label>(commsType, this->size());
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //
