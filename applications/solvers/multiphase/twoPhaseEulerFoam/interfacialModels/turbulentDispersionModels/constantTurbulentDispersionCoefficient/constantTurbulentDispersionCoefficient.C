@@ -74,7 +74,7 @@ Foam::turbulentDispersionModels::constantTurbulentDispersionCoefficient::
 F() const
 {
     return
-      - Ctd_
+        Ctd_
        *pair_.dispersed()
        *pair_.continuous().rho()
        *pair_.continuous().turbulence().k()
