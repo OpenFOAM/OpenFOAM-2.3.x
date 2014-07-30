@@ -51,7 +51,7 @@ void Foam::cyclicAMIFvPatch::makeWeights(scalarField& w) const
     {
         const cyclicAMIFvPatch& nbrPatch = neighbFvPatch();
 
-        const scalarField deltas(nf() & fvPatch::delta());
+        const scalarField deltas(nf() & coupledFvPatch::delta());
 
         tmp<scalarField> tnbrDeltas;
         if (applyLowWeightCorrection())
@@ -59,13 +59,14 @@ void Foam::cyclicAMIFvPatch::makeWeights(scalarField& w) const
             tnbrDeltas =
                 interpolate
                 (
-                    nbrPatch.nf() & nbrPatch.fvPatch::delta(),
+                    nbrPatch.nf() & nbrPatch.coupledFvPatch::delta(),
                     scalarField(this->size(), 1.0)
                 );
         }
         else
         {
-            tnbrDeltas = interpolate(nbrPatch.nf() & nbrPatch.fvPatch::delta());
+            tnbrDeltas =
+                interpolate(nbrPatch.nf() & nbrPatch.coupledFvPatch::delta());
         }
 
         const scalarField& nbrDeltas = tnbrDeltas();
@@ -92,7 +93,7 @@ Foam::tmp<Foam::vectorField> Foam::cyclicAMIFvPatch::delta() const
 
     if (coupled())
     {
-        const vectorField patchD(fvPatch::delta());
+        const vectorField patchD(coupledFvPatch::delta());
 
         tmp<vectorField> tnbrPatchD;
         if (applyLowWeightCorrection())
@@ -100,13 +101,13 @@ Foam::tmp<Foam::vectorField> Foam::cyclicAMIFvPatch::delta() const
             tnbrPatchD =
                 interpolate
                 (
-                    nbrPatch.fvPatch::delta(),
+                    nbrPatch.coupledFvPatch::delta(),
                     vectorField(this->size(), vector::zero)
                 );
         }
         else
         {
-            tnbrPatchD = interpolate(nbrPatch.fvPatch::delta());
+            tnbrPatchD = interpolate(nbrPatch.coupledFvPatch::delta());
         }
 
         const vectorField& nbrPatchD = tnbrPatchD();
@@ -140,7 +141,7 @@ Foam::tmp<Foam::vectorField> Foam::cyclicAMIFvPatch::delta() const
     }
     else
     {
-        return fvPatch::delta();
+        return coupledFvPatch::delta();
     }
 }
 
