@@ -444,6 +444,20 @@ void Foam::fieldValues::faceSource::initialise(const dictionary& dict)
     if (dict.readIfPresent("weightField", weightFieldName_))
     {
         Info<< "    weight field = " << weightFieldName_ << nl;
+
+        if (source_ == stSampledSurface)
+        {
+            FatalIOErrorIn
+            (
+                "void Foam::fieldValues::faceSource::initialise"
+                "("
+                    "const dictionary&"
+                ")",
+                dict
+            )
+                << "Cannot use weightField for a sampledSurface"
+                << exit(FatalIOError);
+        }
     }
 
     if (dict.found("orientedWeightField"))
@@ -664,8 +678,8 @@ void Foam::fieldValues::faceSource::write()
             file() << obr_.time().value() << tab << totalArea;
         }
 
-        // construct weight field
-        scalarField weightField(faceId_.size(), 1.0);
+        // construct weight field. Note: zero size means weight = 1
+        scalarField weightField;
         if (weightFieldName_ != "none")
         {
             weightField =
