@@ -53,7 +53,8 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
-#   include "addOverwriteOption.H"
+    #include "addOverwriteOption.H"
+    #include "addRegionOption.H"
     argList::validArgs.append("cellSet");
     argList::addBoolOption
     (
@@ -62,10 +63,10 @@ int main(int argc, char *argv[])
         " (default is to extend set)"
     );
 
-#   include "setRootCase.H"
-#   include "createTime.H"
+    #include "setRootCase.H"
+    #include "createTime.H"
     runTime.functionObjects().off();
-#   include "createMesh.H"
+    #include "createNamedMesh.H"
     const word oldInstance = mesh.pointsInstance();
 
     word cellSetName(args.args()[1]);
@@ -181,7 +182,7 @@ int main(int argc, char *argv[])
         mesh.movePoints(map().preMotionPoints());
     }
 
-    Pout<< "Refined from " << returnReduce(map().nOldCells(), sumOp<label>())
+    Info<< "Refined from " << returnReduce(map().nOldCells(), sumOp<label>())
         << " to " << mesh.globalData().nTotalCells() << " cells." << nl << endl;
 
     if (overwrite)
