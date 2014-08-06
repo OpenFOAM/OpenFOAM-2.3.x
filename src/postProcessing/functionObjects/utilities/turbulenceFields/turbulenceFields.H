@@ -32,16 +32,16 @@ Description
     further manipulation.
 
     Fields are stored as copies of the original, with the prefix
-    "tubulenceModel::", e.g.
+    "tubulenceModel:", e.g.
 
-        turbulenceModel::R
+        turbulenceModel:R
 
     Example of function object specification:
     \verbatim
     turbulenceFields1
     {
         type        turbulenceFields;
-        functionObjectLibs ("libfieldFunctionObjects.so");
+        functionObjectLibs ("libutilityFunctionObjects.so");
         ...
         fields
         (
