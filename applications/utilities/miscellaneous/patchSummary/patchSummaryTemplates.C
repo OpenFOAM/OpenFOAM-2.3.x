@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,33 +28,33 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-template<class Type>
+template<class GeoField>
 void Foam::addToFieldList
 (
-    PtrList<GeometricField<Type, fvPatchField, volMesh> >& fieldList,
+    PtrList<GeoField>& fieldList,
     const IOobject& obj,
     const label fieldI,
-    const fvMesh& mesh
+    const typename GeoField::Mesh& mesh
 )
 {
-    typedef GeometricField<Type, fvPatchField, volMesh> fieldType;
+    typedef GeoField fieldType;
 
-    if (obj.headerClassName() == fieldType::typeName)
+    if (obj.headerClassName() == GeoField::typeName)
     {
         fieldList.set
         (
             fieldI,
-            new fieldType(obj, mesh)
+            new GeoField(obj, mesh)
         );
-        Info<< "    " << fieldType::typeName << tab << obj.name() << endl;
+        Info<< "    " << GeoField::typeName << tab << obj.name() << endl;
     }
 }
 
 
-template<class Type>
+template<class GeoField>
 void Foam::outputFieldList
 (
-    const PtrList<GeometricField<Type, fvPatchField, volMesh> >& fieldList,
+    const PtrList<GeoField>& fieldList,
     const label patchI
 )
 {
@@ -62,7 +62,8 @@ void Foam::outputFieldList
     {
         if (fieldList.set(fieldI))
         {
-            Info<< "    " << pTraits<Type>::typeName << tab << tab
+            Info<< "    " << pTraits<typename GeoField::value_type>::typeName
+                << tab << tab
                 << fieldList[fieldI].name() << tab << tab
                 << fieldList[fieldI].boundaryField()[patchI].type() << nl;
         }
@@ -70,10 +71,10 @@ void Foam::outputFieldList
 }
 
 
-template<class Type>
+template<class GeoField>
 void Foam::collectFieldList
 (
-    const PtrList<GeometricField<Type, fvPatchField, volMesh> >& fieldList,
+    const PtrList<GeoField>& fieldList,
     const label patchI,
     HashTable<word>& fieldToType
 )
