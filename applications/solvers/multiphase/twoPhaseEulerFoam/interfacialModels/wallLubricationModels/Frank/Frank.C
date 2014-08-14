@@ -71,11 +71,12 @@ Foam::wallLubricationModels::Frank::~Frank()
 Foam::tmp<Foam::volVectorField> Foam::wallLubricationModels::Frank::F() const
 {
     volVectorField Ur(pair_.Ur());
-    volVectorField nWall(- fvc::grad(yWall_));
-    nWall /= mag(nWall) + SMALL;
+
+    const volVectorField& n(nWall());
+    const volScalarField& y(yWall());
 
     volScalarField Eo(pair_.Eo());
-    volScalarField yTilde(yWall_/(Cwc_*pair_.dispersed().d()));
+    volScalarField yTilde(y/(Cwc_*pair_.dispersed().d()));
 
     return
         (
@@ -86,12 +87,12 @@ Foam::tmp<Foam::volVectorField> Foam::wallLubricationModels::Frank::F() const
        *max
         (
             dimensionedScalar("zero", dimless/dimLength, 0.0),
-            (1.0 - yTilde)/(Cwd_*yWall_*pow(yTilde, p_ - 1.0))
+            (1.0 - yTilde)/(Cwd_*y*pow(yTilde, p_ - 1.0))
         )
        *pair_.dispersed()
        *pair_.continuous().rho()
-       *magSqr(Ur - (Ur & nWall)*nWall)
-       *nWall;
+       *magSqr(Ur - (Ur & n)*n)
+       *n;
 }
 
 

@@ -70,19 +70,19 @@ Foam::wallLubricationModels::Antal::~Antal()
 Foam::tmp<Foam::volVectorField> Foam::wallLubricationModels::Antal::F() const
 {
     volVectorField Ur(pair_.Ur());
-    volVectorField nWall(- fvc::grad(yWall_));
-    nWall /= mag(nWall) + SMALL;
+
+    const volVectorField& n(nWall());
 
     return
         max
         (
             dimensionedScalar("zero", dimless/dimLength, 0),
-            Cw1_/pair_.dispersed().d() + Cw2_/yWall_
+            Cw1_/pair_.dispersed().d() + Cw2_/yWall()
         )
        *pair_.dispersed()
        *pair_.continuous().rho()
-       *magSqr(Ur - (Ur & nWall)*nWall)
-       *nWall;
+       *magSqr(Ur - (Ur & n)*n)
+       *n;
 }
 
 

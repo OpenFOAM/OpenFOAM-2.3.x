@@ -32,7 +32,6 @@ License
 #include "liftModel.H"
 #include "wallLubricationModel.H"
 #include "turbulentDispersionModel.H"
-#include "wallDist.H"
 #include "fvMatrix.H"
 #include "surfaceInterpolate.H"
 #include "MULES.H"
@@ -110,17 +109,6 @@ Foam::twoPhaseSystem::twoPhaseSystem
         ),
         mesh,
         dimensionedScalar("dgdt", dimless/dimTime, 0)
-    ),
-
-    yWall_
-    (
-        IOobject
-        (
-            "yWall",
-            mesh.time().timeName(),
-            mesh
-        ),
-        wallDist(mesh).y()
     )
 {
     phase2_.volScalarField::operator=(scalar(1) - phase1_);

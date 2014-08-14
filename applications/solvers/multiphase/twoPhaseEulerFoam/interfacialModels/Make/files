@@ -56,4 +56,6 @@ aspectRatioModels/TomiyamaAspectRatio/TomiyamaAspectRatio.C
 aspectRatioModels/VakhrushevEfremov/VakhrushevEfremov.C
 aspectRatioModels/Wellek/Wellek.C
 
+wallDependentModel/wallDependentModel.C
+
 LIB = $(FOAM_LIBBIN)/libcompressibleEulerianInterfacialModels
