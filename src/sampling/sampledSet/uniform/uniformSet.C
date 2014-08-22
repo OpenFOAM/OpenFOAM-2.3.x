@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -226,13 +226,16 @@ void Foam::uniformSet::calcSamples
             << exit(FatalError);
     }
 
+    // Dummy cloud to force cyclicAMI and min-tet decomposition construction
+    // even on those processors where there are no points
+    passiveParticleCloud dummyCloud(mesh());
+
+
     const vector offset = (end_ - start_)/(nPoints_ - 1);
     const vector normOffset = offset/mag(offset);
     const vector smallVec = tol*offset;
     const scalar smallDist = mag(smallVec);
 
-    // Force calculation of minimum-tet decomposition.
-    (void) mesh().tetBasePtIs();
 
     // Get all boundary intersections
     List<pointIndexHit> bHits = searchEngine().intersections
