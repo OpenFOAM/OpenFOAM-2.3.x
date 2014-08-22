@@ -83,9 +83,6 @@ private:
         //-  Dilatation term
         volScalarField dgdt_;
 
-        //- Wall distance
-        volScalarField yWall_;
-
         //- Unordered phase pair
         autoPtr<phasePair> pair_;
 

@@ -53,7 +53,7 @@ Foam::aspectRatioModels::TomiyamaAspectRatio::TomiyamaAspectRatio
 )
 :
     VakhrushevEfremov(dict, pair),
-    yWall_(pair.phase1().mesh().lookupObject<volScalarField>("yWall"))
+    wallDependentModel(pair.phase1().mesh())
 {}
 
 
@@ -72,7 +72,7 @@ Foam::aspectRatioModels::TomiyamaAspectRatio::E() const
         VakhrushevEfremov::E()
        *max
        (
-           scalar(1) - 0.35*yWall_/pair_.dispersed().d(),
+           scalar(1) - 0.35*yWall()/pair_.dispersed().d(),
            scalar(0.65)
        );
 }

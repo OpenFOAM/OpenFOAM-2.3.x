@@ -77,7 +77,7 @@ inletOutletTotalTemperatureFvPatchScalarField
 :
     inletOutletFvPatchScalarField(p, iF),
     UName_(dict.lookupOrDefault<word>("U", "U")),
-    psiName_(dict.lookupOrDefault<word>("psi", "psi")),
+    psiName_(dict.lookupOrDefault<word>("psi", "thermo:psi")),
     gamma_(readScalar(dict.lookup("gamma"))),
     T0_("T0", dict, p.size())
 {

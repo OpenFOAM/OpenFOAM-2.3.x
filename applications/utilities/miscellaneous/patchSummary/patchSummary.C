@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,6 +37,7 @@ Description
 
 #include "fvCFD.H"
 #include "volFields.H"
+#include "pointFields.H"
 #include "IOobjectList.H"
 #include "patchSummaryTemplates.H"
 
@@ -87,6 +88,12 @@ int main(int argc, char *argv[])
         PtrList<volSymmTensorField> vsytf(objNames.size());
         PtrList<volTensorField> vtf(objNames.size());
 
+        PtrList<pointScalarField> psf(objNames.size());
+        PtrList<pointVectorField> pvf(objNames.size());
+        PtrList<pointSphericalTensorField> psptf(objNames.size());
+        PtrList<pointSymmTensorField> psytf(objNames.size());
+        PtrList<pointTensorField> ptf(objNames.size());
+
         Info<< "Valid fields:" << endl;
 
         forAll(objNames, objI)
@@ -101,11 +108,17 @@ int main(int argc, char *argv[])
 
             if (obj.headerOk())
             {
-                addToFieldList<scalar>(vsf, obj, objI, mesh);
-                addToFieldList<vector>(vvf, obj, objI, mesh);
-                addToFieldList<sphericalTensor>(vsptf, obj, objI, mesh);
-                addToFieldList<symmTensor>(vsytf, obj, objI, mesh);
-                addToFieldList<tensor>(vtf, obj, objI, mesh);
+                addToFieldList(vsf, obj, objI, mesh);
+                addToFieldList(vvf, obj, objI, mesh);
+                addToFieldList(vsptf, obj, objI, mesh);
+                addToFieldList(vsytf, obj, objI, mesh);
+                addToFieldList(vtf, obj, objI, mesh);
+
+                addToFieldList(psf, obj, objI, pointMesh::New(mesh));
+                addToFieldList(pvf, obj, objI, pointMesh::New(mesh));
+                addToFieldList(psptf, obj, objI, pointMesh::New(mesh));
+                addToFieldList(psytf, obj, objI, pointMesh::New(mesh));
+                addToFieldList(ptf, obj, objI, pointMesh::New(mesh));
             }
         }
 
@@ -119,11 +132,17 @@ int main(int argc, char *argv[])
             forAll(bm, patchI)
             {
                 Info<< bm[patchI].type() << "\t: " << bm[patchI].name() << nl;
-                outputFieldList<scalar>(vsf, patchI);
-                outputFieldList<vector>(vvf, patchI);
-                outputFieldList<sphericalTensor>(vsptf, patchI);
-                outputFieldList<symmTensor>(vsytf, patchI);
-                outputFieldList<tensor>(vtf, patchI);
+                outputFieldList(vsf, patchI);
+                outputFieldList(vvf, patchI);
+                outputFieldList(vsptf, patchI);
+                outputFieldList(vsytf, patchI);
+                outputFieldList(vtf, patchI);
+
+                outputFieldList(psf, patchI);
+                outputFieldList(pvf, patchI);
+                outputFieldList(psptf, patchI);
+                outputFieldList(psytf, patchI);
+                outputFieldList(ptf, patchI);
                 Info<< endl;
             }
         }
@@ -139,11 +158,17 @@ int main(int argc, char *argv[])
             forAll(bm, patchI)
             {
                 HashTable<word> fieldToType;
-                collectFieldList<scalar>(vsf, patchI, fieldToType);
-                collectFieldList<vector>(vvf, patchI, fieldToType);
-                collectFieldList<sphericalTensor>(vsptf, patchI, fieldToType);
-                collectFieldList<symmTensor>(vsytf, patchI, fieldToType);
-                collectFieldList<tensor>(vtf, patchI, fieldToType);
+                collectFieldList(vsf, patchI, fieldToType);
+                collectFieldList(vvf, patchI, fieldToType);
+                collectFieldList(vsptf, patchI, fieldToType);
+                collectFieldList(vsytf, patchI, fieldToType);
+                collectFieldList(vtf, patchI, fieldToType);
+
+                collectFieldList(psf, patchI, fieldToType);
+                collectFieldList(pvf, patchI, fieldToType);
+                collectFieldList(psptf, patchI, fieldToType);
+                collectFieldList(psytf, patchI, fieldToType);
+                collectFieldList(ptf, patchI, fieldToType);
 
                 label groupI = findIndex(fieldToTypes, fieldToType);
                 if (groupI == -1)
@@ -184,11 +209,17 @@ int main(int argc, char *argv[])
                             Info<< "group\t: " << groups[i] << nl;
                         }
                     }
-                    outputFieldList<scalar>(vsf, patchIDs[0]);
-                    outputFieldList<vector>(vvf, patchIDs[0]);
-                    outputFieldList<sphericalTensor>(vsptf, patchIDs[0]);
-                    outputFieldList<symmTensor>(vsytf, patchIDs[0]);
-                    outputFieldList<tensor>(vtf, patchIDs[0]);
+                    outputFieldList(vsf, patchIDs[0]);
+                    outputFieldList(vvf, patchIDs[0]);
+                    outputFieldList(vsptf, patchIDs[0]);
+                    outputFieldList(vsytf, patchIDs[0]);
+                    outputFieldList(vtf, patchIDs[0]);
+
+                    outputFieldList(psf, patchIDs[0]);
+                    outputFieldList(pvf, patchIDs[0]);
+                    outputFieldList(psptf, patchIDs[0]);
+                    outputFieldList(psytf, patchIDs[0]);
+                    outputFieldList(ptf, patchIDs[0]);
                     Info<< endl;
                 }
                 else
@@ -199,11 +230,17 @@ int main(int argc, char *argv[])
                         label patchI = patchIDs[i];
                         Info<< bm[patchI].type()
                             << "\t: " << bm[patchI].name() << nl;
-                        outputFieldList<scalar>(vsf, patchI);
-                        outputFieldList<vector>(vvf, patchI);
-                        outputFieldList<sphericalTensor>(vsptf, patchI);
-                        outputFieldList<symmTensor>(vsytf, patchI);
-                        outputFieldList<tensor>(vtf, patchI);
+                        outputFieldList(vsf, patchI);
+                        outputFieldList(vvf, patchI);
+                        outputFieldList(vsptf, patchI);
+                        outputFieldList(vsytf, patchI);
+                        outputFieldList(vtf, patchI);
+
+                        outputFieldList(psf, patchI);
+                        outputFieldList(pvf, patchI);
+                        outputFieldList(psptf, patchI);
+                        outputFieldList(psytf, patchI);
+                        outputFieldList(ptf, patchI);
                         Info<< endl;
                     }
                 }

@@ -1177,6 +1177,15 @@ Foam::labelList Foam::meshRefinement::markFacesOnProblemCellsGeometric
         {
             newPoints[meshPoints[i]] += disp[i];
         }
+
+        syncTools::syncPointList
+        (
+            mesh_,
+            newPoints,
+            minMagSqrEqOp<point>(),     // combine op
+            vector(GREAT, GREAT, GREAT) // null value (note: cannot use VGREAT)
+        );
+
         mesh_.movePoints(newPoints);
     }
 

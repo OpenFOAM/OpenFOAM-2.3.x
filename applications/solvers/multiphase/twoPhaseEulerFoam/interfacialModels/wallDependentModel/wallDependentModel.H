@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,77 +22,72 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::aspectRatioModels::TomiyamaAspectRatio
+    Foam::wallDependentModel
 
 Description
-    Aspect ratio model of Tomiyama.
-
-    Reference:
-    \verbatim
-        "Implementation and Comparison of Correlations for interfacial Forces
-        in a Gas-Liquid System within an Euler-Euler Framework"
-        M Otromke
-        PhD Thesis
-        April 2013
-    \endverbatim
+    A class which provides on-demand creation and caching of wall distance and
+    wall normal fields for use by multiple models.
 
 SourceFiles
-    TomiyamaAspectRatio.C
+    wallDependentModel.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef TomiyamaAspectRatio_H
-#define TomiyamaAspectRatio_H
+#ifndef wallDependentModel_H
+#define wallDependentModel_H
 
-#include "VakhrushevEfremov.H"
-#include "wallDependentModel.H"
+#include "fvMesh.H"
+#include "volFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace aspectRatioModels
-{
 
 /*---------------------------------------------------------------------------*\
-                       Class TomiyamaAspectRatio Declaration
+                         Class wallDependentModel Declaration
 \*---------------------------------------------------------------------------*/
 
-class TomiyamaAspectRatio
-:
-    public VakhrushevEfremov,
-    public wallDependentModel
+class wallDependentModel
 {
+    // Private data
+
+        //- Reference to the mesh
+        const fvMesh& mesh_;
+
+
+    // Private Member Functions
+
+        //- Disallow default bitwise copy construct
+        wallDependentModel(const wallDependentModel&);
+
+        //- Disallow default bitwise assignment
+        void operator=(const wallDependentModel&);
+
+
 public:
-
-    //- Runtime type information
-    TypeName("Tomiyama");
-
 
     // Constructors
 
-        //- Construct from a dictionary and an ordered phase pair
-        TomiyamaAspectRatio
-        (
-            const dictionary& dict,
-            const orderedPhasePair& pair
-        );
+        //- Construct from a mesh
+        wallDependentModel(const fvMesh& mesh);
 
 
     //- Destructor
-    virtual ~TomiyamaAspectRatio();
-
+    virtual ~wallDependentModel();
 
     // Member Functions
 
-        //- Aspect ratio
-        virtual tmp<volScalarField> E() const;
+        // Return the wall distance, creating and storing it if necessary
+        const volScalarField& yWall() const;
+
+        // Return the wall normal, creating and storing it if necessary
+        const volVectorField& nWall() const;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace aspectRatioModels
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

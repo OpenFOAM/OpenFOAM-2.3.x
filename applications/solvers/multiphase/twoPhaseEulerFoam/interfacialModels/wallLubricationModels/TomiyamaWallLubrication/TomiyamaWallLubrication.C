@@ -70,8 +70,9 @@ Foam::tmp<Foam::volVectorField>
 Foam::wallLubricationModels::TomiyamaWallLubrication::F() const
 {
     volVectorField Ur(pair_.Ur());
-    volVectorField nWall(- fvc::grad(yWall_));
-    nWall /= mag(nWall) + SMALL;
+
+    const volVectorField& n(nWall());
+    const volScalarField& y(yWall());
 
     volScalarField Eo(pair_.Eo());
 
@@ -84,13 +85,13 @@ Foam::wallLubricationModels::TomiyamaWallLubrication::F() const
        *0.5
        *pair_.dispersed().d()
        *(
-            1/sqr(yWall_)
-          - 1/sqr(D_ - yWall_)
+            1/sqr(y)
+          - 1/sqr(D_ - y)
         )
        *pair_.dispersed()
        *pair_.continuous().rho()
-       *magSqr(Ur - (Ur & nWall)*nWall)
-       *nWall;
+       *magSqr(Ur - (Ur & n)*n)
+       *n;
 }
 
 

@@ -45,8 +45,8 @@ Foam::wallLubricationModel::wallLubricationModel
     const phasePair& pair
 )
 :
-    pair_(pair),
-    yWall_(pair.phase1().mesh().lookupObject<volScalarField>("yWall"))
+    wallDependentModel(pair.phase1().mesh()),
+    pair_(pair)
 {}
 
 
