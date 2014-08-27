@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -110,6 +110,10 @@ Foam::OutputFilterFunctionObject<OutputFilter>::OutputFilterFunctionObject
     storeFilter_(true),
     timeStart_(-VGREAT),
     timeEnd_(VGREAT),
+    nStepsToStartTimeChange_
+    (
+        dict.lookupOrDefault("nStepsToStartTimeChange", 3)
+    ),
     outputControl_(t, dict, "output"),
     evaluateControl_(t, dict, "evaluate")
 {
