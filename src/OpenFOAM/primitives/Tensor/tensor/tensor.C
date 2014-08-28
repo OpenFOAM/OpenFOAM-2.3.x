@@ -92,76 +92,95 @@ Foam::vector Foam::eigenValues(const tensor& t)
     // The eigenvalues
     scalar i, ii, iii;
 
-    // Coefficients of the characteristic polynmial
-    // x^3 + a*x^2 + b*x + c = 0
-    scalar a =
-       - t.xx() - t.yy() - t.zz();
-
-    scalar b =
-        t.xx()*t.yy() + t.xx()*t.zz() + t.yy()*t.zz()
-      - t.xy()*t.yx() - t.yz()*t.zy() - t.zx()*t.xz();
-
-    scalar c =
-      - t.xx()*t.yy()*t.zz()
-      - t.xy()*t.yz()*t.zx() - t.xz()*t.zy()*t.yx()
-      + t.xx()*t.yz()*t.zy() + t.yy()*t.zx()*t.xz() + t.zz()*t.xy()*t.yx();
-
-    // Auxillary variables
-    scalar aBy3 = a/3;
-
-    scalar P = (a*a - 3*b)/9; // == -p_wikipedia/3
-    scalar PPP = P*P*P;
-
-    scalar Q = (2*a*a*a - 9*a*b + 27*c)/54; // == q_wikipedia/2
-    scalar QQ = Q*Q;
-
-    // Three identical roots
-    if (mag(P) < SMALL && mag(Q) < SMALL)
+    // diagonal matrix
+    if
+    (
+        (
+            mag(t.xy()) + mag(t.xz()) + mag(t.yx())
+            + mag(t.yz()) + mag(t.zx()) + mag(t.zy())
+        )
+        < SMALL
+    )
     {
-        return vector(- aBy3, - aBy3, - aBy3);
+        i = t.xx();
+        ii = t.yy();
+        iii = t.zz();
     }
 
-    // Two identical roots and one distinct root
-    else if (mag(PPP/QQ - 1) < SMALL)
-    {
-        scalar sqrtP = sqrt(P);
-        scalar signQ = sign(Q);
-
-        i = ii = signQ*sqrtP - aBy3;
-        iii = - 2*signQ*sqrtP - aBy3;
-    }
-
-    // Three distinct roots
-    else if (PPP > QQ)
-    {
-        scalar sqrtP = sqrt(P);
-        scalar value = cos(acos(Q/sqrt(PPP))/3);
-        scalar delta = sqrt(3 - 3*value*value);
-
-        i = - 2*sqrtP*value - aBy3;
-        ii = sqrtP*(value + delta) - aBy3;
-        iii = sqrtP*(value - delta) - aBy3;
-    }
-
-    // One real root, two imaginary roots
-    // based on the above logic, PPP must be less than QQ
+    // non-diagonal matrix
     else
     {
-        WarningIn("eigenValues(const tensor&)")
-            << "complex eigenvalues detected for tensor: " << t
-            << endl;
+        // Coefficients of the characteristic polynmial
+        // x^3 + a*x^2 + b*x + c = 0
+        scalar a =
+           - t.xx() - t.yy() - t.zz();
 
-        if (mag(P) < SMALL)
+        scalar b =
+            t.xx()*t.yy() + t.xx()*t.zz() + t.yy()*t.zz()
+          - t.xy()*t.yx() - t.yz()*t.zy() - t.zx()*t.xz();
+
+        scalar c =
+          - t.xx()*t.yy()*t.zz()
+          - t.xy()*t.yz()*t.zx() - t.xz()*t.zy()*t.yx()
+          + t.xx()*t.yz()*t.zy() + t.yy()*t.zx()*t.xz() + t.zz()*t.xy()*t.yx();
+
+        // Auxillary variables
+        scalar aBy3 = a/3;
+
+        scalar P = (a*a - 3*b)/9; // == -p_wikipedia/3
+        scalar PPP = P*P*P;
+
+        scalar Q = (2*a*a*a - 9*a*b + 27*c)/54; // == q_wikipedia/2
+        scalar QQ = Q*Q;
+
+        // Three identical roots
+        if (mag(P) < SMALL && mag(Q) < SMALL)
         {
-            i = cbrt(QQ/2);
+            return vector(- aBy3, - aBy3, - aBy3);
         }
+
+        // Two identical roots and one distinct root
+        else if (mag(PPP/QQ - 1) < SMALL)
+        {
+            scalar sqrtP = sqrt(P);
+            scalar signQ = sign(Q);
+
+            i = ii = signQ*sqrtP - aBy3;
+            iii = - 2*signQ*sqrtP - aBy3;
+        }
+
+        // Three distinct roots
+        else if (PPP > QQ)
+        {
+            scalar sqrtP = sqrt(P);
+            scalar value = cos(acos(Q/sqrt(PPP))/3);
+            scalar delta = sqrt(3 - 3*value*value);
+
+            i = - 2*sqrtP*value - aBy3;
+            ii = sqrtP*(value + delta) - aBy3;
+            iii = sqrtP*(value - delta) - aBy3;
+        }
+
+        // One real root, two imaginary roots
+        // based on the above logic, PPP must be less than QQ
         else
         {
-            scalar w = cbrt(- Q - sqrt(QQ - PPP));
-            i = w + P/w - aBy3;
-        }
+            WarningIn("eigenValues(const tensor&)")
+                << "complex eigenvalues detected for tensor: " << t
+                << endl;
 
-        return vector(-VGREAT, i, VGREAT);
+            if (mag(P) < SMALL)
+            {
+                i = cbrt(QQ/2);
+            }
+            else
+            {
+                scalar w = cbrt(- Q - sqrt(QQ - PPP));
+                i = w + P/w - aBy3;
+            }
+
+            return vector(-VGREAT, i, VGREAT);
+        }
     }
 
     // Sort the eigenvalues into ascending order
@@ -192,7 +211,7 @@ Foam::vector Foam::eigenVector
 {
     // Constantly rotating direction ensures different eigenvectors are
     // generated when called sequentially with a multiple eigenvalue
-    static vector direction(0,0,1);
+    static vector direction(1,0,0);
     vector oldDirection(direction);
     scalar temp = direction[2];
     direction[2] = direction[1];
