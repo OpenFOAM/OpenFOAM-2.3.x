@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,12 +33,13 @@ Description
     constant/boundaryData/\<patchname\> where:
     - points : pointField with locations
     - ddd    : supplied values at time ddd
-    The points should be more or less on a plane since they get triangulated
-    in 2-D.
+    The default mode of operation (mapMethod planarInterpolation) is
+    to project the points onto a plane (constructed from the first threee
+    points) and construct a 2D triangulation and finds for the face centres
+    the triangle it is in and the weights to the 3 vertices.
 
-    At startup, this condition generates the triangulation and performs a
-    linear interpolation (triangle it is in and weights to the 3 vertices)
-    for every face centre.
+    The optional mapMethod nearest will avoid all projection and
+    triangulation and just use the value at the nearest vertex.
 
     Values are interpolated linearly between times.
 
@@ -49,6 +50,7 @@ Description
         setAverage   | flag to activate setting of average value | yes |
         perturb      | perturb points for regular geometries | no | 1e-5
         fieldTableName | alternative field name to sample | no| this field name
+        mapMethod    | type of mapping | no | planarInterpolation
     \endtable
 
     /verbatim
@@ -60,10 +62,6 @@ Description
         //fieldTableName samples;
     }
     /endverbatim
-
-Note
-    Switch on debug flag to have it dump the triangulation (in transformed
-    space) and transform face centres.
 
 SeeAlso
     Foam::fixedValueFvPatchField
@@ -107,7 +105,10 @@ class timeVaryingMappedFixedValueFvPatchField
         //- Fraction of perturbation (fraction of bounding box) to add
         scalar perturb_;
 
-        //- 2D interpolation
+        //- Interpolation scheme to use
+        word mapMethod_;
+
+        //- 2D interpolation (for 'planarInterpolation' mapMethod)
         autoPtr<pointToPointPlanarInterpolation> mapperPtr_;
 
         //- List of boundaryData time directories

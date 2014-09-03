@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,6 +42,7 @@ timeVaryingMappedFixedValuePointPatchField
     fieldTableName_(iF.name()),
     setAverage_(false),
     perturb_(0),
+    mapperPtr_(NULL),
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
@@ -68,7 +69,8 @@ timeVaryingMappedFixedValuePointPatchField
     fieldTableName_(ptf.fieldTableName_),
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
-    mapperPtr_(ptf.mapperPtr_),
+    mapMethod_(ptf.mapMethod_),
+    mapperPtr_(NULL),
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
@@ -99,6 +101,14 @@ timeVaryingMappedFixedValuePointPatchField
     fieldTableName_(iF.name()),
     setAverage_(readBool(dict.lookup("setAverage"))),
     perturb_(dict.lookupOrDefault("perturb", 1e-5)),
+    mapMethod_
+    (
+        dict.lookupOrDefault<word>
+        (
+            "mapMethod",
+            "planarInterpolation"
+        )
+    ),
     mapperPtr_(NULL),
     sampleTimes_(0),
     startSampleTime_(-1),
@@ -146,6 +156,7 @@ timeVaryingMappedFixedValuePointPatchField
     fieldTableName_(ptf.fieldTableName_),
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
+    mapMethod_(ptf.mapMethod_),
     mapperPtr_(ptf.mapperPtr_),
     sampleTimes_(ptf.sampleTimes_),
     startSampleTime_(ptf.startSampleTime_),
@@ -176,6 +187,7 @@ timeVaryingMappedFixedValuePointPatchField
     fieldTableName_(ptf.fieldTableName_),
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
+    mapMethod_(ptf.mapMethod_),
     mapperPtr_(ptf.mapperPtr_),
     sampleTimes_(ptf.sampleTimes_),
     startSampleTime_(ptf.startSampleTime_),
@@ -290,13 +302,22 @@ void Foam::timeVaryingMappedFixedValuePointPatchField<Type>::checkTable()
             )
         );
 
+        // tbd: run-time selection
+        bool nearestOnly =
+        (
+           !mapMethod_.empty()
+         && mapMethod_ != "planarInterpolation"
+        );
+
+        // Allocate the interpolator
         mapperPtr_.reset
         (
             new pointToPointPlanarInterpolation
             (
                 samplePoints,
                 meshPts,
-                perturb_
+                perturb_,
+                nearestOnly
             )
         );
 
@@ -590,6 +611,18 @@ void Foam::timeVaryingMappedFixedValuePointPatchField<Type>::write
     if (fieldTableName_ != this->dimensionedInternalField().name())
     {
         os.writeKeyword("fieldTableName") << fieldTableName_
+            << token::END_STATEMENT << nl;
+    }
+
+    if
+    (
+        (
+           !mapMethod_.empty()
+         && mapMethod_ != "planarInterpolation"
+        )
+    )
+    {
+        os.writeKeyword("mapMethod") << mapMethod_
             << token::END_STATEMENT << nl;
     }
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -72,6 +72,7 @@ timeVaryingMappedFixedValueFvPatchField
     fieldTableName_(ptf.fieldTableName_),
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
+    mapMethod_(ptf.mapMethod_),
     mapperPtr_(NULL),
     sampleTimes_(0),
     startSampleTime_(-1),
@@ -102,6 +103,14 @@ timeVaryingMappedFixedValueFvPatchField
     fieldTableName_(iF.name()),
     setAverage_(readBool(dict.lookup("setAverage"))),
     perturb_(dict.lookupOrDefault("perturb", 1e-5)),
+    mapMethod_
+    (
+        dict.lookupOrDefault<word>
+        (
+            "mapMethod",
+            "planarInterpolation"
+        )
+    ),
     mapperPtr_(NULL),
     sampleTimes_(0),
     startSampleTime_(-1),
@@ -112,6 +121,27 @@ timeVaryingMappedFixedValueFvPatchField
     endAverage_(pTraits<Type>::zero),
     offset_(DataEntry<Type>::New("offset", dict))
 {
+    if
+    (
+        mapMethod_ != "planarInterpolation"
+     && mapMethod_ != "nearest"
+    )
+    {
+        FatalIOErrorIn
+        (
+            "timeVaryingMappedFixedValueFvPatchField<Type>::\n"
+            "timeVaryingMappedFixedValueFvPatchField\n"
+            "(\n"
+            "    const fvPatch&\n"
+            "    const DimensionedField<Type, volMesh>&\n"
+            "    const dictionary&\n"
+            ")\n",
+            dict
+        )   << "mapMethod should be one of 'planarInterpolation'"
+            << ", 'nearest'" << exit(FatalIOError);
+    }
+
+
     dict.readIfPresent("fieldTableName", fieldTableName_);
 
     if (dict.found("value"))
@@ -140,6 +170,7 @@ timeVaryingMappedFixedValueFvPatchField
     fieldTableName_(ptf.fieldTableName_),
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
+    mapMethod_(ptf.mapMethod_),
     mapperPtr_(NULL),
     sampleTimes_(ptf.sampleTimes_),
     startSampleTime_(ptf.startSampleTime_),
@@ -169,6 +200,7 @@ timeVaryingMappedFixedValueFvPatchField
     fieldTableName_(ptf.fieldTableName_),
     setAverage_(ptf.setAverage_),
     perturb_(ptf.perturb_),
+    mapMethod_(ptf.mapMethod_),
     mapperPtr_(NULL),
     sampleTimes_(ptf.sampleTimes_),
     startSampleTime_(ptf.startSampleTime_),
@@ -258,6 +290,14 @@ void timeVaryingMappedFixedValueFvPatchField<Type>::checkTable()
                 << samplePointsFile << endl;
         }
 
+
+        // tbd: run-time selection
+        bool nearestOnly =
+        (
+           !mapMethod_.empty()
+         && mapMethod_ != "planarInterpolation"
+        );
+
         // Allocate the interpolator
         mapperPtr_.reset
         (
@@ -265,7 +305,8 @@ void timeVaryingMappedFixedValueFvPatchField<Type>::checkTable()
             (
                 samplePoints,
                  this->patch().patch().faceCentres(),
-                perturb_
+                perturb_,
+                nearestOnly
             )
         );
 
@@ -557,6 +598,18 @@ void timeVaryingMappedFixedValueFvPatchField<Type>::write(Ostream& os) const
     if (fieldTableName_ != this->dimensionedInternalField().name())
     {
         os.writeKeyword("fieldTableName") << fieldTableName_
+            << token::END_STATEMENT << nl;
+    }
+
+    if
+    (
+        (
+           !mapMethod_.empty()
+         && mapMethod_ != "planarInterpolation"
+        )
+    )
+    {
+        os.writeKeyword("mapMethod") << mapMethod_
             << token::END_STATEMENT << nl;
     }
 
