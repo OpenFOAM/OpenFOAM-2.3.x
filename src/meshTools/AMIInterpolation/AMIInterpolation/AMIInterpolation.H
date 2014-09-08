@@ -110,7 +110,7 @@ private:
     // Private data
 
         //- Interpolation method
-        interpolationMethod method_;
+        const word methodName_;
 
         //- Flag to indicate that the two patches are co-directional and
         //  that the orientation of the target patch should be reversed
@@ -250,7 +250,7 @@ private:
             );
 
 
-        // Constructor helper
+        // Constructor helpers
 
             static void agglomerate
             (
@@ -269,6 +269,12 @@ private:
                 autoPtr<mapDistribute>& tgtMap
             );
 
+            void constructFromSurface
+            (
+                const SourcePatch& srcPatch,
+                const TargetPatch& tgtPatch,
+                const autoPtr<searchableSurface>& surfPtr
+            );
 
 public:
 
@@ -286,6 +292,19 @@ public:
             const bool reverseTarget = false
         );
 
+        //- Construct from components
+        AMIInterpolation
+        (
+            const SourcePatch& srcPatch,
+            const TargetPatch& tgtPatch,
+            const faceAreaIntersect::triangulationMode& triMode,
+            const bool requireMatch = true,
+            const word& methodName =
+                interpolationMethodToWord(imFaceAreaWeight),
+            const scalar lowWeightCorrection = -1,
+            const bool reverseTarget = false
+        );
+
         //- Construct from components, with projection surface
         AMIInterpolation
         (
@@ -295,6 +314,20 @@ public:
             const faceAreaIntersect::triangulationMode& triMode,
             const bool requireMatch = true,
             const interpolationMethod& method = imFaceAreaWeight,
+            const scalar lowWeightCorrection = -1,
+            const bool reverseTarget = false
+        );
+
+        //- Construct from components, with projection surface
+        AMIInterpolation
+        (
+            const SourcePatch& srcPatch,
+            const TargetPatch& tgtPatch,
+            const autoPtr<searchableSurface>& surf,
+            const faceAreaIntersect::triangulationMode& triMode,
+            const bool requireMatch = true,
+            const word& methodName =
+                interpolationMethodToWord(imFaceAreaWeight),
             const scalar lowWeightCorrection = -1,
             const bool reverseTarget = false
         );
