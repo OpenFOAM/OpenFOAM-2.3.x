@@ -536,66 +536,13 @@ void Foam::AMIInterpolation<SourcePatch, TargetPatch>::agglomerate
 }
 
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
 template<class SourcePatch, class TargetPatch>
-Foam::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
+void Foam::AMIInterpolation<SourcePatch, TargetPatch>::constructFromSurface
 (
     const SourcePatch& srcPatch,
     const TargetPatch& tgtPatch,
-    const faceAreaIntersect::triangulationMode& triMode,
-    const bool requireMatch,
-    const interpolationMethod& method,
-    const scalar lowWeightCorrection,
-    const bool reverseTarget
+    const autoPtr<searchableSurface>& surfPtr
 )
-:
-    method_(method),
-    reverseTarget_(reverseTarget),
-    requireMatch_(requireMatch),
-    singlePatchProc_(-999),
-    lowWeightCorrection_(lowWeightCorrection),
-    srcAddress_(),
-    srcWeights_(),
-    srcWeightsSum_(),
-    tgtAddress_(),
-    tgtWeights_(),
-    tgtWeightsSum_(),
-    triMode_(triMode),
-    srcMapPtr_(NULL),
-    tgtMapPtr_(NULL)
-{
-    update(srcPatch, tgtPatch);
-}
-
-
-template<class SourcePatch, class TargetPatch>
-Foam::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
-(
-    const SourcePatch& srcPatch,
-    const TargetPatch& tgtPatch,
-    const autoPtr<searchableSurface>& surfPtr,
-    const faceAreaIntersect::triangulationMode& triMode,
-    const bool requireMatch,
-    const interpolationMethod& method,
-    const scalar lowWeightCorrection,
-    const bool reverseTarget
-)
-:
-    method_(method),
-    reverseTarget_(reverseTarget),
-    requireMatch_(requireMatch),
-    singlePatchProc_(-999),
-    lowWeightCorrection_(lowWeightCorrection),
-    srcAddress_(),
-    srcWeights_(),
-    srcWeightsSum_(),
-    tgtAddress_(),
-    tgtWeights_(),
-    tgtWeightsSum_(),
-    triMode_(triMode),
-    srcMapPtr_(NULL),
-    tgtMapPtr_(NULL)
 {
     if (surfPtr.valid())
     {
@@ -658,6 +605,134 @@ Foam::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
 }
 
 
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template<class SourcePatch, class TargetPatch>
+Foam::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
+(
+    const SourcePatch& srcPatch,
+    const TargetPatch& tgtPatch,
+    const faceAreaIntersect::triangulationMode& triMode,
+    const bool requireMatch,
+    const interpolationMethod& method,
+    const scalar lowWeightCorrection,
+    const bool reverseTarget
+)
+:
+    methodName_(interpolationMethodToWord(method)),
+    reverseTarget_(reverseTarget),
+    requireMatch_(requireMatch),
+    singlePatchProc_(-999),
+    lowWeightCorrection_(lowWeightCorrection),
+    srcAddress_(),
+    srcWeights_(),
+    srcWeightsSum_(),
+    tgtAddress_(),
+    tgtWeights_(),
+    tgtWeightsSum_(),
+    triMode_(triMode),
+    srcMapPtr_(NULL),
+    tgtMapPtr_(NULL)
+{
+    update(srcPatch, tgtPatch);
+}
+
+
+template<class SourcePatch, class TargetPatch>
+Foam::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
+(
+    const SourcePatch& srcPatch,
+    const TargetPatch& tgtPatch,
+    const faceAreaIntersect::triangulationMode& triMode,
+    const bool requireMatch,
+    const word& methodName,
+    const scalar lowWeightCorrection,
+    const bool reverseTarget
+)
+:
+    methodName_(methodName),
+    reverseTarget_(reverseTarget),
+    requireMatch_(requireMatch),
+    singlePatchProc_(-999),
+    lowWeightCorrection_(lowWeightCorrection),
+    srcAddress_(),
+    srcWeights_(),
+    srcWeightsSum_(),
+    tgtAddress_(),
+    tgtWeights_(),
+    tgtWeightsSum_(),
+    triMode_(triMode),
+    srcMapPtr_(NULL),
+    tgtMapPtr_(NULL)
+{
+    update(srcPatch, tgtPatch);
+}
+
+
+template<class SourcePatch, class TargetPatch>
+Foam::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
+(
+    const SourcePatch& srcPatch,
+    const TargetPatch& tgtPatch,
+    const autoPtr<searchableSurface>& surfPtr,
+    const faceAreaIntersect::triangulationMode& triMode,
+    const bool requireMatch,
+    const interpolationMethod& method,
+    const scalar lowWeightCorrection,
+    const bool reverseTarget
+)
+:
+    methodName_(interpolationMethodToWord(method)),
+    reverseTarget_(reverseTarget),
+    requireMatch_(requireMatch),
+    singlePatchProc_(-999),
+    lowWeightCorrection_(lowWeightCorrection),
+    srcAddress_(),
+    srcWeights_(),
+    srcWeightsSum_(),
+    tgtAddress_(),
+    tgtWeights_(),
+    tgtWeightsSum_(),
+    triMode_(triMode),
+    srcMapPtr_(NULL),
+    tgtMapPtr_(NULL)
+{
+    constructFromSurface(srcPatch, tgtPatch, surfPtr);
+}
+
+
+template<class SourcePatch, class TargetPatch>
+Foam::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
+(
+    const SourcePatch& srcPatch,
+    const TargetPatch& tgtPatch,
+    const autoPtr<searchableSurface>& surfPtr,
+    const faceAreaIntersect::triangulationMode& triMode,
+    const bool requireMatch,
+    const word& methodName,
+    const scalar lowWeightCorrection,
+    const bool reverseTarget
+)
+:
+    methodName_(methodName),
+    reverseTarget_(reverseTarget),
+    requireMatch_(requireMatch),
+    singlePatchProc_(-999),
+    lowWeightCorrection_(lowWeightCorrection),
+    srcAddress_(),
+    srcWeights_(),
+    srcWeightsSum_(),
+    tgtAddress_(),
+    tgtWeights_(),
+    tgtWeightsSum_(),
+    triMode_(triMode),
+    srcMapPtr_(NULL),
+    tgtMapPtr_(NULL)
+{
+    constructFromSurface(srcPatch, tgtPatch, surfPtr);
+}
+
+
 template<class SourcePatch, class TargetPatch>
 Foam::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
 (
@@ -666,7 +741,7 @@ Foam::AMIInterpolation<SourcePatch, TargetPatch>::AMIInterpolation
     const labelList& targetRestrictAddressing
 )
 :
-    method_(fineAMI.method_),
+    methodName_(fineAMI.methodName_),
     reverseTarget_(fineAMI.reverseTarget_),
     requireMatch_(fineAMI.requireMatch_),
     singlePatchProc_(fineAMI.singlePatchProc_),
@@ -883,7 +958,7 @@ void Foam::AMIInterpolation<SourcePatch, TargetPatch>::update
         (
             AMIMethod<SourcePatch, TargetPatch>::New
             (
-                interpolationMethodToWord(method_),
+                methodName_,
                 srcPatch,
                 newTgtPatch,
                 srcMagSf_,
@@ -1000,7 +1075,7 @@ void Foam::AMIInterpolation<SourcePatch, TargetPatch>::update
         (
             AMIMethod<SourcePatch, TargetPatch>::New
             (
-                interpolationMethodToWord(method_),
+                methodName_,
                 srcPatch,
                 tgtPatch,
                 srcMagSf_,
