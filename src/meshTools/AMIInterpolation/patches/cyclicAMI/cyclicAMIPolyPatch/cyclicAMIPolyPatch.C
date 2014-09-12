@@ -980,11 +980,6 @@ Foam::label Foam::cyclicAMIPolyPatch::pointFace
 {
     if (owner())
     {
-        Info << "OWNER" << endl;
-        Debug(p);
-        Debug(n);
-        Debug(faceCentres()[faceI]);
-
         return AMI().tgtPointFace
         (
             *this,
@@ -996,11 +991,6 @@ Foam::label Foam::cyclicAMIPolyPatch::pointFace
     }
     else
     {
-        Info << "NEIGHBOUR" << endl;
-        Debug(p);
-        Debug(n);
-        Debug(faceCentres()[faceI]);
-
         return neighbPatch().AMI().srcPointFace
         (
             *this,
