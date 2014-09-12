@@ -65,10 +65,7 @@ void Foam::fieldCoordinateSystemTransform::transformField
 
     dimensionedTensor R("R", field.dimensions(), coordSys_.R().R());
 
-    forAll(field, i)
-    {
-        Foam::transform(transField, R, transField);
-    }
+    Foam::transform(transField, R, transField);
 
     Info<< "    writing field " << transField.name() << nl << endl;
 
