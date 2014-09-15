@@ -993,8 +993,8 @@ Foam::label Foam::cyclicAMIPolyPatch::pointFace
     {
         return neighbPatch().AMI().srcPointFace
         (
-            *this,
             neighbPatch(),
+            *this,
             n,
             faceI,
             p
