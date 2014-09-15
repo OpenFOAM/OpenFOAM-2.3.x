@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -314,8 +314,6 @@ Foam::Map<Foam::label> Foam::DelaunayMesh<Triangulation>::rangeInsertWithInfo
 
     Map<label> oldToNewIndex(points.size());
 
-    label maxIndex = -1;
-
     for
     (
         typename vectorPairPointIndex::const_iterator p = points.begin();
@@ -342,27 +340,19 @@ Foam::Map<Foam::label> Foam::DelaunayMesh<Triangulation>::rangeInsertWithInfo
         }
         else
         {
+            const label oldIndex = vert.index();
+            hint->index() = getNewVertexIndex();
+
             if (reIndex)
             {
-                const label oldIndex = vert.index();
-                hint->index() = getNewVertexIndex();
                 oldToNewIndex.insert(oldIndex, hint->index());
             }
-            else
-            {
-                hint->index() = vert.index();
-                maxIndex = max(maxIndex, vert.index());
-            }
+
             hint->type() = vert.type();
             hint->procIndex() = vert.procIndex();
             hint->targetCellSize() = vert.targetCellSize();
             hint->alignment() = vert.alignment();
         }
-    }
-
-    if (!reIndex)
-    {
-        vertexCount_ = maxIndex + 1;
     }
 
     return oldToNewIndex;
