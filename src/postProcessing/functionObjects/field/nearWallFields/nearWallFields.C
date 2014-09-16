@@ -52,7 +52,6 @@ void Foam::nearWallFields::calcAddressing()
     }
 
     // Global indexing
-    globalIndex globalCells(mesh.nCells());
     globalIndex globalWalls(nPatchFaces);
 
     if (debug)
