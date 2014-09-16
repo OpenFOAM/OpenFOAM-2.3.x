@@ -77,6 +77,7 @@ bool Foam::uniformSet::nextSample
 
 bool Foam::uniformSet::trackToBoundary
 (
+    passiveParticleCloud& particleCloud,
     passiveParticle& singleParticle,
     point& samplePt,
     label& sampleI,
@@ -94,7 +95,6 @@ bool Foam::uniformSet::trackToBoundary
     // Alias
     const point& trackPt = singleParticle.position();
 
-    passiveParticleCloud particleCloud(mesh());
     particle::TrackingData<passiveParticleCloud> trackData(particleCloud);
 
     while(true)
@@ -105,7 +105,7 @@ bool Foam::uniformSet::trackToBoundary
             // no more samples.
             if (debug)
             {
-                Info<< "trackToBoundary : Reached end : samplePt now:"
+                Pout<< "trackToBoundary : Reached end : samplePt now:"
                     << samplePt << "  sampleI now:" << sampleI << endl;
             }
             return false;
@@ -116,7 +116,7 @@ bool Foam::uniformSet::trackToBoundary
             // trackPt corresponds with samplePt. Store and use next samplePt
             if (debug)
             {
-                Info<< "trackToBoundary : samplePt corresponds to trackPt : "
+                Pout<< "trackToBoundary : samplePt corresponds to trackPt : "
                     << "  trackPt:" << trackPt << "  samplePt:" << samplePt
                     << endl;
             }
@@ -132,7 +132,7 @@ bool Foam::uniformSet::trackToBoundary
                 // no more samples.
                 if (debug)
                 {
-                    Info<< "trackToBoundary : Reached end : "
+                    Pout<< "trackToBoundary : Reached end : "
                         << "  samplePt now:" << samplePt
                         << "  sampleI now:" << sampleI
                         << endl;
@@ -145,7 +145,7 @@ bool Foam::uniformSet::trackToBoundary
 
         if (debug)
         {
-            Info<< "Searching along trajectory from "
+            Pout<< "Searching along trajectory from "
                 << "  trackPt:" << trackPt
                 << "  trackCellI:" << singleParticle.cell()
                 << "  to:" << samplePt << endl;
@@ -160,7 +160,7 @@ bool Foam::uniformSet::trackToBoundary
 
             if (debug)
             {
-                Info<< "Result of tracking "
+                Pout<< "Result of tracking "
                     << "  trackPt:" << trackPt
                     << "  trackCellI:" << singleParticle.cell()
                     << "  trackFaceI:" << singleParticle.face()
@@ -178,10 +178,10 @@ bool Foam::uniformSet::trackToBoundary
 
         if (singleParticle.onBoundary())
         {
-            //Info<< "trackToBoundary : reached boundary" << endl;
+            //Pout<< "trackToBoundary : reached boundary" << endl;
             if (mag(trackPt - samplePt) < smallDist)
             {
-                //Info<< "trackToBoundary : boundary is also sampling point"
+                //Pout<< "trackToBoundary : boundary is also sampling point"
                 //    << endl;
                 // Reached samplePt on boundary
                 samplingPts.append(trackPt);
@@ -193,7 +193,7 @@ bool Foam::uniformSet::trackToBoundary
             return true;
         }
 
-        //Info<< "trackToBoundary : reached internal sampling point" << endl;
+        //Pout<< "trackToBoundary : reached internal sampling point" << endl;
         // Reached samplePt in cell or on internal face
         samplingPts.append(trackPt);
         samplingCells.append(singleParticle.cell());
@@ -226,16 +226,13 @@ void Foam::uniformSet::calcSamples
             << exit(FatalError);
     }
 
-    // Dummy cloud to force cyclicAMI and min-tet decomposition construction
-    // even on those processors where there are no points
-    passiveParticleCloud dummyCloud(mesh());
-
-
     const vector offset = (end_ - start_)/(nPoints_ - 1);
     const vector normOffset = offset/mag(offset);
     const vector smallVec = tol*offset;
     const scalar smallDist = mag(smallVec);
 
+    // Force calculation of cloud addressing on all processors
+    passiveParticleCloud particleCloud(mesh());
 
     // Get all boundary intersections
     List<pointIndexHit> bHits = searchEngine().intersections
@@ -312,6 +309,7 @@ void Foam::uniformSet::calcSamples
 
         bool reachedBoundary = trackToBoundary
         (
+            particleCloud,
             singleParticle,
             samplePt,
             sampleI,
@@ -332,7 +330,7 @@ void Foam::uniformSet::calcSamples
         {
             if (debug)
             {
-                Info<< "calcSamples : Reached end of samples: "
+                Pout<< "calcSamples : Reached end of samples: "
                     << "  samplePt now:" << samplePt
                     << "  sampleI now:" << sampleI
                     << endl;
@@ -351,7 +349,7 @@ void Foam::uniformSet::calcSamples
 
             if (debug)
             {
-                Info<< "Finding next boundary : "
+                Pout<< "Finding next boundary : "
                     << "bPoint:" << bHits[bHitI].hitPoint()
                     << "  tracking:" << singleParticle.position()
                     << "  dist:" << dist
@@ -422,6 +420,7 @@ void Foam::uniformSet::genSamples()
     );
 }
 
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::uniformSet::uniformSet
@@ -444,7 +443,7 @@ Foam::uniformSet::uniformSet
 
     if (debug)
     {
-        write(Info);
+        write(Pout);
     }
 }
 
@@ -466,7 +465,7 @@ Foam::uniformSet::uniformSet
 
     if (debug)
     {
-        write(Info);
+        write(Pout);
     }
 }
 
