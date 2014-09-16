@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -65,6 +65,7 @@ class polyLineSet
         //  Returns false if end of samples reached.
         bool trackToBoundary
         (
+            passiveParticleCloud& particleCloud,
             passiveParticle& singleParticle,
             label& sampleI,
             DynamicList<point>& samplingPts,

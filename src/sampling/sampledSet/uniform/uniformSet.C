@@ -232,6 +232,7 @@ void Foam::uniformSet::calcSamples
     const scalar smallDist = mag(smallVec);
 
     // Force calculation of cloud addressing on all processors
+    const bool oldMoving = const_cast<polyMesh&>(mesh()).moving(false);
     passiveParticleCloud particleCloud(mesh());
 
     // Get all boundary intersections
@@ -383,6 +384,8 @@ void Foam::uniformSet::calcSamples
 
         startSegmentI = samplingPts.size();
     }
+
+    const_cast<polyMesh&>(mesh()).moving(oldMoving);
 }
 
 
