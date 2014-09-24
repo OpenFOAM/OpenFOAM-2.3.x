@@ -117,7 +117,6 @@ class medialAxisMeshMover
                 const label nSmoothDisp,
                 const PackedBoolList& isMasterPoint,
                 const PackedBoolList& isMasterEdge,
-                const labelList& meshEdges,
                 pointField& normals
             ) const;
 
@@ -175,7 +174,6 @@ class medialAxisMeshMover
                 const label nSmoothDisp,
                 const PackedBoolList& isMasterPoint,
                 const PackedBoolList& isMasterEdge,
-                const labelList& meshEdges,
                 const scalarField& fieldMin,
                 scalarField& field
             ) const;

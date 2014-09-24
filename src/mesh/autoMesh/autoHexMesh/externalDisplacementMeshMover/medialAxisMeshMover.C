@@ -129,9 +129,8 @@ Foam::medialAxisMeshMover::getPatch
 void Foam::medialAxisMeshMover::smoothPatchNormals
 (
     const label nSmoothDisp,
-    const PackedBoolList& isMasterPoint,
-    const PackedBoolList& isMasterEdge,
-    const labelList& meshEdges,
+    const PackedBoolList& isPatchMasterPoint,
+    const PackedBoolList& isPatchMasterEdge,
     pointField& normals
 ) const
 {
@@ -142,13 +141,12 @@ void Foam::medialAxisMeshMover::smoothPatchNormals
     // Get smoothly varying internal normals field.
     Info<< typeName << " : Smoothing normals ..." << endl;
 
-    scalarField edgeWeights(meshEdges.size());
+    scalarField edgeWeights(edges.size());
     scalarField invSumWeight(meshPoints.size());
     meshRefinement::calculateEdgeWeights
     (
         mesh(),
-        isMasterEdge,
-        meshEdges,
+        isPatchMasterEdge,
         meshPoints,
         edges,
         edgeWeights,
@@ -162,8 +160,7 @@ void Foam::medialAxisMeshMover::smoothPatchNormals
         meshRefinement::weightedSum
         (
             mesh(),
-            isMasterEdge,
-            meshEdges,
+            isPatchMasterEdge,
             meshPoints,
             edges,
             edgeWeights,
@@ -177,9 +174,7 @@ void Foam::medialAxisMeshMover::smoothPatchNormals
         {
             scalar resid = meshRefinement::gAverage
             (
-                mesh(),
-                isMasterPoint,
-                meshPoints,
+                isPatchMasterPoint,
                 mag(normals-average)()
             );
             Info<< "    Iteration " << iter << "   residual " << resid << endl;
@@ -201,8 +196,8 @@ void Foam::medialAxisMeshMover::smoothPatchNormals
 void Foam::medialAxisMeshMover::smoothNormals
 (
     const label nSmoothDisp,
-    const PackedBoolList& isMasterPoint,
-    const PackedBoolList& isMasterEdge,
+    const PackedBoolList& isMeshMasterPoint,
+    const PackedBoolList& isMeshMasterEdge,
     const labelList& fixedPoints,
     pointVectorField& normals
 ) const
@@ -229,18 +224,16 @@ void Foam::medialAxisMeshMover::smoothNormals
 
 
     // Correspondence between local edges/points and mesh edges/points
-    const labelList meshEdges(identity(mesh().nEdges()));
     const labelList meshPoints(identity(mesh().nPoints()));
 
     // Calculate inverse sum of weights
 
-    scalarField edgeWeights(meshEdges.size());
+    scalarField edgeWeights(mesh().nEdges());
     scalarField invSumWeight(meshPoints.size());
     meshRefinement::calculateEdgeWeights
     (
         mesh(),
-        isMasterEdge,
-        meshEdges,
+        isMeshMasterEdge,
         meshPoints,
         edges,
         edgeWeights,
@@ -253,8 +246,7 @@ void Foam::medialAxisMeshMover::smoothNormals
         meshRefinement::weightedSum
         (
             mesh(),
-            isMasterEdge,
-            meshEdges,
+            isMeshMasterEdge,
             meshPoints,
             edges,
             edgeWeights,
@@ -268,8 +260,7 @@ void Foam::medialAxisMeshMover::smoothNormals
         {
             scalar resid = meshRefinement::gAverage
             (
-                mesh(),
-                isMasterPoint,
+                isMeshMasterPoint,
                 mag(normals-average)()
             );
             Info<< "    Iteration " << iter << "   residual " << resid << endl;
@@ -411,9 +402,9 @@ void Foam::medialAxisMeshMover::update(const dictionary& coeffDict)
     // Predetermine mesh edges
     // ~~~~~~~~~~~~~~~~~~~~~~~
 
-    // Precalulate master point/edge (only relevant for shared points/edges)
-    const PackedBoolList isMasterPoint(syncTools::getMasterPoints(mesh()));
-    const PackedBoolList isMasterEdge(syncTools::getMasterEdges(mesh()));
+    // Precalulate (mesh) master point/edge (only relevant for shared pts/edges)
+    const PackedBoolList isMeshMasterPoint(syncTools::getMasterPoints(mesh()));
+    const PackedBoolList isMeshMasterEdge(syncTools::getMasterEdges(mesh()));
     // Precalculate meshEdge per pp edge
     const labelList meshEdges
     (
@@ -424,6 +415,23 @@ void Foam::medialAxisMeshMover::update(const dictionary& coeffDict)
         )
     );
 
+    // Precalulate (patch) master point/edge
+    const PackedBoolList isPatchMasterPoint
+    (
+        meshRefinement::getMasterPoints
+        (
+            mesh(),
+            meshPoints
+        )
+    );
+    const PackedBoolList isPatchMasterEdge
+    (
+        meshRefinement::getMasterEdges
+        (
+            mesh(),
+            meshEdges
+        )
+    );
 
     // Determine pointNormal
     // ~~~~~~~~~~~~~~~~~~~~~
@@ -434,9 +442,8 @@ void Foam::medialAxisMeshMover::update(const dictionary& coeffDict)
     smoothPatchNormals
     (
         nSmoothSurfaceNormals,
-        isMasterPoint,
-        isMasterEdge,
-        meshEdges,
+        isPatchMasterPoint,
+        isPatchMasterEdge,
         pointNormals
     );
 
@@ -795,8 +802,8 @@ void Foam::medialAxisMeshMover::update(const dictionary& coeffDict)
     smoothNormals
     (
         nSmoothNormals,
-        isMasterPoint,
-        isMasterEdge,
+        isMeshMasterPoint,
+        isMeshMasterEdge,
         meshPoints,
         dispVec_
     );
@@ -999,9 +1006,8 @@ void Foam::medialAxisMeshMover::syncPatchDisplacement
 void Foam::medialAxisMeshMover::minSmoothField
 (
     const label nSmoothDisp,
-    const PackedBoolList& isMasterPoint,
-    const PackedBoolList& isMasterEdge,
-    const labelList& meshEdges,
+    const PackedBoolList& isPatchMasterPoint,
+    const PackedBoolList& isPatchMasterEdge,
     const scalarField& fieldMin,
     scalarField& field
 ) const
@@ -1010,13 +1016,12 @@ void Foam::medialAxisMeshMover::minSmoothField
     const edgeList& edges = pp.edges();
     const labelList& meshPoints = pp.meshPoints();
 
-    scalarField edgeWeights(meshEdges.size());
+    scalarField edgeWeights(edges.size());
     scalarField invSumWeight(meshPoints.size());
     meshRefinement::calculateEdgeWeights
     (
         mesh(),
-        isMasterEdge,
-        meshEdges,
+        isPatchMasterEdge,
         meshPoints,
         edges,
         edgeWeights,
@@ -1032,8 +1037,7 @@ void Foam::medialAxisMeshMover::minSmoothField
         meshRefinement::weightedSum
         (
             mesh(),
-            isMasterEdge,
-            meshEdges,
+            isPatchMasterEdge,
             meshPoints,
             edges,
             edgeWeights,
@@ -1064,9 +1068,7 @@ void Foam::medialAxisMeshMover::minSmoothField
         {
             scalar resid = meshRefinement::gAverage
             (
-                mesh(),
-                isMasterPoint,
-                meshPoints,
+                isPatchMasterPoint,
                 mag(field-average)()
             );
             Info<< "    Iteration " << iter << "   residual " << resid << endl;
@@ -1080,7 +1082,7 @@ void Foam::medialAxisMeshMover::
 handleFeatureAngleLayerTerminations
 (
     const scalar minCos,
-    const PackedBoolList& isMasterPoint,
+    const PackedBoolList& isPatchMasterPoint,
     const labelList& meshEdges,
     List<autoLayerDriver::extrudeMode>& extrudeStatus,
     pointField& patchDisp,
@@ -1122,7 +1124,6 @@ handleFeatureAngleLayerTerminations
 
     const labelListList& edgeFaces = pp.edgeFaces();
     const vectorField& faceNormals = pp.faceNormals();
-    const labelList& meshPoints = pp.meshPoints();
 
     forAll(edgeFaces, edgeI)
     {
@@ -1183,14 +1184,14 @@ handleFeatureAngleLayerTerminations
                     {
                         if (unmarkExtrusion(v0, patchDisp, extrudeStatus))
                         {
-                            if (isMasterPoint[meshPoints[v0]])
+                            if (isPatchMasterPoint[v0])
                             {
                                 nPointCounter++;
                             }
                         }
                         if (unmarkExtrusion(v1, patchDisp, extrudeStatus))
                         {
-                            if (isMasterPoint[meshPoints[v1]])
+                            if (isPatchMasterPoint[v1])
                             {
                                 nPointCounter++;
                             }
@@ -1213,8 +1214,8 @@ void Foam::medialAxisMeshMover::findIsolatedRegions
 (
     const scalar minCosLayerTermination,
     const bool detectExtrusionIsland,
-    const PackedBoolList& isMasterPoint,
-    const PackedBoolList& isMasterEdge,
+    const PackedBoolList& isPatchMasterPoint,
+    const PackedBoolList& isPatchMasterEdge,
     const labelList& meshEdges,
     const scalarField& minThickness,
     List<autoLayerDriver::extrudeMode>& extrudeStatus,
@@ -1223,12 +1224,31 @@ void Foam::medialAxisMeshMover::findIsolatedRegions
 {
     const indirectPrimitivePatch& pp = adaptPatchPtr_();
     const labelListList& pointFaces = pp.pointFaces();
-
+    const labelList& meshPoints = pp.meshPoints();
 
     Info<< typeName << " : Removing isolated regions ..." << endl;
 
     // Keep count of number of points unextruded
     label nPointCounter = 0;
+
+
+    autoPtr<OBJstream> str;
+    if (debug)
+    {
+        str.reset
+        (
+            new OBJstream
+            (
+                mesh().time().path()
+              / "islandExcludePoints_"
+              + mesh().time().timeName()
+              + ".obj"
+            )
+        );
+        Info<< typeName
+            << " : Writing points surrounded by non-extruded points to "
+            << str().name() << endl;
+    }
 
     while (true)
     {
@@ -1237,7 +1257,7 @@ void Foam::medialAxisMeshMover::findIsolatedRegions
         handleFeatureAngleLayerTerminations
         (
             minCosLayerTermination,
-            isMasterPoint,
+            isPatchMasterPoint,
             meshEdges,
 
             extrudeStatus,
@@ -1353,7 +1373,7 @@ void Foam::medialAxisMeshMover::findIsolatedRegions
         syncTools::syncPointList
         (
             mesh(),
-            pp.meshPoints(),
+            meshPoints,
             keptPoints,
             orEqOp<bool>(),
             false               // null value
@@ -1369,6 +1389,11 @@ void Foam::medialAxisMeshMover::findIsolatedRegions
                 {
                     nPointCounter++;
                     nChanged++;
+
+                    if (str.valid())
+                    {
+                        str().write(pp.points()[meshPoints[patchPointI]]);
+                    }
                 }
             }
         }
@@ -1390,7 +1415,7 @@ void Foam::medialAxisMeshMover::findIsolatedRegions
 
     forAll(edges, edgeI)
     {
-        if (isMasterEdge.get(meshEdges[edgeI]) == 1)
+        if (isPatchMasterEdge[edgeI])
         {
             const edge& e = edges[edgeI];
 
@@ -1411,7 +1436,7 @@ void Foam::medialAxisMeshMover::findIsolatedRegions
     syncTools::syncPointList
     (
         mesh(),
-        pp.meshPoints(),
+        meshPoints,
         isolatedPoint,
         plusEqOp<label>(),
         label(0)        // null value
@@ -1458,6 +1483,11 @@ void Foam::medialAxisMeshMover::findIsolatedRegions
                     )
                     {
                         nPointCounter++;
+
+                        if (str.valid())
+                        {
+                            str().write(pp.points()[meshPoints[f[fp]]]);
+                        }
                     }
                 }
             }
@@ -1474,25 +1504,23 @@ void Foam::medialAxisMeshMover::findIsolatedRegions
 void Foam::medialAxisMeshMover::smoothLambdaMuDisplacement
 (
     const label nSmoothDisp,
-    const PackedBoolList& isMasterPoint,
-    const PackedBoolList& isMasterEdge,
+    const PackedBoolList& isMeshMasterPoint,
+    const PackedBoolList& isMeshMasterEdge,
     vectorField& displacement
 ) const
 {
     const edgeList& edges = mesh().edges();
 
     // Correspondence between local edges/points and mesh edges/points
-    const labelList meshEdges(identity(mesh().nEdges()));
     const labelList meshPoints(identity(mesh().nPoints()));
 
     // Calculate inverse sum of weights
-    scalarField edgeWeights(meshEdges.size());
+    scalarField edgeWeights(mesh().nEdges());
     scalarField invSumWeight(meshPoints.size());
     meshRefinement::calculateEdgeWeights
     (
         mesh(),
-        isMasterEdge,
-        meshEdges,
+        isMeshMasterEdge,
         meshPoints,
         edges,
         edgeWeights,
@@ -1512,8 +1540,7 @@ void Foam::medialAxisMeshMover::smoothLambdaMuDisplacement
         meshRefinement::weightedSum
         (
             mesh(),
-            isMasterEdge,
-            meshEdges,
+            isMeshMasterEdge,
             meshPoints,
             edges,
             edgeWeights,
@@ -1533,8 +1560,7 @@ void Foam::medialAxisMeshMover::smoothLambdaMuDisplacement
         meshRefinement::weightedSum
         (
             mesh(),
-            isMasterEdge,
-            meshEdges,
+            isMeshMasterEdge,
             meshPoints,
             edges,
             edgeWeights,
@@ -1558,8 +1584,7 @@ void Foam::medialAxisMeshMover::smoothLambdaMuDisplacement
         {
             scalar resid = meshRefinement::gAverage
             (
-                mesh(),
-                isMasterPoint,
+                isMeshMasterPoint,
                 mag(displacement-average)()
             );
             Info<< "    Iteration " << iter << "   residual " << resid << endl;
@@ -1735,8 +1760,8 @@ void Foam::medialAxisMeshMover::calculateDisplacement
 
 
     // Precalulate master points/edge (only relevant for shared points/edges)
-    const PackedBoolList isMasterPoint(syncTools::getMasterPoints(mesh()));
-    const PackedBoolList isMasterEdge(syncTools::getMasterEdges(mesh()));
+    const PackedBoolList isMeshMasterPoint(syncTools::getMasterPoints(mesh()));
+    const PackedBoolList isMeshMasterEdge(syncTools::getMasterEdges(mesh()));
     // Precalculate meshEdge per pp edge
     const labelList meshEdges
     (
@@ -1744,6 +1769,24 @@ void Foam::medialAxisMeshMover::calculateDisplacement
         (
             mesh().edges(),
             mesh().pointEdges()
+        )
+    );
+
+    // Precalulate (patch) master point/edge
+    const PackedBoolList isPatchMasterPoint
+    (
+        meshRefinement::getMasterPoints
+        (
+            mesh(),
+            meshPoints
+        )
+    );
+    const PackedBoolList isPatchMasterEdge
+    (
+        meshRefinement::getMasterEdges
+        (
+            mesh(),
+            meshEdges
         )
     );
 
@@ -1846,7 +1889,7 @@ void Foam::medialAxisMeshMover::calculateDisplacement
 
                 patchDisp[patchPointI] = thickness[patchPointI]*n;
 
-                if (isMasterPoint[pointI])
+                if (isPatchMasterPoint[patchPointI])
                 {
                     numThicknessRatioExclude++;
                 }
@@ -1885,8 +1928,8 @@ void Foam::medialAxisMeshMover::calculateDisplacement
         minCosLayerTermination,
         detectExtrusionIsland,
 
-        isMasterPoint,
-        isMasterEdge,
+        isPatchMasterPoint,
+        isPatchMasterEdge,
         meshEdges,
         minThickness,
 
@@ -1908,9 +1951,8 @@ void Foam::medialAxisMeshMover::calculateDisplacement
     minSmoothField
     (
         nSmoothPatchThickness,
-        isMasterPoint,
-        isMasterEdge,
-        meshEdges,
+        isPatchMasterPoint,
+        isPatchMasterEdge,
         minThickness,
 
         thickness
@@ -1991,8 +2033,8 @@ void Foam::medialAxisMeshMover::calculateDisplacement
         smoothLambdaMuDisplacement
         (
             nSmoothDisplacement,
-            isMasterPoint,
-            isMasterEdge,
+            isMeshMasterPoint,
+            isMeshMasterEdge,
             displacement
         );
     }

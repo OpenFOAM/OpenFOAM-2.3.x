@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -57,7 +57,6 @@ template<class T> void Foam::meshRefinement::updateList
 template<class T>
 T Foam::meshRefinement::gAverage
 (
-    const polyMesh& mesh,
     const PackedBoolList& isMasterElem,
     const UList<T>& values
 )
@@ -68,7 +67,6 @@ T Foam::meshRefinement::gAverage
         (
             "meshRefinement::gAverage\n"
             "(\n"
-            "    const polyMesh&,\n"
             "    const PackedBoolList& isMasterElem,\n"
             "    const UList<T>& values\n"
             ")\n"
@@ -84,58 +82,6 @@ T Foam::meshRefinement::gAverage
     forAll(values, i)
     {
         if (isMasterElem[i])
-        {
-            sum += values[i];
-            n++;
-        }
-    }
-
-    reduce(sum, sumOp<T>());
-    reduce(n, sumOp<label>());
-
-    if (n > 0)
-    {
-        return sum/n;
-    }
-    else
-    {
-        return pTraits<T>::max;
-    }
-}
-
-
-template<class T>
-T Foam::meshRefinement::gAverage
-(
-    const polyMesh& mesh,
-    const PackedBoolList& isMasterElem,
-    const labelList& meshElems,
-    const UList<T>& values
-)
-{
-    if (values.size() != meshElems.size())
-    {
-        FatalErrorIn
-        (
-            "meshRefinement::gAverage\n"
-            "(\n"
-            "    const polyMesh&,\n"
-            "    const labelList&,\n"
-            "    const PackedBoolList& isMasterElem,\n"
-            "    const UList<T>& values\n"
-            ")\n"
-        )   << "Number of elements in list " << values.size()
-            << " does not correspond to number of elements in meshElems "
-            << meshElems.size()
-            << exit(FatalError);
-    }
-
-    T sum = pTraits<T>::zero;
-    label n = 0;
-
-    forAll(values, i)
-    {
-        if (isMasterElem[meshElems[i]])
         {
             sum += values[i];
             n++;
@@ -343,7 +289,6 @@ void Foam::meshRefinement::weightedSum
 (
     const polyMesh& mesh,
     const PackedBoolList& isMasterEdge,
-    const labelList& meshEdges,
     const labelList& meshPoints,
     const edgeList& edges,
     const scalarField& edgeWeights,
@@ -353,15 +298,13 @@ void Foam::meshRefinement::weightedSum
 {
     if
     (
-        mesh.nEdges() != isMasterEdge.size()
-     || edges.size() != meshEdges.size()
+        edges.size() != isMasterEdge.size()
      || edges.size() != edgeWeights.size()
      || meshPoints.size() != pointData.size()
     )
     {
         FatalErrorIn("medialAxisMeshMover::weightedSum(..)")
             << "Inconsistent sizes for edge or point data:"
-            << " meshEdges:" << meshEdges.size()
             << " isMasterEdge:" << isMasterEdge.size()
             << " edgeWeights:" << edgeWeights.size()
             << " edges:" << edges.size()
@@ -375,7 +318,7 @@ void Foam::meshRefinement::weightedSum
 
     forAll(edges, edgeI)
     {
-        if (isMasterEdge.get(meshEdges[edgeI]) == 1)
+        if (isMasterEdge[edgeI])
         {
             const edge& e = edges[edgeI];
 
