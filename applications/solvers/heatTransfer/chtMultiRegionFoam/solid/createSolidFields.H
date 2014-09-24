@@ -4,6 +4,7 @@
     PtrList<radiation::radiationModel> radiations(solidRegions.size());
     PtrList<fv::IOoptionList> solidHeatSources(solidRegions.size());
     PtrList<volScalarField> betavSolid(solidRegions.size());
+    PtrList<volSymmTensorField> aniAlphas(solidRegions.size());
 
     // Populate solid field pointer lists
     forAll(solidRegions, i)
@@ -32,6 +33,38 @@
                 i,
                 coordinateSystem::New(solidRegions[i], thermos[i])
             );
+
+            tmp<volVectorField> tkappaByCp =
+                thermos[i].Kappa()/thermos[i].Cp();
+
+            aniAlphas.set
+            (
+                i,
+                new volSymmTensorField
+                (
+                    IOobject
+                    (
+                        "Anialpha",
+                        runTime.timeName(),
+                        solidRegions[i],
+                        IOobject::NO_READ,
+                        IOobject::NO_WRITE
+                    ),
+                    solidRegions[i],
+                    dimensionedSymmTensor
+                    (
+                        "zero",
+                        tkappaByCp().dimensions(),
+                        symmTensor::zero
+                    ),
+                    zeroGradientFvPatchSymmTensorField::typeName
+                )
+            );
+
+            aniAlphas[i].internalField() =
+                coordinates[i].R().transformVector(tkappaByCp());
+            aniAlphas[i].correctBoundaryConditions();
+
         }
 
         IOobject betavSolidIO

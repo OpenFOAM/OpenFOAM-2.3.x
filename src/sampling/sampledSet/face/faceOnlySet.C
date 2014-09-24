@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -43,6 +43,7 @@ namespace Foam
 
 bool Foam::faceOnlySet::trackToBoundary
 (
+    passiveParticleCloud& particleCloud,
     passiveParticle& singleParticle,
     DynamicList<point>& samplingPts,
     DynamicList<label>& samplingCells,
@@ -55,7 +56,6 @@ bool Foam::faceOnlySet::trackToBoundary
     const vector smallVec = tol*offset;
     const scalar smallDist = mag(smallVec);
 
-    passiveParticleCloud particleCloud(mesh());
     particle::TrackingData<passiveParticleCloud> trackData(particleCloud);
 
     // Alias
@@ -115,8 +115,9 @@ void Foam::faceOnlySet::calcSamples
     const vector smallVec = tol*offset;
     const scalar smallDist = mag(smallVec);
 
-    // Force calculation of minimum-tet decomposition.
-    (void) mesh().tetBasePtIs();
+    // Force calculation of cloud addressing on all processors
+    const bool oldMoving = const_cast<polyMesh&>(mesh()).moving(false);
+    passiveParticleCloud particleCloud(mesh());
 
     // Get all boundary intersections
     List<pointIndexHit> bHits = searchEngine().intersections
@@ -218,6 +219,7 @@ void Foam::faceOnlySet::calcSamples
 
         bool reachedBoundary = trackToBoundary
         (
+            particleCloud,
             singleParticle,
             samplingPts,
             samplingCells,
@@ -286,6 +288,8 @@ void Foam::faceOnlySet::calcSamples
 
         startSegmentI = samplingPts.size();
     }
+
+    const_cast<polyMesh&>(mesh()).moving(oldMoving);
 }
 
 

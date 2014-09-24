@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -82,6 +82,7 @@ class uniformSet
         //  reached
         bool trackToBoundary
         (
+            passiveParticleCloud& particleCloud,
             passiveParticle& singleParticle,
             point& samplePt,
             label& sampleI,

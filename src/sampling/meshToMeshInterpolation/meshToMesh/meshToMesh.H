@@ -92,7 +92,7 @@ private:
         List<label> tgtPatchID_;
 
         //- List of AMIs between source and target patches
-        mutable PtrList<AMIPatchToPatchInterpolation> patchAMIs_;
+        PtrList<AMIPatchToPatchInterpolation> patchAMIs_;
 
         //- Cutting patches whose values are set using a zero-gradient condition
         List<label> cuttingPatches_;
@@ -108,9 +108,6 @@ private:
 
         //- Target to source cell interpolation weights
         scalarListList tgtToSrcCellWght_;
-
-        //- Interpolation method
-        interpolationMethod method_;
 
         //- Cell total volume in overlap region [m3]
         scalar V_;
@@ -143,22 +140,41 @@ private:
             scalarListList& wght
         ) const;
 
-        //- Calculate the addressing between overalping regions of src and tgt
+        //- Calculate the addressing between overlapping regions of src and tgt
         //  meshes
-        void calcAddressing(const polyMesh& src, const polyMesh& tgt);
+        void calcAddressing
+        (
+            const word& methodName,
+            const polyMesh& src,
+            const polyMesh& tgt
+        );
 
         //- Calculate - main driver function
-        void calculate();
+        void calculate(const word& methodName);
 
-        //- Conversion between mesh and patch interpolation methods
-        AMIPatchToPatchInterpolation::interpolationMethod
-        interpolationMethodAMI
+        //- Calculate patch overlap
+        void calculatePatchAMIs(const word& amiMethodName);
+
+        //- Constructor helper
+        void constructNoCuttingPatches
         (
-            const interpolationMethod method
-        ) const;
+            const word& methodName,
+            const word& AMIMethodName,
+            const bool interpAllPatches
+        );
+
+        //- Constructor helper
+        void constructFromCuttingPatches
+        (
+            const word& methodName,
+            const word& AMIMethodName,
+            const HashTable<word>& patchMap,
+            const wordList& cuttingPatches
+        );
 
         //- Return the list of AMIs between source and target patches
-        const PtrList<AMIPatchToPatchInterpolation>& patchAMIs() const;
+        inline const PtrList<AMIPatchToPatchInterpolation>&
+        patchAMIs() const;
 
 
         // Parallel operations
@@ -237,6 +253,15 @@ public:
         const bool interpAllPatches = true
     );
 
+    //- Construct from source and target meshes, generic mapping methods
+    meshToMesh
+    (
+        const polyMesh& src,
+        const polyMesh& tgt,
+        const word& methodName,     // internal mapping
+        const word& AMIMethodName,  // boundary mapping
+        const bool interpAllPatches = true
+    );
 
     //- Construct from source and target meshes
     meshToMesh
@@ -244,6 +269,18 @@ public:
         const polyMesh& src,
         const polyMesh& tgt,
         const interpolationMethod& method,
+        const HashTable<word>& patchMap,
+        const wordList& cuttingPatches
+    );
+
+
+    //- Construct from source and target meshes, generic mapping methods
+    meshToMesh
+    (
+        const polyMesh& src,
+        const polyMesh& tgt,
+        const word& methodName,     // internal mapping
+        const word& AMIMethodName,  // boundary mapping
         const HashTable<word>& patchMap,
         const wordList& cuttingPatches
     );
@@ -277,6 +314,13 @@ public:
 
             //- Return const access to the overlap volume
             inline scalar V() const;
+
+            //- Conversion between mesh and patch interpolation methods
+            static AMIPatchToPatchInterpolation::interpolationMethod
+            interpolationMethodAMI
+            (
+                const interpolationMethod method
+            );
 
 
         // Evaluation
