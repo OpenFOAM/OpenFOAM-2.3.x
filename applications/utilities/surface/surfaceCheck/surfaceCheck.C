@@ -636,7 +636,7 @@ int main(int argc, char *argv[])
                     faces,
                     "zone",
                     scalarFaceZone,
-                    true
+                    false               // face based data
                 );
             }
 
