@@ -323,6 +323,9 @@ addLayersControls
     // - overall thickness and firstLayerThickness
     // - overall thickness and finalLayerThickness
     // - overall thickness and expansionRatio
+    //
+    // Note: the mode thus selected is global, i.e. one cannot override the
+    //       mode on a per-patch basis (only the values can be overridden)
 
         // Expansion factor for layer mesh
         expansionRatio 1.0;
