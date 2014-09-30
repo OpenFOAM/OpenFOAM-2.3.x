@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -34,6 +34,8 @@ Description
 
         // What to sample:
         // - nearestCell         : sample cell containing point
+        // - nearestOnlyCell     : nearest sample cell (even if not containing
+        //                         point)
         // - nearestPatchFace    : nearest face on selected patch
         // - nearestPatchFaceAMI : nearest face on selected patch
                                    - patches need not conform
@@ -107,11 +109,12 @@ public:
         //- Mesh items to sample
         enum sampleMode
         {
-            NEARESTCELL,         // nearest cell
+            NEARESTCELL,         // nearest cell containing sample
             NEARESTPATCHFACE,    // nearest face on selected patch
             NEARESTPATCHFACEAMI, // nearest patch face + AMI interpolation
             NEARESTPATCHPOINT,   // nearest point on selected patch
-            NEARESTFACE          // nearest face
+            NEARESTFACE,         // nearest face
+            NEARESTONLYCELL      // nearest cell (even if not containing cell)
         };
 
         //- How to project face centres
@@ -122,7 +125,7 @@ public:
             NORMAL              // use face normal + distance
         };
 
-        static const NamedEnum<sampleMode, 5> sampleModeNames_;
+        static const NamedEnum<sampleMode, 6> sampleModeNames_;
 
         static const NamedEnum<offsetMode, 3> offsetModeNames_;
 
@@ -255,6 +258,7 @@ protected:
         //- Find cells/faces containing samples
         void findSamples
         (
+            const sampleMode mode,      // search mode
             const pointField&,
             labelList& sampleProcs,     // processor containing sample
             labelList& sampleIndices,   // local index of cell/face
