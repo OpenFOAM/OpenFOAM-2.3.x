@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -196,6 +196,15 @@ public:
                 const triSurfaceSearch& query2,
                 const scalarField& surf1PointTol,
                 pointField& points1
+            );
+
+            //- Replace edge intersection for a subset (given as edge map and
+            //  face map - for face indices stored in pointIndexHit.index())
+            void replace
+            (
+                const edgeIntersections&,
+                const labelList& edgeMap,
+                const labelList& faceMap
             );
 };
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -697,6 +697,40 @@ Foam::label Foam::edgeIntersections::removeDegenerates
     }
 
     return iter;
+}
+
+
+void Foam::edgeIntersections::replace
+(
+    const edgeIntersections& subInfo,
+    const labelList& edgeMap,
+    const labelList& faceMap
+)
+{
+    forAll(subInfo, subI)
+    {
+        const List<pointIndexHit>& subHits = subInfo[subI];
+        const labelList& subClass = subInfo.classification()[subI];
+
+        label edgeI = edgeMap[subI];
+        List<pointIndexHit>& intersections = operator[](edgeI);
+        labelList& intersectionTypes = classification_[edgeI];
+
+        intersections.setSize(subHits.size());
+        intersectionTypes.setSize(subHits.size());
+
+        forAll(subHits, i)
+        {
+            const pointIndexHit& subHit = subHits[i];
+            intersections[i] = pointIndexHit
+            (
+                subHit.hit(),
+                subHit.rawPoint(),
+                faceMap[subHit.index()]
+            );
+            intersectionTypes[i] = subClass[i];
+        }
+    }
 }
 
 
