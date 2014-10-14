@@ -503,6 +503,7 @@ $(mapPolyMesh)/faceMapper/faceMapper.C
 $(mapPolyMesh)/cellMapper/cellMapper.C
 $(mapPolyMesh)/mapDistribute/mapDistribute.C
 $(mapPolyMesh)/mapDistribute/mapDistributePolyMesh.C
+$(mapPolyMesh)/mapDistribute/IOmapDistribute.C
 $(mapPolyMesh)/mapAddedPolyMesh.C
 
 PrimitivePatch = $(primitiveMesh)/PrimitivePatch
