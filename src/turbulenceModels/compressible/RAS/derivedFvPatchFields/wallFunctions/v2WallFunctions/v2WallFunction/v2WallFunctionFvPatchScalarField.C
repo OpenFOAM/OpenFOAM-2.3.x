@@ -55,6 +55,14 @@ void v2WallFunctionFvPatchScalarField::checkType()
 }
 
 
+void v2WallFunctionFvPatchScalarField::writeLocalEntries(Ostream& os) const
+{
+    os.writeKeyword("Cmu") << Cmu_ << token::END_STATEMENT << nl;
+    os.writeKeyword("kappa") << kappa_ << token::END_STATEMENT << nl;
+    os.writeKeyword("E") << E_ << token::END_STATEMENT << nl;
+}
+
+
 scalar v2WallFunctionFvPatchScalarField::yPlusLam
 (
     const scalar kappa,
@@ -224,11 +232,8 @@ void v2WallFunctionFvPatchScalarField::evaluate
 
 void v2WallFunctionFvPatchScalarField::write(Ostream& os) const
 {
+    writeLocalEntries(os);
     fixedValueFvPatchField<scalar>::write(os);
-    os.writeKeyword("Cmu") << Cmu_ << token::END_STATEMENT << nl;
-    os.writeKeyword("kappa") << kappa_ << token::END_STATEMENT << nl;
-    os.writeKeyword("E") << E_ << token::END_STATEMENT << nl;
-    writeEntry("value", os);
 }
 
 

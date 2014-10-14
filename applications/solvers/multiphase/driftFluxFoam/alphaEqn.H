@@ -19,16 +19,7 @@
             ).fvmDiv(phi, alpha1)
         );
 
-        solve
-        (
-            alpha1Eqn
-          - fv::gaussLaplacianScheme<scalar, scalar>
-            (
-                mesh,
-                linear<scalar>(mesh),
-                fv::uncorrectedSnGrad<scalar>(mesh)
-            ).fvmLaplacian(fvc::interpolate(turbulence->nut()), alpha1)
-        );
+        solve(alpha1Eqn);
 
         Info<< "Phase-1 volume fraction = "
             << alpha1.weightedAverage(mesh.Vsc()).value()
@@ -42,6 +33,7 @@
         if (alphaApplyPrevCorr && tphiAlphaCorr0.valid())
         {
             Info<< "Applying the previous iteration correction flux" << endl;
+
             #ifdef LTSSOLVE
             MULES::LTScorrect
             (

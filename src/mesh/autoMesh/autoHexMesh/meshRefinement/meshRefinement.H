@@ -733,7 +733,6 @@ public:
             (
                 const polyMesh& mesh,
                 const PackedBoolList& isMasterEdge,
-                const labelList& meshEdges,
                 const labelList& meshPoints,
                 const edgeList& edges,
                 scalarField& edgeWeights,
@@ -747,7 +746,6 @@ public:
             (
                 const polyMesh& mesh,
                 const PackedBoolList& isMasterEdge,
-                const labelList& meshEdges,
                 const labelList& meshPoints,
                 const edgeList& edges,
                 const scalarField& edgeWeights,
@@ -1069,6 +1067,22 @@ public:
                 const UList<T>& data
             );
 
+            //- Determine master point for subset of points. If coupled
+            //  chooses only one
+            static PackedBoolList getMasterPoints
+            (
+                const polyMesh& mesh,
+                const labelList& meshPoints
+            );
+
+            //- Determine master edge for subset of edges. If coupled
+            //  chooses only one
+            static PackedBoolList getMasterEdges
+            (
+                const polyMesh& mesh,
+                const labelList& meshEdges
+            );
+
             //- Print some mesh stats.
             void printMeshInfo(const bool, const string&) const;
 
@@ -1100,21 +1114,9 @@ public:
             template<class T>
             static T gAverage
             (
-                const polyMesh& mesh,
                 const PackedBoolList& isMasterElem,
                 const UList<T>& values
             );
-
-            //- Helper: calculate average over selected elements
-            template<class T>
-            static T gAverage
-            (
-                const polyMesh& mesh,
-                const PackedBoolList& isMasterElem,
-                const labelList& meshPoints,
-                const UList<T>& values
-            );
-
 
             //- Get/set write level
             static writeType writeLevel();

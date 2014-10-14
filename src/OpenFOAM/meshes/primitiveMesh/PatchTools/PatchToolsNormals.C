@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -45,15 +45,114 @@ Foam::PatchTools::pointNormals
     const PrimitivePatch<Face, FaceList, PointField, PointType>& p
 )
 {
-    // Assume patch is smaller than the globalData().coupledPatch() (?) so
-    // loop over patch meshPoints.
-
     const globalMeshData& globalData = mesh.globalData();
     const indirectPrimitivePatch& coupledPatch = globalData.coupledPatch();
     const Map<label>& coupledPatchMP = coupledPatch.meshPointMap();
     const mapDistribute& map = globalData.globalPointSlavesMap();
     const globalIndexAndTransform& transforms =
         globalData.globalTransforms();
+
+
+
+
+    // Combine normals. Note: do on all master points. Cannot just use
+    // patch points since the master point does not have to be on the
+    // patch!
+
+    pointField coupledPointNormals(map.constructSize(), vector::zero);
+
+    {
+        // Collect local pointFaces (sized on patch points only)
+        List<List<point> > pointFaceNormals(map.constructSize());
+        forAll(p.meshPoints(), patchPointI)
+        {
+            label meshPointI = p.meshPoints()[patchPointI];
+            Map<label>::const_iterator fnd = coupledPatchMP.find(meshPointI);
+            if (fnd != coupledPatchMP.end())
+            {
+                label coupledPointI = fnd();
+
+                List<point>& pNormals = pointFaceNormals[coupledPointI];
+                const labelList& pFaces = p.pointFaces()[patchPointI];
+                pNormals.setSize(pFaces.size());
+                forAll(pFaces, i)
+                {
+                    pNormals[i] = p.faceNormals()[pFaces[i]];
+                }
+            }
+        }
+
+
+        // Pull remote data into local slots
+        map.distribute
+        (
+            transforms,
+            pointFaceNormals,
+            mapDistribute::transform()
+        );
+
+
+        // Combine all face normals (-local, -remote,untransformed,
+        //  -remote,transformed)
+
+        const labelListList& slaves = globalData.globalPointSlaves();
+        const labelListList& transformedSlaves =
+            globalData.globalPointTransformedSlaves();
+
+        forAll(slaves, coupledPointI)
+        {
+            const labelList& slaveSlots = slaves[coupledPointI];
+            const labelList& transformedSlaveSlots =
+                transformedSlaves[coupledPointI];
+
+            point& n = coupledPointNormals[coupledPointI];
+
+            // Local entries
+            const List<point>& local = pointFaceNormals[coupledPointI];
+
+            label nFaces =
+                local.size()
+              + slaveSlots.size()
+              + transformedSlaveSlots.size();
+
+            n = sum(local);
+
+            // Add any remote face normals
+            forAll(slaveSlots, i)
+            {
+                n += sum(pointFaceNormals[slaveSlots[i]]);
+            }
+            forAll(transformedSlaveSlots, i)
+            {
+                n += sum(pointFaceNormals[transformedSlaveSlots[i]]);
+            }
+
+            if (nFaces >= 1)
+            {
+                n /= mag(n)+VSMALL;
+            }
+
+            // Put back into slave slots
+            forAll(slaveSlots, i)
+            {
+                coupledPointNormals[slaveSlots[i]] = n;
+            }
+            forAll(transformedSlaveSlots, i)
+            {
+                coupledPointNormals[transformedSlaveSlots[i]] = n;
+            }
+        }
+
+
+        // Send back
+        map.reverseDistribute
+        (
+            transforms,
+            coupledPointNormals.size(),
+            coupledPointNormals,
+            mapDistribute::transform()
+        );
+    }
 
 
     // 1. Start off with local normals (note:without calculating pointNormals
@@ -78,99 +177,7 @@ Foam::PatchTools::pointNormals
     }
 
 
-    // Collect local pointFaces
-    List<List<point> > pointFaceNormals(map.constructSize());
-    forAll(p.meshPoints(), patchPointI)
-    {
-        label meshPointI = p.meshPoints()[patchPointI];
-        Map<label>::const_iterator fnd = coupledPatchMP.find(meshPointI);
-        if (fnd != coupledPatchMP.end())
-        {
-            label coupledPointI = fnd();
-
-            List<point>& pNormals = pointFaceNormals[coupledPointI];
-            const labelList& pFaces = p.pointFaces()[patchPointI];
-            pNormals.setSize(pFaces.size());
-            forAll(pFaces, i)
-            {
-                pNormals[i] = p.faceNormals()[pFaces[i]];
-            }
-        }
-    }
-
-
-    // Pull remote data into local slots
-    map.distribute
-    (
-        transforms,
-        pointFaceNormals,
-        mapDistribute::transform()
-    );
-
-
-    // Combine normals
-    const labelListList& slaves = globalData.globalPointSlaves();
-    const labelListList& transformedSlaves =
-        globalData.globalPointTransformedSlaves();
-
-
-    pointField coupledPointNormals(map.constructSize(), vector::zero);
-
-    forAll(p.meshPoints(), patchPointI)
-    {
-        label meshPointI = p.meshPoints()[patchPointI];
-        Map<label>::const_iterator fnd = coupledPatchMP.find(meshPointI);
-        if (fnd != coupledPatchMP.end())
-        {
-            label coupledPointI = fnd();
-            const labelList& slaveSlots =
-                slaves[coupledPointI];
-            const labelList& transformedSlaveSlots =
-                transformedSlaves[coupledPointI];
-
-            label nFaces = slaveSlots.size()+transformedSlaveSlots.size();
-            if (nFaces > 0)
-            {
-                // Combine
-                point& n = coupledPointNormals[coupledPointI];
-
-                n += sum(pointFaceNormals[coupledPointI]);
-
-                forAll(slaveSlots, i)
-                {
-                    n += sum(pointFaceNormals[slaveSlots[i]]);
-                }
-                forAll(transformedSlaveSlots, i)
-                {
-                    n += sum(pointFaceNormals[transformedSlaveSlots[i]]);
-                }
-                n /= mag(n)+VSMALL;
-
-                // Put back into slave slots
-                forAll(slaveSlots, i)
-                {
-                    coupledPointNormals[slaveSlots[i]] = n;
-                }
-                forAll(transformedSlaveSlots, i)
-                {
-                    coupledPointNormals[transformedSlaveSlots[i]] = n;
-                }
-            }
-        }
-    }
-
-
-    // Send back
-    map.reverseDistribute
-    (
-        transforms,
-        coupledPointNormals.size(),
-        coupledPointNormals,
-        mapDistribute::transform()
-    );
-
-
-    // Override patch normals
+    // 2. Override patch normals on coupled points
     forAll(p.meshPoints(), patchPointI)
     {
         label meshPointI = p.meshPoints()[patchPointI];

@@ -2,7 +2,7 @@ autoHexMesh             = autoHexMesh
 autoHexMeshDriver       = $(autoHexMesh)/autoHexMeshDriver
 
 $(autoHexMeshDriver)/autoLayerDriver.C
-$(autoHexMeshDriver)/autoLayerDriverShrink.C
+/* $(autoHexMeshDriver)/autoLayerDriverShrink.C */
 $(autoHexMeshDriver)/autoSnapDriver.C
 $(autoHexMeshDriver)/autoSnapDriverFeature.C
 $(autoHexMeshDriver)/autoRefineDriver.C

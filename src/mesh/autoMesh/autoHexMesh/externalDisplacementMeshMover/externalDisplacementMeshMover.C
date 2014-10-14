@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,7 +47,6 @@ Foam::externalDisplacementMeshMover::externalDisplacementMeshMover
     baffles_(baffles),
     pointDisplacement_(pointDisplacement)
 {}
-
 
 
 // * * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * //

@@ -126,7 +126,7 @@ bool Foam::autoSnapDriver::isFeaturePoint
 
 void Foam::autoSnapDriver::smoothAndConstrain
 (
-    const PackedBoolList& isMasterEdge,
+    const PackedBoolList& isPatchMasterEdge,
     const indirectPrimitivePatch& pp,
     const labelList& meshEdges,
     const List<pointConstraint>& constraints,
@@ -168,7 +168,7 @@ void Foam::autoSnapDriver::smoothAndConstrain
                 {
                     label edgeI = pEdges[i];
 
-                    if (isMasterEdge[meshEdges[edgeI]])
+                    if (isPatchMasterEdge[edgeI])
                     {
                         label nbrPointI = edges[edgeI].otherVertex(pointI);
                         if (constraints[nbrPointI].first() >= nConstraints)
@@ -3231,20 +3231,24 @@ Foam::vectorField Foam::autoSnapDriver::calcNearestSurfaceFeature
         patchConstraints
     );
 
-    const PackedBoolList isMasterPoint(syncTools::getMasterPoints(mesh));
+    //const PackedBoolList isMasterPoint(syncTools::getMasterPoints(mesh));
+    const PackedBoolList isPatchMasterPoint
+    (
+        meshRefinement::getMasterPoints
+        (
+            mesh,
+            pp.meshPoints()
+        )
+    );
     {
         vector avgPatchDisp = meshRefinement::gAverage
         (
-            mesh,
-            isMasterPoint,
-            pp.meshPoints(),
+            isPatchMasterPoint,
             patchDisp
         );
         vector avgPatchAttr = meshRefinement::gAverage
         (
-            mesh,
-            isMasterPoint,
-            pp.meshPoints(),
+            isPatchMasterPoint,
             patchAttraction
         );
 
@@ -3280,8 +3284,6 @@ Foam::vectorField Foam::autoSnapDriver::calcNearestSurfaceFeature
 
     // Count
     {
-        const labelList& meshPoints = pp.meshPoints();
-
         label nMasterPoints = 0;
         label nPlanar = 0;
         label nEdge = 0;
@@ -3289,7 +3291,7 @@ Foam::vectorField Foam::autoSnapDriver::calcNearestSurfaceFeature
 
         forAll(patchConstraints, pointI)
         {
-            if (isMasterPoint[meshPoints[pointI]])
+            if (isPatchMasterPoint[pointI])
             {
                 nMasterPoints++;
 
@@ -3337,7 +3339,19 @@ Foam::vectorField Foam::autoSnapDriver::calcNearestSurfaceFeature
 
     if (featureAttract < 1-0.001)
     {
-        const PackedBoolList isMasterEdge(syncTools::getMasterEdges(mesh));
+        //const PackedBoolList isMasterEdge(syncTools::getMasterEdges(mesh));
+        const labelList meshEdges
+        (
+            pp.meshEdges(mesh.edges(), mesh.pointEdges())
+        );
+        const PackedBoolList isPatchMasterEdge
+        (
+            meshRefinement::getMasterEdges
+            (
+                mesh,
+                meshEdges
+            )
+        );
 
         const vectorField pointNormals
         (
@@ -3347,17 +3361,13 @@ Foam::vectorField Foam::autoSnapDriver::calcNearestSurfaceFeature
                 pp
             )
         );
-        const labelList meshEdges
-        (
-            pp.meshEdges(mesh.edges(), mesh.pointEdges())
-        );
 
 
         // 1. Smoothed all displacement
         vectorField smoothedPatchDisp = patchDisp;
         smoothAndConstrain
         (
-            isMasterEdge,
+            isPatchMasterEdge,
             pp,
             meshEdges,
             patchConstraints,
@@ -3370,7 +3380,7 @@ Foam::vectorField Foam::autoSnapDriver::calcNearestSurfaceFeature
         tangPatchDisp -= (pointNormals & patchDisp) * pointNormals;
         smoothAndConstrain
         (
-            isMasterEdge,
+            isPatchMasterEdge,
             pp,
             meshEdges,
             patchConstraints,
