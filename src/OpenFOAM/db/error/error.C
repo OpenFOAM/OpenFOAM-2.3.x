@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -128,7 +128,7 @@ Foam::OSstream& Foam::error::operator()
 }
 
 
-Foam::error::operator OSstream&()
+Foam::error::operator Foam::OSstream&()
 {
     if (!messageStreamPtr_->good())
     {
@@ -142,7 +142,7 @@ Foam::error::operator OSstream&()
 }
 
 
-Foam::error::operator dictionary() const
+Foam::error::operator Foam::dictionary() const
 {
     dictionary errDict;
 

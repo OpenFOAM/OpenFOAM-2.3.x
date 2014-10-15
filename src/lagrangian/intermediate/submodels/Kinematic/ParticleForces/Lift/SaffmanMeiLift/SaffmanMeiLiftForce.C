@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -54,7 +54,7 @@ Foam::scalar Foam::SaffmanMeiLiftForce<CloudType>::SaffmanMeiLiftForce::Cl
         Cld = 6.46*0.0524*sqrt(beta*Re);
     }
 
-    return 3.0/(mathematical::twoPi*sqrt(Rew))*Cld;
+    return 3.0/(mathematical::twoPi*sqrt(Rew + ROOTVSMALL))*Cld;
 }
 
 
