@@ -334,8 +334,14 @@ bool Foam::KinematicParcel<ParcelType>::move
 
         p.stepFraction() = newStepFraction;
 
+        bool calcParcel = true;
+        if (!tracking && td.cloud().solution().steadyState())
+        {
+            calcParcel = false;
+        }
+
         // Avoid problems with extremely small timesteps
-        if (dt > ROOTVSMALL)
+        if ((dt > ROOTVSMALL) && calcParcel)
         {
             // Update cell based properties
             p.setCellValues(td, dt, cellI);
