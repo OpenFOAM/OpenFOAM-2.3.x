@@ -60,6 +60,7 @@ Description
         thicknessLayers | list of thicknesses per layer [m] | yes |
         kappaLayers  | list of thermal conductivites per layer [W/m/K] | yes |
         kappaName    | name of thermal conductivity field | yes  |
+        QrName       | name of the radiative field | no | no
     \endtable
 
     Example of the boundary condition specification:
@@ -75,6 +76,7 @@ Description
         kappaLayers     (1 2 3 4)
         value           uniform 300.0;
         kappaName       none;
+        QrName          none;
     }
     \endverbatim
 
@@ -136,6 +138,9 @@ private:
 
         //- Ambient temperature / [K]
         scalarField Ta_;
+
+        //- Name of the radiative heat flux
+        const word QrName_;
 
         //- Thickness of layers
         scalarList thicknessLayers_;
