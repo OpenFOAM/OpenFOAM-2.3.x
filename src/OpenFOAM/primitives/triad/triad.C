@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -372,7 +372,7 @@ Foam::triad Foam::triad::sortxyz() const
 
 
 
-Foam::triad::operator quaternion() const
+Foam::triad::operator Foam::quaternion() const
 {
     tensor R;
 
