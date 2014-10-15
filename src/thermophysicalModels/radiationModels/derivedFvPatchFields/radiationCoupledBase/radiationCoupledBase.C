@@ -32,6 +32,13 @@ License
 
 // * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * * //
 
+
+namespace Foam
+{
+    defineTypeNameAndDebug(radiationCoupledBase, 0);
+}
+
+
 namespace Foam
 {
     template<>
@@ -137,6 +144,12 @@ Foam::radiationCoupledBase::radiationCoupledBase
         break;
     }
 }
+
+
+// * * * * * * * * * * * * * * * * Destructor    * * * * * * * * * * * * * * //
+
+Foam::radiationCoupledBase::~radiationCoupledBase()
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //

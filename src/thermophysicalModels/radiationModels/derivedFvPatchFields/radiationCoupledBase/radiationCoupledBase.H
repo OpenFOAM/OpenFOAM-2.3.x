@@ -90,6 +90,10 @@ protected:
 
 public:
 
+     //- Runtime type information
+    TypeName("radiationCoupledBase");
+
+
     // Constructors
 
         //- Construct from patch, emissivity mode and emissivity
@@ -117,6 +121,9 @@ public:
         );
 
 
+    //- Destructor
+        virtual ~radiationCoupledBase();
+
     // Member functions
 
         // Access
@@ -135,13 +142,13 @@ public:
         // Mapping functions
 
             //- Map (and resize as needed) from self given a mapping object
-            void autoMap
+            virtual void autoMap
             (
                 const fvPatchFieldMapper&
             );
 
             //- Reverse map the given fvPatchField onto this fvPatchField
-            void rmap
+            virtual void rmap
             (
                 const fvPatchScalarField&,
                 const labelList&
