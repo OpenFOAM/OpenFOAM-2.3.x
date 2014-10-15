@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,6 +42,7 @@ SourceFiles
 #include "scalarField.H"
 #include "NamedEnum.H"
 #include "fvPatch.H"
+#include "fvPatchFieldMapper.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -99,6 +100,15 @@ public:
             const scalarField& emissivity
         );
 
+        //- Construct from patch, emissivity mode and emissivity and mapper
+        radiationCoupledBase
+        (
+            const fvPatch& patch,
+            const word& calculationMethod,
+            const scalarField& emissivity,
+            const fvPatchFieldMapper& mapper
+        );
+
         //- Construct from patch and dictionary
         radiationCoupledBase
         (
@@ -109,15 +119,34 @@ public:
 
     // Member functions
 
-        //- Method to obtain emissivity
-        word emissivityMethod() const
-        {
-            return emissivityMethodTypeNames_[method_];
-        }
+        // Access
+
+            //- Method to obtain emissivity
+            word emissivityMethod() const
+            {
+                return emissivityMethodTypeNames_[method_];
+            }
 
 
-        //- Calculate corresponding emissivity field
-        scalarField emissivity() const;
+            //- Calculate corresponding emissivity field
+            scalarField emissivity() const;
+
+
+        // Mapping functions
+
+            //- Map (and resize as needed) from self given a mapping object
+            void autoMap
+            (
+                const fvPatchFieldMapper&
+            );
+
+            //- Reverse map the given fvPatchField onto this fvPatchField
+            void rmap
+            (
+                const fvPatchScalarField&,
+                const labelList&
+            );
+
 
         //- Write
         void write(Ostream&) const;
