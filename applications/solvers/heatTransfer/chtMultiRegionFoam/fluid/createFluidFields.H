@@ -13,6 +13,7 @@
     PtrList<volScalarField> dpdtFluid(fluidRegions.size());
 
     List<scalar> initialMassFluid(fluidRegions.size());
+    List<bool> frozenFlowFluid(fluidRegions.size(), false);
 
     PtrList<fv::IOoptionList> fluidFvOptions(fluidRegions.size());
 
@@ -102,7 +103,7 @@
             )
         );
 
-        Info<< "    Adding turbulence \n" << endl;
+        Info<< "    Adding to turbulence\n" << endl;
         turbulence.set
         (
             i,
@@ -189,6 +190,10 @@
                 )
             )
         );
+
+        const dictionary& pimpleDict =
+            fluidRegions[i].solutionDict().subDict("PIMPLE");
+        pimpleDict.readIfPresent("frozenFlow", frozenFlowFluid[i]);
 
         Info<< "    Adding fvOptions\n" << endl;
         fluidFvOptions.set

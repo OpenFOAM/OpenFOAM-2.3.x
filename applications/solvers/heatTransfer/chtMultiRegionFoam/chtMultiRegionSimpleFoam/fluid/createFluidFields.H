@@ -11,8 +11,9 @@
     PtrList<radiation::radiationModel> radiation(fluidRegions.size());
 
     List<scalar> initialMassFluid(fluidRegions.size());
-    List<label> pRefCellFluid(fluidRegions.size(),0);
-    List<scalar> pRefValueFluid(fluidRegions.size(),0.0);
+    List<label> pRefCellFluid(fluidRegions.size(), 0);
+    List<scalar> pRefValueFluid(fluidRegions.size(), 0.0);
+    List<bool> frozenFlowFluid(fluidRegions.size(), false);
 
     PtrList<dimensionedScalar> rhoMax(fluidRegions.size());
     PtrList<dimensionedScalar> rhoMin(fluidRegions.size());
@@ -160,38 +161,22 @@
 
         initialMassFluid[i] = fvc::domainIntegrate(rhoFluid[i]).value();
 
+        const dictionary& simpleDict =
+            fluidRegions[i].solutionDict().subDict("SIMPLE");
+
         setRefCell
         (
             thermoFluid[i].p(),
             p_rghFluid[i],
-            fluidRegions[i].solutionDict().subDict("SIMPLE"),
+            simpleDict,
             pRefCellFluid[i],
             pRefValueFluid[i]
         );
 
-        rhoMax.set
-        (
-            i,
-            new dimensionedScalar
-            (
-                fluidRegions[i].solutionDict().subDict("SIMPLE").lookup
-                (
-                    "rhoMax"
-                )
-            )
-        );
+        simpleDict.readIfPresent("frozenFlow", frozenFlowFluid[i]);
 
-        rhoMin.set
-        (
-            i,
-            new dimensionedScalar
-            (
-                fluidRegions[i].solutionDict().subDict("SIMPLE").lookup
-                (
-                    "rhoMin"
-                )
-            )
-        );
+        rhoMax.set(i, new dimensionedScalar(simpleDict.lookup("rhoMax")));
+        rhoMin.set(i, new dimensionedScalar(simpleDict.lookup("rhoMin")));
 
         Info<< "    Adding fvOptions\n" << endl;
         fluidFvOptions.set
