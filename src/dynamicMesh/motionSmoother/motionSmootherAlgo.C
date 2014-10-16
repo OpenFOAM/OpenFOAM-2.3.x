@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -526,6 +526,16 @@ void Foam::motionSmootherAlgo::setDisplacement
     {
         displacement[ppMeshPoints[patchPointI]] = patchDisp[patchPointI];
     }
+
+
+    // Combine any coupled points
+    syncTools::syncPointList
+    (
+        mesh,
+        displacement,
+        maxMagEqOp(),           // combine op
+        vector::zero            // null value
+    );
 
 
     // Adapt the fixedValue bc's (i.e. copy internal point data to

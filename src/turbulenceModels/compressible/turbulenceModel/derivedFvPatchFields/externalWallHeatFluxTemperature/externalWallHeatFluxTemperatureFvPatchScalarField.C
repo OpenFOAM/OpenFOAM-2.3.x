@@ -69,6 +69,7 @@ externalWallHeatFluxTemperatureFvPatchScalarField
     q_(p.size(), 0.0),
     h_(p.size(), 0.0),
     Ta_(p.size(), 0.0),
+    QrName_("undefined-Qr"),
     thicknessLayers_(),
     kappaLayers_()
 {
@@ -93,6 +94,7 @@ externalWallHeatFluxTemperatureFvPatchScalarField
     q_(ptf.q_, mapper),
     h_(ptf.h_, mapper),
     Ta_(ptf.Ta_, mapper),
+    QrName_(ptf.QrName_),
     thicknessLayers_(ptf.thicknessLayers_),
     kappaLayers_(ptf.kappaLayers_)
 {}
@@ -112,6 +114,7 @@ externalWallHeatFluxTemperatureFvPatchScalarField
     q_(p.size(), 0.0),
     h_(p.size(), 0.0),
     Ta_(p.size(), 0.0),
+    QrName_(dict.lookupOrDefault<word>("Qr", "none")),
     thicknessLayers_(),
     kappaLayers_()
 {
@@ -181,6 +184,7 @@ externalWallHeatFluxTemperatureFvPatchScalarField
     q_(tppsf.q_),
     h_(tppsf.h_),
     Ta_(tppsf.Ta_),
+    QrName_(tppsf.QrName_),
     thicknessLayers_(tppsf.thicknessLayers_),
     kappaLayers_(tppsf.kappaLayers_)
 {}
@@ -199,6 +203,7 @@ externalWallHeatFluxTemperatureFvPatchScalarField
     q_(tppsf.q_),
     h_(tppsf.h_),
     Ta_(tppsf.Ta_),
+    QrName_(tppsf.QrName_),
     thicknessLayers_(tppsf.thicknessLayers_),
     kappaLayers_(tppsf.kappaLayers_)
 {}
@@ -245,6 +250,12 @@ void Foam::externalWallHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
     const scalarField Tp(*this);
     scalarField hp(patch().size(), 0.0);
 
+    scalarField Qr(Tp.size(), 0.0);
+    if (QrName_ != "none")
+    {
+        Qr = patch().lookupPatchField<volScalarField, scalar>(QrName_);
+    }
+
     switch (mode_)
     {
         case fixedHeatFlux:
@@ -281,15 +292,17 @@ void Foam::externalWallHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
 
     if (mode_ == fixedHeatFlux)
     {
-        refGrad() =  q_/kappa(Tp);
+        refGrad() =  (q_ + Qr)/kappa(Tp);
         refValue() =  0.0;
         valueFraction() = 0.0;
     }
     else if (mode_ == fixedHeatTransferCoeff)
     {
+        Qr /= Tp;
         refGrad() =  0.0;
-        refValue() =  Ta_;
-        valueFraction() = hp/(hp + kappa(Tp)*patch().deltaCoeffs());
+        refValue() =  hp*Ta_/(hp - Qr);
+        valueFraction() =
+            (hp - Qr)/((hp - Qr) + kappa(Tp)*patch().deltaCoeffs());
     }
 
     mixedFvPatchScalarField::updateCoeffs();
@@ -318,9 +331,11 @@ void Foam::externalWallHeatFluxTemperatureFvPatchScalarField::write
 {
     mixedFvPatchScalarField::write(os);
     temperatureCoupledBase::write(os);
+    os.writeKeyword("Qr")<< QrName_ << token::END_STATEMENT << nl;
 
     switch (mode_)
     {
+
         case fixedHeatFlux:
         {
             q_.writeEntry("q", os);

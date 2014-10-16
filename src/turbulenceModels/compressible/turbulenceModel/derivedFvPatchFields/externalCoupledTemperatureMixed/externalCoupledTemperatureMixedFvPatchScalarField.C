@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -201,8 +201,8 @@ void Foam::externalCoupledTemperatureMixedFvPatchScalarField::transferData
             {
                 const Field<scalar>& magSf = magSfs[procI];
                 const Field<scalar>& value = values[procI];
-                const Field& qDot = qDots[procI];
-                const Field& htc = htcs[procI];
+                const Field<scalar>& qDot = qDots[procI];
+                const Field<scalar>& htc = htcs[procI];
 
                 forAll(magSf, faceI)
                 {

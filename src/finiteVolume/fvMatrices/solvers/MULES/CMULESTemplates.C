@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -107,6 +107,7 @@ void Foam::MULES::correct
         psiMax, psiMin,
         nLimiterIter
     );
+
     correct(rDeltaT, rho, psi, phi, phiCorr, Sp, Su);
 }
 
@@ -171,6 +172,13 @@ void Foam::MULES::limiterCorr
     const volScalarField::GeometricBoundaryField& psiBf = psi.boundaryField();
 
     const fvMesh& mesh = psi.mesh();
+
+    const dictionary& MULEScontrols = mesh.solverDict(psi.name());
+
+    scalar extremaCoeff
+    (
+        MULEScontrols.lookupOrDefault<scalar>("extremaCoeff", 0.0)
+    );
 
     const labelUList& owner = mesh.owner();
     const labelUList& neighb = mesh.neighbour();
@@ -283,8 +291,8 @@ void Foam::MULES::limiterCorr
         }
     }
 
-    psiMaxn = min(psiMaxn, psiMax);
-    psiMinn = max(psiMinn, psiMin);
+    psiMaxn = min(psiMaxn + extremaCoeff*(psiMax - psiMin), psiMax);
+    psiMinn = max(psiMinn - extremaCoeff*(psiMax - psiMin), psiMin);
 
     // scalar smooth = 0.5;
     // psiMaxn = min((1.0 - smooth)*psiIf + smooth*psiMaxn, psiMax);

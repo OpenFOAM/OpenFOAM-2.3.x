@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -1338,6 +1338,33 @@ void Foam::mapDistribute::operator=(const mapDistribute& rhs)
     transformElements_ = rhs.transformElements_;
     transformStart_ = rhs.transformStart_;
     schedulePtr_.clear();
+}
+
+
+// * * * * * * * * * * * * * * Istream Operator  * * * * * * * * * * * * * * //
+
+Foam::Istream& Foam::operator>>(Istream& is, mapDistribute& map)
+{
+    is.fatalCheck("operator>>(Istream&, mapDistribute&)");
+
+    is  >> map.constructSize_ >> map.subMap_ >> map.constructMap_
+        >> map.transformElements_ >> map.transformStart_;
+
+    return is;
+}
+
+
+// * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * * //
+
+Foam::Ostream& Foam::operator<<(Ostream& os, const mapDistribute& map)
+{
+    os  << map.constructSize_ << token::NL
+        << map.subMap_ << token::NL
+        << map.constructMap_ << token::NL
+        << map.transformElements_ << token::NL
+        << map.transformStart_ << token::NL;
+
+    return os;
 }
 
 
