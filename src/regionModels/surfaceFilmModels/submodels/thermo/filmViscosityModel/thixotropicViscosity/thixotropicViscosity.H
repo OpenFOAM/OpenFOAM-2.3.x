@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -105,37 +105,17 @@ protected:
 
     // Protected data
 
-/*
-        //- Model `a' coefficient
-        scalar a_;
-
-        //- Model `b' coefficient
-        scalar b_;
-
-        //- Model `c' coefficient
-        scalar c_;
-
-        //- Model `d' coefficient
-        scalar d_;
-
-        //- Limiting viscosity when lambda = 1
-        scalar mu0_;
-
-        //- Limiting viscosity when lambda = 0
-        scalar muInf_;
-*/
-
         //- Model `a' coefficient
         dimensionedScalar a_;
 
         //- Model `b' coefficient
         dimensionedScalar b_;
 
-        //- Model `c' coefficient
-        dimensionedScalar c_;
-
         //- Model `d' coefficient
         dimensionedScalar d_;
+
+        //- Model `c' coefficient (read after d since dims depend on d value)
+        dimensionedScalar c_;
 
         //- Limiting viscosity when lambda = 1
         dimensionedScalar mu0_;

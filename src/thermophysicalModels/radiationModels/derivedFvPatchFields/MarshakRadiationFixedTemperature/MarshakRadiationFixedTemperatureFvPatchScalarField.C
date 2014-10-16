@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -63,7 +63,8 @@ MarshakRadiationFixedTemperatureFvPatchScalarField
     (
         p,
         ptf.emissivityMethod(),
-        ptf.emissivity_
+        ptf.emissivity_,
+        mapper
     ),
     Trad_(ptf.Trad_, mapper)
 {}
@@ -136,6 +137,7 @@ void Foam::MarshakRadiationFixedTemperatureFvPatchScalarField::autoMap
 )
 {
     mixedFvPatchScalarField::autoMap(m);
+    radiationCoupledBase::autoMap(m);
     Trad_.autoMap(m);
 }
 
@@ -147,7 +149,7 @@ void Foam::MarshakRadiationFixedTemperatureFvPatchScalarField::rmap
 )
 {
     mixedFvPatchScalarField::rmap(ptf, addr);
-
+    radiationCoupledBase::rmap(ptf, addr);
     const MarshakRadiationFixedTemperatureFvPatchScalarField& mrptf =
         refCast<const MarshakRadiationFixedTemperatureFvPatchScalarField>(ptf);
 

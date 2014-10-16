@@ -28,3 +28,5 @@
         dimMass,
         initialMassFluid[i]
     );
+
+    const bool frozenFlow = frozenFlowFluid[i];

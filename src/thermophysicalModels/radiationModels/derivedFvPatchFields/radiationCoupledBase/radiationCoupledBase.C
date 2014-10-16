@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,6 +31,13 @@ License
 #include "absorptionEmissionModel.H"
 
 // * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * * //
+
+
+namespace Foam
+{
+    defineTypeNameAndDebug(radiationCoupledBase, 0);
+}
+
 
 namespace Foam
 {
@@ -63,6 +70,20 @@ Foam::radiationCoupledBase::radiationCoupledBase
     patch_(patch),
     method_(emissivityMethodTypeNames_[calculationType]),
     emissivity_(emissivity)
+{}
+
+
+Foam::radiationCoupledBase::radiationCoupledBase
+(
+    const fvPatch& patch,
+    const word& calculationType,
+    const scalarField& emissivity,
+    const fvPatchFieldMapper& mapper
+)
+:
+    patch_(patch),
+    method_(emissivityMethodTypeNames_[calculationType]),
+    emissivity_(emissivity, mapper)
 {}
 
 
@@ -123,6 +144,12 @@ Foam::radiationCoupledBase::radiationCoupledBase
         break;
     }
 }
+
+
+// * * * * * * * * * * * * * * * * Destructor    * * * * * * * * * * * * * * //
+
+Foam::radiationCoupledBase::~radiationCoupledBase()
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -186,6 +213,28 @@ Foam::scalarField Foam::radiationCoupledBase::emissivity() const
     }
 
     return scalarField(0);
+}
+
+
+void Foam::radiationCoupledBase::autoMap
+(
+    const fvPatchFieldMapper& m
+)
+{
+    emissivity_.autoMap(m);
+}
+
+
+void Foam::radiationCoupledBase::rmap
+(
+    const fvPatchScalarField& ptf,
+    const labelList& addr
+)
+{
+    const radiationCoupledBase& mrptf =
+        refCast<const radiationCoupledBase>(ptf);
+
+    emissivity_.rmap(mrptf.emissivity_, addr);
 }
 
 

@@ -12,6 +12,7 @@ $(generalSources)/semiImplicitSource/semiImplicitSource.C
 
 derivedSources=sources/derived
 $(derivedSources)/actuationDiskSource/actuationDiskSource.C
+$(derivedSources)/effectivenessHeatExchangerSource/effectivenessHeatExchangerSource.C
 $(derivedSources)/explicitPorositySource/explicitPorositySource.C
 $(derivedSources)/MRFSource/MRFSource.C
 $(derivedSources)/pressureGradientExplicitSource/pressureGradientExplicitSource.C
@@ -27,7 +28,8 @@ $(derivedSources)/rotorDiskSource/trimModel/trimModel/trimModel.C
 $(derivedSources)/rotorDiskSource/trimModel/trimModel/trimModelNew.C
 $(derivedSources)/rotorDiskSource/trimModel/fixed/fixedTrim.C
 $(derivedSources)/rotorDiskSource/trimModel/targetCoeff/targetCoeffTrim.C
-$(derivedSources)/effectivenessHeatExchangerSource/effectivenessHeatExchangerSource.C
+$(derivedSources)/solidificationMeltingSource/solidificationMeltingSource.C
+$(derivedSources)/solidificationMeltingSource/solidificationMeltingSourceIO.C
 
 interRegion = sources/interRegion
 $(interRegion)/interRegionHeatTransferModel/constantHeatTransfer/constantHeatTransfer.C

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -61,7 +61,8 @@ Foam::MarshakRadiationFvPatchScalarField::MarshakRadiationFvPatchScalarField
     (
         p,
         ptf.emissivityMethod(),
-        ptf.emissivity_
+        ptf.emissivity_,
+        mapper
     ),
     TName_(ptf.TName_)
 {}
@@ -136,7 +137,8 @@ void Foam::MarshakRadiationFvPatchScalarField::autoMap
     const fvPatchFieldMapper& m
 )
 {
-    scalarField::autoMap(m);
+    mixedFvPatchScalarField::autoMap(m);
+    radiationCoupledBase::autoMap(m);
 }
 
 
@@ -147,6 +149,7 @@ void Foam::MarshakRadiationFvPatchScalarField::rmap
 )
 {
     mixedFvPatchScalarField::rmap(ptf, addr);
+    radiationCoupledBase::rmap(ptf, addr);
 }
 
 

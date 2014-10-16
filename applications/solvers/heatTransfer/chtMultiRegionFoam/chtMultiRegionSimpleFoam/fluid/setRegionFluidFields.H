@@ -25,6 +25,7 @@
 
     const label pRefCell = pRefCellFluid[i];
     const scalar pRefValue = pRefValueFluid[i];
+    const bool frozenFlow = frozenFlowFluid[i];
 
     volScalarField& p_rgh = p_rghFluid[i];
     const volScalarField& gh = ghFluid[i];
