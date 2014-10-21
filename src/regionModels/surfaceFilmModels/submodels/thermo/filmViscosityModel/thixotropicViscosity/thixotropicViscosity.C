@@ -91,12 +91,12 @@ thixotropicViscosity::thixotropicViscosity
 )
 :
     filmViscosityModel(typeName, owner, dict, mu),
-    a_(coeffDict_.lookup("a")),
-    b_(coeffDict_.lookup("b")),
-    c_(coeffDict_.lookup("c")),
-    d_(coeffDict_.lookup("d")),
-    mu0_(coeffDict_.lookup("mu0")),
-    muInf_(coeffDict_.lookup("muInf")),
+    a_("a", dimless/dimTime, coeffDict_.lookup("a")),
+    b_("b", dimless, coeffDict_.lookup("b")),
+    d_("d", dimless, coeffDict_.lookup("d")),
+    c_("c", pow(dimTime, d_.value() - scalar(1)), coeffDict_.lookup("c")),
+    mu0_("mu0", dimPressure*dimTime, coeffDict_.lookup("mu0")),
+    muInf_("muInf", mu0_.dimensions(), coeffDict_.lookup("muInf")),
     K_(1.0 - Foam::sqrt(muInf_/mu0_)),
     lambda_
     (
@@ -144,26 +144,32 @@ void thixotropicViscosity::correct
     const volScalarField& delta = film.delta();
     const volScalarField& deltaRho = film.deltaRho();
     const surfaceScalarField& phi = film.phi();
+    const volScalarField& alpha = film.alpha();
 
-    // gamma-dot (shear rate) raised to the power d
-    volScalarField gDotPowD
-    (
-        "gDotPowD",
-        pow(mag(U - Uw)/(delta + film.deltaSmall()), d_)
-    );
+    // gamma-dot (shear rate)
+    volScalarField gDot("gDot", alpha*mag(U - Uw)/(delta + film.deltaSmall()));
 
-    dimensionedScalar c0("SMALL", dimMass/sqr(dimLength)/dimTime, SMALL);
-    volScalarField coeff(-deltaRho*c_*gDotPowD + c0);
+    if (debug && this->owner().regionMesh().time().outputTime())
+    {
+        gDot.write();
+    }
+
+    dimensionedScalar deltaRho0("deltaRho0", deltaRho.dimensions(), ROOTVSMALL);
+    surfaceScalarField phiU(phi/fvc::interpolate(deltaRho + deltaRho0));
+
+    dimensionedScalar c0("c0", dimless/dimTime, ROOTVSMALL);
+    volScalarField coeff("coeff", -c_*pow(gDot, d_) + c0);
 
     fvScalarMatrix lambdaEqn
     (
-        fvm::ddt(deltaRho, lambda_)
-      + fvm::div(phi, lambda_)
-      - fvm::Sp(fvc::div(phi), lambda_)
+        fvm::ddt(lambda_)
+      + fvm::div(phiU, lambda_)
+      - fvm::Sp(fvc::div(phiU), lambda_)
       ==
-        deltaRho*a_*pow((1.0 - lambda_), b_)
+        a_*pow((1.0 - lambda_), b_)
       + fvm::SuSp(coeff, lambda_)
     );
+
 
     lambdaEqn.relax();
 

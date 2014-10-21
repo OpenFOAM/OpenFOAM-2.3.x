@@ -3,23 +3,30 @@ if (finalIter)
     mesh.data::add("finalIteration", true);
 }
 
-if (oCorr == 0)
+if (frozenFlow)
 {
-    #include "rhoEqn.H"
+    #include "EEqn.H"
 }
-
-#include "UEqn.H"
-#include "EEqn.H"
-
-// --- PISO loop
-for (int corr=0; corr<nCorr; corr++)
+else
 {
-    #include "pEqn.H"
+    if (oCorr == 0)
+    {
+        #include "rhoEqn.H"
+    }
+
+    #include "UEqn.H"
+    #include "EEqn.H"
+
+    // --- PISO loop
+    for (int corr=0; corr<nCorr; corr++)
+    {
+        #include "pEqn.H"
+    }
+
+    turb.correct();
+
+    rho = thermo.rho();
 }
-
-turb.correct();
-
-rho = thermo.rho();
 
 if (finalIter)
 {
