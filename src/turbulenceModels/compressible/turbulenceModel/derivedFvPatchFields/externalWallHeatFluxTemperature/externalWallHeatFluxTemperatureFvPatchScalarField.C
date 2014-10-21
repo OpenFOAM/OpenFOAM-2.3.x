@@ -345,10 +345,8 @@ void Foam::externalWallHeatFluxTemperatureFvPatchScalarField::write
         {
             h_.writeEntry("h", os);
             Ta_.writeEntry("Ta", os);
-            os.writeKeyword("thicknessLayers")<< thicknessLayers_
-                << token::END_STATEMENT << nl;
-            os.writeKeyword("kappaLayers")<< kappaLayers_
-                << token::END_STATEMENT << nl;
+            thicknessLayers_.writeEntry("thicknessLayers", os);
+            kappaLayers_.writeEntry("kappaLayers", os);
             break;
         }
         default:
