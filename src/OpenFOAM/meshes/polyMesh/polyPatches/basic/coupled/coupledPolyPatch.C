@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -344,15 +344,7 @@ void Foam::coupledPolyPatch::calcTransformTensors
             Pout<< "    error:" << error << endl;
         }
 
-        if (transform == NOORDERING)
-        {
-            forwardT_.setSize(0);
-            reverseT_.setSize(0);
-
-            separation_.setSize(0);
-            collocated_ = boolList(1, true);
-        }
-        else if
+        if
         (
             transform == ROTATIONAL
          || (
