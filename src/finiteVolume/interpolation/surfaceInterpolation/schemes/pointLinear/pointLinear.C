@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -63,36 +63,38 @@ correction
             w[owner[facei]]*C[owner[facei]]
           + (1.0 - w[owner[facei]])*C[neighbour[facei]];
 
+        const face& f = faces[facei];
+
         scalar at = triangle<point, const point&>
         (
             pi,
-            points[faces[facei][0]],
-            points[faces[facei][faces[facei].size()-1]]
+            points[f[0]],
+            points[f[f.size()-1]]
         ).mag();
 
         scalar sumAt = at;
         Type sumPsip = at*(1.0/3.0)*
         (
             sfCorr[facei]
-          + pvf[faces[facei][0]]
-          + pvf[faces[facei][faces[facei].size()-1]]
+          + pvf[f[0]]
+          + pvf[f[f.size()-1]]
         );
 
-        for (label pointi=1; pointi<faces[facei].size(); pointi++)
+        for (label pointi=1; pointi<f.size(); pointi++)
         {
             at = triangle<point, const point&>
             (
                 pi,
-                points[faces[facei][pointi]],
-                points[faces[facei][pointi-1]]
+                points[f[pointi]],
+                points[f[pointi-1]]
             ).mag();
 
             sumAt += at;
             sumPsip += at*(1.0/3.0)*
             (
                 sfCorr[facei]
-              + pvf[faces[facei][pointi]]
-              + pvf[faces[facei][pointi-1]]
+              + pvf[f[pointi]]
+              + pvf[f[pointi-1]]
             );
 
         }
@@ -100,7 +102,73 @@ correction
         sfCorr[facei] = sumPsip/sumAt - sfCorr[facei];
     }
 
-    tsfCorr().boundaryField() = pTraits<Type>::zero;
+
+    typename GeometricField<Type, fvsPatchField, surfaceMesh>::
+        GeometricBoundaryField& bSfCorr = tsfCorr().boundaryField();
+
+    forAll(bSfCorr, patchi)
+    {
+        fvsPatchField<Type>& pSfCorr = bSfCorr[patchi];
+
+        if (pSfCorr.coupled())
+        {
+            const fvPatch& fvp = mesh.boundary()[patchi];
+            const scalarField& pWghts = mesh.weights().boundaryField()[patchi];
+            const labelUList& pOwner = fvp.faceCells();
+            const vectorField& pNbrC = mesh.C().boundaryField()[patchi];
+
+            forAll(pOwner, facei)
+            {
+                label own = pOwner[facei];
+
+                point pi =
+                    pWghts[facei]*C[own]
+                  + (1.0 - pWghts[facei])*pNbrC[facei];
+
+                const face& f = faces[facei+fvp.start()];
+
+                scalar at = triangle<point, const point&>
+                (
+                    pi,
+                    points[f[0]],
+                    points[f[f.size()-1]]
+                ).mag();
+
+                scalar sumAt = at;
+                Type sumPsip = at*(1.0/3.0)*
+                (
+                    pSfCorr[facei]
+                  + pvf[f[0]]
+                  + pvf[f[f.size()-1]]
+                );
+
+                for (label pointi=1; pointi<f.size(); pointi++)
+                {
+                    at = triangle<point, const point&>
+                    (
+                        pi,
+                        points[f[pointi]],
+                        points[f[pointi-1]]
+                    ).mag();
+
+                    sumAt += at;
+                    sumPsip += at*(1.0/3.0)*
+                    (
+                        pSfCorr[facei]
+                      + pvf[f[pointi]]
+                      + pvf[f[pointi-1]]
+                    );
+
+                }
+
+                pSfCorr[facei] = sumPsip/sumAt - pSfCorr[facei];
+            }
+        }
+        else
+        {
+            pSfCorr = pTraits<Type>::zero;
+        }
+    }
 
     return tsfCorr;
 }
