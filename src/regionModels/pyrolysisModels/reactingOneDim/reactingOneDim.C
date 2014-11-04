@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -729,7 +729,7 @@ void reactingOneDim::evolveRegion()
 }
 
 
-void reactingOneDim::info() const
+void reactingOneDim::info()
 {
     Info<< "\nPyrolysis in region: " << regionMesh().name() << endl;
 

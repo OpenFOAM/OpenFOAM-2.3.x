@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -99,7 +99,7 @@ public:
         virtual void evolve();
 
         //- Provide some feedback from pyrolysis regions
-        virtual void info() const;
+        virtual void info();
 
         //- Return max diffusivity allowed in the solid
         virtual scalar maxDiff() const;

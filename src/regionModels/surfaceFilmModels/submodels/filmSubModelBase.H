@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -61,7 +61,7 @@ protected:
     // Protected data
 
         //- Reference to the owner surface film model
-        const surfaceFilmModel& owner_;
+        surfaceFilmModel& owner_;
 
 
 public:
@@ -103,8 +103,11 @@ public:
             //- Flag to indicate when to write a property
             virtual bool outputTime() const;
 
-            //- Return the reference to the owner surface film model
+            //- Return const access to the owner surface film model
             inline const surfaceFilmModel& owner() const;
+
+            //- Return the reference to the owner surface film model
+            inline surfaceFilmModel& owner();
 
             template<class FilmType>
             inline const FilmType& filmType() const;

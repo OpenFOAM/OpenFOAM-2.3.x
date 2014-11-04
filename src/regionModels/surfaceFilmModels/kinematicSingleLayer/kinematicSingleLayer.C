@@ -1074,7 +1074,7 @@ const volScalarField& kinematicSingleLayer::cloudDiameterTrans() const
 }
 
 
-void kinematicSingleLayer::info() const
+void kinematicSingleLayer::info()
 {
     Info<< "\nSurface film: " << type() << endl;
 

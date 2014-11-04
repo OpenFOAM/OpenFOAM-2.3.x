@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,8 +39,7 @@ namespace surfaceFilmModels
 injectionModelList::injectionModelList(surfaceFilmModel& owner)
 :
     PtrList<injectionModel>(),
-    owner_(owner),
-    dict_(dictionary::null)
+    filmSubModelBase(owner)
 {}
 
 
@@ -51,8 +50,15 @@ injectionModelList::injectionModelList
 )
 :
     PtrList<injectionModel>(),
-    owner_(owner),
-    dict_(dict)
+    filmSubModelBase
+    (
+        "injectionModelList",
+        owner,
+        dict,
+        "injectionModelList",
+        "injectionModelList"
+    ),
+    massInjected_(owner.intCoupledPatchIDs().size(), 0.0)
 {
     const wordList activeModels(dict.lookup("injectionModels"));
 
@@ -71,11 +77,7 @@ injectionModelList::injectionModelList
         forAllConstIter(wordHashSet, models, iter)
         {
             const word& model = iter.key();
-            set
-            (
-                i,
-                injectionModel::New(owner, dict, model)
-            );
+            set(i, injectionModel::New(owner, dict, model));
             i++;
         }
     }
@@ -90,6 +92,7 @@ injectionModelList::injectionModelList
 
 injectionModelList::~injectionModelList()
 {}
+
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -110,10 +113,19 @@ void injectionModelList::correct
     // Push values to boundaries ready for transfer to the primary region
     massToInject.correctBoundaryConditions();
     diameterToInject.correctBoundaryConditions();
+
+    const labelList& patchIDs = owner().intCoupledPatchIDs();
+
+    forAll(patchIDs, i)
+    {
+        label patchI = patchIDs[i];
+        massInjected_[i] =
+            massInjected_[i] + sum(massToInject.boundaryField()[patchI]);
+    }
 }
 
 
-void injectionModelList::info(Ostream& os) const
+void injectionModelList::info(Ostream& os)
 {
     scalar injectedMass = 0.0;
     forAll(*this, i)
@@ -123,6 +135,29 @@ void injectionModelList::info(Ostream& os) const
     }
 
     os  << indent << "injected mass      = " << injectedMass << nl;
+
+    scalarList mass0(massInjected_.size(), 0.0);
+    this->getModelProperty("massInjected", mass0);
+
+    scalarList mass(massInjected_);
+    Pstream::listCombineGather(mass, plusEqOp<scalar>());
+    mass = mass + mass0;
+
+    const polyBoundaryMesh& pbm = owner().regionMesh().boundaryMesh();
+    const labelList& patchIDs = owner().intCoupledPatchIDs();
+
+    forAll(patchIDs, i)
+    {
+        label patchI = patchIDs[i];
+        Info<< indent << "  - patch: " << pbm[patchI].name() << ": "
+            << mass[i] << endl;
+    }
+
+    if (owner().time().outputTime())
+    {
+        setModelProperty("massInjected", mass);
+        massInjected_ = 0.0;
+    }
 }
 
 
