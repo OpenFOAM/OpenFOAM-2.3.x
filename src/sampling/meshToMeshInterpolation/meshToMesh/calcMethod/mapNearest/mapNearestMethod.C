@@ -48,9 +48,7 @@ bool Foam::mapNearestMethod::findInitialSeeds
     label& tgtSeedI
 ) const
 {
-    const cellList& srcCells = src_.cells();
-    const faceList& srcFaces = src_.faces();
-    const pointField& srcPts = src_.points();
+    const vectorField& srcCcs = src_.cellCentres();
 
     for (label i = startSeedI; i < srcCellIDs.size(); i++)
     {
@@ -58,11 +56,9 @@ bool Foam::mapNearestMethod::findInitialSeeds
 
         if (mapFlag[srcI])
         {
-            const pointField
-                pts(srcCells[srcI].points(srcFaces, srcPts).xfer());
-
-            const point& pt = pts[0];
-            pointIndexHit hit = tgt_.cellTree().findNearest(pt, GREAT);
+            const point& srcCc = srcCcs[srcI];
+            pointIndexHit hit =
+                tgt_.cellTree().findNearest(srcCc, GREAT);
 
             if (hit.hit())
             {
@@ -86,8 +82,7 @@ bool Foam::mapNearestMethod::findInitialSeeds
                 )
                     << "Unable to find nearest target cell"
                     << " for source cell " << srcI
-                    << " with centre "
-                    << srcCells[srcI].centre(srcPts, srcFaces)
+                    << " with centre " << srcCc
                     << abort(FatalError);
             }
 
@@ -123,36 +118,37 @@ void Foam::mapNearestMethod::calculateAddressing
     const scalarField& srcVc = src_.cellVolumes();
     const scalarField& tgtVc = tgt_.cellVolumes();
 
-    label srcCellI = srcSeedI;
-    label tgtCellI = tgtSeedI;
-
-    do
     {
-        // find nearest tgt cell
-        findNearestCell(src_, tgt_, srcCellI, tgtCellI);
+        label srcCellI = srcSeedI;
+        label tgtCellI = tgtSeedI;
 
-        // store src/tgt cell pair
-        srcToTgt[srcCellI].append(tgtCellI);
-        tgtToSrc[tgtCellI].append(srcCellI);
+        do
+        {
+            // find nearest tgt cell
+            findNearestCell(src_, tgt_, srcCellI, tgtCellI);
 
-        // mark source cell srcCellI and tgtCellI as matched
-        mapFlag[srcCellI] = false;
+           // store src/tgt cell pair
+            srcToTgt[srcCellI].append(tgtCellI);
+            tgtToSrc[tgtCellI].append(srcCellI);
 
-        // accumulate intersection volume
-        V_ += srcVc[srcCellI];
+            // mark source cell srcCellI and tgtCellI as matched
+            mapFlag[srcCellI] = false;
 
-        // find new source cell
-        setNextNearestCells
-        (
-            startSeedI,
-            srcCellI,
-            tgtCellI,
-            mapFlag,
-            srcCellIDs
-        );
+            // accumulate intersection volume
+            V_ += srcVc[srcCellI];
+
+            // find new source cell
+            setNextNearestCells
+            (
+                startSeedI,
+                srcCellI,
+                tgtCellI,
+                mapFlag,
+                srcCellIDs
+            );
+        }
+        while (srcCellI >= 0);
     }
-    while (srcCellI >= 0);
-
 
     // for the case of multiple source cells per target cell, select the
     // nearest source cell only and discard the others
@@ -163,7 +159,7 @@ void Foam::mapNearestMethod::calculateAddressing
     {
         if (tgtToSrc[targetCellI].size() > 1)
         {
-            const vector& tgtC = tgtCc[tgtCellI];
+            const vector& tgtC = tgtCc[targetCellI];
 
             DynamicList<label>& srcCells = tgtToSrc[targetCellI];
 
@@ -203,16 +199,14 @@ void Foam::mapNearestMethod::calculateAddressing
     // transfer addressing into persistent storage
     forAll(srcToTgtCellAddr, i)
     {
-        scalar v = srcVc[i];
+        srcToTgtCellWght[i] = scalarList(srcToTgt[i].size(), srcVc[i]);
         srcToTgtCellAddr[i].transfer(srcToTgt[i]);
-        srcToTgtCellWght[i] = scalarList(1, v);
     }
 
     forAll(tgtToSrcCellAddr, i)
     {
-        scalar v = tgtVc[i];
+        tgtToSrcCellWght[i] = scalarList(tgtToSrc[i].size(), tgtVc[i]);
         tgtToSrcCellAddr[i].transfer(tgtToSrc[i]);
-        tgtToSrcCellWght[i] = scalarList(1, v);
     }
 }
 
@@ -272,9 +266,17 @@ void Foam::mapNearestMethod::setNextNearestCells
         if (mapFlag[cellI])
         {
             srcCellI = cellI;
-            startSeedI = cellI + 1;
-
             return;
+        }
+    }
+
+    for (label i = startSeedI; i < srcCellIDs.size(); i++)
+    {
+        label cellI = srcCellIDs[i];
+        if (mapFlag[cellI])
+        {
+            startSeedI = i;
+            break;
         }
     }
 

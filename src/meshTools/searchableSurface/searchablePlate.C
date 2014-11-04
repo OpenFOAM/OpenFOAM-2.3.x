@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -70,8 +70,8 @@ Foam::direction Foam::searchablePlate::calcNormal(const point& span)
     if (normalDir == 3)
     {
         FatalErrorIn("searchablePlate::calcNormal()")
-            << "Span should have one and only zero entry. Now:" << span
-            << exit(FatalError);
+            << "Span should have two positive and one zero entry. Now:"
+            << span << exit(FatalError);
     }
 
     return normalDir;
