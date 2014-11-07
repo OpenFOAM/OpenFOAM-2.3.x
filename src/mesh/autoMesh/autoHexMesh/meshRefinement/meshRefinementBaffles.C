@@ -185,6 +185,7 @@ void Foam::meshRefinement::getBafflePatches
     label vertI = 0;
     if (debug&OBJINTERSECTIONS)
     {
+        mkDir(mesh_.time().path()/timeName());
         str.reset
         (
             new OFstream
@@ -2561,7 +2562,7 @@ Foam::autoPtr<Foam::mapPolyMesh> Foam::meshRefinement::splitMesh
     blockedFace.clear();
 
     // Find the region containing the keepPoint
-    label keepRegionI = findRegion
+    const label keepRegionI = findRegion
     (
         mesh_,
         cellRegion,
