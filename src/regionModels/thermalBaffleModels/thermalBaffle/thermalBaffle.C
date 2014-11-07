@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -107,13 +107,13 @@ void thermalBaffle::solveEnergy()
         forAll(ppCoupled, localFaceI)
         {
             const labelList& cells = boundaryFaceCells_[localFaceI];
-            forAll (cells, i)
+            forAll(cells, i)
             {
                 const label cellId = cells[i];
 
                 Q[cellId] =
                     Qs_.boundaryField()[patchI][localFaceI]
-                    /thickness_[localFaceI];
+                   /thickness_[localFaceI];
 
                 rho[cellId] *= delta_.value()/thickness_[localFaceI];
 
@@ -352,7 +352,7 @@ const solidThermo& thermalBaffle::thermo() const
 }
 
 
-void thermalBaffle::info() const
+void thermalBaffle::info()
 {
     const labelList& coupledPatches = intCoupledPatchIDs();
 
@@ -361,7 +361,7 @@ void thermalBaffle::info() const
         const label patchI = coupledPatches[i];
         const fvPatchScalarField& ph = h_.boundaryField()[patchI];
         const word patchName = regionMesh().boundary()[patchI].name();
-        Info << indent << "Q : " << patchName << indent <<
+        Info<< indent << "Q : " << patchName << indent <<
             gSum
             (
                 mag(regionMesh().Sf().boundaryField()[patchI])

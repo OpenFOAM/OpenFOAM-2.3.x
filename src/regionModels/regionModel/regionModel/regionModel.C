@@ -579,7 +579,7 @@ void Foam::regionModels::regionModel::postEvolveRegion()
 }
 
 
-void Foam::regionModels::regionModel::info() const
+void Foam::regionModels::regionModel::info()
 {
     // do nothing
 }
