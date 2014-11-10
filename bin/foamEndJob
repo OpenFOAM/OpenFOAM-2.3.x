@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+#   \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -45,7 +45,7 @@ Usage: $Script [OPTION] <pid>
 Usage: $Script [OPTION] -c
 
 options:
-  -clear            use blockMesh reader  (uses .blockMesh extension)
+  -clear            clear any outstanding $Script for the case
   -case <dir>       specify alternative case directory, default is the cwd
   -now              stop at next time step
   -help             print the usage
