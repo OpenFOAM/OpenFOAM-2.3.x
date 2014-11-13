@@ -123,14 +123,16 @@ turbulentTemperatureRadCoupledMixedFvPatchScalarField
 
         if (thicknessLayers_.size() > 0)
         {
+            // total thermal transmittance by harmonic averaging
             forAll (thicknessLayers_, iLayer)
             {
                 const scalar l = thicknessLayers_[iLayer];
                 if (l > 0.0)
                 {
-                    contactRes_ += kappaLayers_[iLayer]/l;
+                    contactRes_ += l/kappaLayers_[iLayer]; // inverse sum
                 }
             }
+            contactRes_ = 1.0/contactRes_; // new total inverse
         }
     }
 
@@ -210,17 +212,16 @@ void turbulentTemperatureRadCoupledMixedFvPatchScalarField::updateCoeffs()
 
 
     // Swap to obtain full local values of neighbour K*delta
-    tmp<scalarField> KDeltaNbr(new scalarField(TcNbr.size(), 0.0));
+    scalarField KDeltaNbr;
     if (contactRes_ == 0.0)
     {
-        // Swap to obtain full local values of neighbour K*delta
-        KDeltaNbr() = nbrField.kappa(nbrField)*nbrPatch.deltaCoeffs();
+        KDeltaNbr = nbrField.kappa(nbrField)*nbrPatch.deltaCoeffs();
     }
     else
     {
-        KDeltaNbr() = contactRes_;
+        KDeltaNbr.setSize(nbrField.size(), contactRes_);
     }
-    mpp.distribute(KDeltaNbr());
+    mpp.distribute(KDeltaNbr);
 
     scalarField KDelta(kappa(*this)*patch().deltaCoeffs());
 
@@ -237,11 +238,11 @@ void turbulentTemperatureRadCoupledMixedFvPatchScalarField::updateCoeffs()
         mpp.distribute(QrNbr);
     }
 
-    scalarField alpha(KDeltaNbr() - (Qr + QrNbr)/Tp);
+    scalarField alpha(KDeltaNbr - (Qr + QrNbr)/Tp);
 
     valueFraction() = alpha/(alpha + KDelta);
 
-    refValue() = (KDeltaNbr()*TcNbr)/alpha;
+    refValue() = (KDeltaNbr*TcNbr)/alpha;
 
     mixedFvPatchScalarField::updateCoeffs();
 
