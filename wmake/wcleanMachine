@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+#   \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -26,43 +26,51 @@
 #     wcleanMachine
 #
 # Description
-#     Searches the directories below the current directory for the object
-#     file directories of the specified machine type(s) and deletes them
+#     Searches the directory tree starting at the current directory for the
+#     object file directories of the specified machine type(s) and deletes them.
+#     If a machine type is not provided the current machine type is assumed.
 #
-#     Usage: wcleanMachine <machineType> [ .. <machineTypeN> ]
+#     Usage: wcleanMachine [ -current ]
+#            wcleanMachine <machineType> [ .. <machineTypeN> ]
 #
 #------------------------------------------------------------------------------
 usage() {
     exec 1>&2
     while [ "$#" -ge 1 ]; do echo "$1"; shift; done
     cat<<USAGE
-usage: ${0##*/} machineType [... machineTypeN]
+Usage: ${0##*/} machineType [... machineTypeN] [ -current ]
 
-  Searches the directories below the current directory for the object file
-  directories of the specified machine type(s) and deletes them
-
-Note:
-can also use '-current' for the current value of \$WM_OPTIONS
+  Searches the directory tree starting at the current directory for the
+  object file directories of the specified machine type(s) and deletes them.
+  If either -current or no machine type is specified then the current type
+  is assumed (from $WM_OPTIONS).
 
 USAGE
     exit 1
 }
 
-
-# needs some machine types ... or provide immediate help
-if [ "$#" -lt 1 -o "$1" = "-h" -o "$1" = "-help" ]
+# Print help message
+if [ "$1" = "-h" -o "$1" = "-help" ]
 then
     usage
 fi
 
-[ -d bin -a -d src ] || usage "not in the project top level directory"
+# Get the machines from the arguments
+machines="$@"
 
-for machType
+# If no arguments are provided default to current machine type
+if [ "$#" -lt 1 ]
+then
+    machines="-current"
+fi
+
+# Loop over all the machine types specified and delete the object directories
+for machType in $machines
 do
     if [ "$machType" = "-current" ]
     then
         machType="$WM_OPTIONS"
-        echo "Using current = $machType"
+        echo "Current machine type: $machType"
         [ -n "$machType" ] || continue
     fi
 
@@ -70,10 +78,10 @@ do
 
     find . -depth \( -name Make -o -name "Make.[A-Za-z]*" \) -type d -print | \
         xargs -i find '{}' -mindepth 1 -maxdepth 1 \
-           \( -type d -name "*$machType" -o -name "*$machType$WM_MPLIB" \) -print |
-        xargs rm -rf
+              \( -type d -name "*$machType" -o -name "*$machType$WM_MPLIB" \) \
+              -print | xargs rm -rf
 
-    rm -rf platforms/$machType
+    rm -rf platforms/${machType}*
 
 done
 
