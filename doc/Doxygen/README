@@ -17,7 +17,7 @@ permission for the directory that Doxygen writes files to.
 
 The Doygen configuration file, Doxyfile, in the
 $WM_PROJECT_DIR/doc/Doxygen directory is configured to work with
-Doxygen versions 1.6.3-1.8.1.
+Doxygen versions 1.6.3-1.8.5.
 
 
 **Note**:

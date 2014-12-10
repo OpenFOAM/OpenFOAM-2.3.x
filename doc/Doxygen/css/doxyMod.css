@@ -63,6 +63,9 @@ tr.memlist
     background-color: #F0F0F0;
 }
 
+.memSeparator {
+    display:none;
+}
 
 #searchli {
     padding: 0px;
@@ -92,3 +95,13 @@ tr.memlist
     padding-left: 5px;
 }
 
+div.line,
+span.comment,
+span.keyword,
+span.preprocessor,
+span.keywordflow,
+a.code
+{
+    white-space: pre-wrap;
+    font-family: "Courier New", Courier, monospace, fixed;
+}
