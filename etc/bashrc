@@ -32,7 +32,7 @@
 #------------------------------------------------------------------------------
 
 export WM_PROJECT=OpenFOAM
-export WM_PROJECT_VERSION=2.3.x
+export WM_PROJECT_VERSION=2.3.1
 
 ################################################################################
 # USER EDITABLE PART: Changes made here may be lost with the next upgrade
@@ -81,7 +81,7 @@ export WM_COMPILE_OPTION=Opt
 #- MPI implementation:
 #    WM_MPLIB = SYSTEMOPENMPI | OPENMPI | MPICH | MPICH-GM | HPMPI
 #               | GAMMA | MPI | QSMPI | SGIMPI
-export WM_MPLIB=OPENMPI
+export WM_MPLIB=SYSTEMOPENMPI
 
 #- Operating System:
 #    WM_OSTYPE = POSIX | ???
