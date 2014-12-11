@@ -32,7 +32,7 @@
 #------------------------------------------------------------------------------
 
 export WM_PROJECT=OpenFOAM
-export WM_PROJECT_VERSION=2.3.1
+export WM_PROJECT_VERSION=2.3.x
 
 ################################################################################
 # USER EDITABLE PART: Changes made here may be lost with the next upgrade
