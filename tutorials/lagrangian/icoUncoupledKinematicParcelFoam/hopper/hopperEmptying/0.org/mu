@@ -9,14 +9,39 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       uniformDimensionedVectorField;
-    location    "constant";
-    object      g;
+    class       volScalarField;
+    location    "0";
+    object      mu;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 1 -2 0 0 0 0];
-value           ( 0 -9.81 0 );
+dimensions      [1 -1 -1 0 0 0 0];
+
+internalField   uniform 1.2e-05;
+
+boundaryField
+{
+    walls
+    {
+        type            calculated;
+        value           uniform 1.2e-05;
+    }
+    frontAndBack
+    {
+        type            calculated;
+        value           uniform 1.2e-05;
+    }
+    inlet
+    {
+        type            calculated;
+        value           uniform 1.2e-05;
+    }
+    outlet
+    {
+        type            calculated;
+        value           uniform 1.2e-05;
+    }
+}
 
 
 // ************************************************************************* //
