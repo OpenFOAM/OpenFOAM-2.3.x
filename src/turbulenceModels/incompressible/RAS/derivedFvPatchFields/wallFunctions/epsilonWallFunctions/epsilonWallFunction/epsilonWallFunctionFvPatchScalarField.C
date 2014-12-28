@@ -565,8 +565,8 @@ void epsilonWallFunctionFvPatchScalarField::manipulateMatrix
 
 void epsilonWallFunctionFvPatchScalarField::write(Ostream& os) const
 {
-    fixedValueFvPatchField<scalar>::write(os);
     writeLocalEntries(os);
+    fixedValueFvPatchField<scalar>::write(os);
 }
 
 
