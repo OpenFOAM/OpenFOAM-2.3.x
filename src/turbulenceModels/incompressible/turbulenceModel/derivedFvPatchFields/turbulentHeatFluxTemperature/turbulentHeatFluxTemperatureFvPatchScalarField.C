@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -194,19 +194,19 @@ void turbulentHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
     // retrieve (constant) specific heat capacity from transport dictionary
     const IOdictionary& transportProperties =
         db().lookupObject<IOdictionary>("transportProperties");
-    const scalar Cp0(readScalar(transportProperties.lookup("Cp0")));
+    const scalar rhoCp0(readScalar(transportProperties.lookup("rhoCp0")));
 
     switch (heatSource_)
     {
         case hsPower:
         {
             const scalar Ap = gSum(patch().magSf());
-            gradient() = q_/(Ap*Cp0*alphaEffp);
+            gradient() = q_/(Ap*rhoCp0*alphaEffp);
             break;
         }
         case hsFlux:
         {
-            gradient() = q_/(Cp0*alphaEffp);
+            gradient() = q_/(rhoCp0*alphaEffp);
             break;
         }
         default:

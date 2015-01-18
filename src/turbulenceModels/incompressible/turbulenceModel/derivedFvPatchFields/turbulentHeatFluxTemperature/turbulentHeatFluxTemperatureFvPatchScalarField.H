@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -54,9 +54,9 @@ Description
     \endverbatim
 
 Note
-    - it is assumed that the units of \c alphaEff are [kg/m/s]
-    - the specific heat capcaity is read from the transport dictionary entry
-      \c Cp0
+    - The units of \c alphaEff are [kg/m/s]
+    - The density*specific heat capacity \c rhoCp0 (units [kg/m3]*[J/kg/K])
+      is read from the transport dictionary entry
 
 SourceFiles
     turbulentHeatFluxTemperatureFvPatchScalarField.C
