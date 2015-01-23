@@ -115,11 +115,11 @@ atmBoundaryLayerInletVelocityFvPatchVectorField
     n_ /= mag(n_);
     z_ /= mag(z_);
 
-    Ustar_ = kappa_*Uref_/(log((Zref_ + z0_)/max(z0_, 0.001)));
+    Ustar_ = kappa_*Uref_/(log((Zref_ + z0_)/max(z0_, scalar(0.001))));
     scalarField Un
     (
         (Ustar_/kappa_)
-       *log(((z_ & patch().Cf()) - zGround_ + z0_)/max(z0_, 0.001))
+       *log(((z_ & patch().Cf()) - zGround_ + z0_)/max(z0_, scalar(0.001)))
     );
 
     vectorField::operator=(n_*Un);

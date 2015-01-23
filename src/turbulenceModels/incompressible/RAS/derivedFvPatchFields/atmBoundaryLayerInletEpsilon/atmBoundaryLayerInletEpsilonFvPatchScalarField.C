@@ -111,7 +111,7 @@ atmBoundaryLayerInletEpsilonFvPatchScalarField
     // Ensure direction vectors are normalized
     z_ /= mag(z_);
 
-    Ustar_ = kappa_*Uref_/(log((Zref_  + z0_)/max(z0_, 0.001)));
+    Ustar_ = kappa_*Uref_/(log((Zref_  + z0_)/max(z0_, scalar(0.001))));
 
     scalarField::operator=
     (

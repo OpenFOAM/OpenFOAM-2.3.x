@@ -114,7 +114,9 @@ atmBoundaryLayerInletVelocityFvPatchVectorField
 
     forAll (Ustar_, i)
     {
-        Ustar_[i] = kappa_*Uref_/(log((Href_  + z0_[i])/max(z0_[i] , 0.001)));
+        Ustar_[i] =
+            kappa_*Uref_
+           /(log((Href_  + z0_[i])/max(z0_[i] , scalar(0.001))));
     }
 
     const vectorField& c = patch().Cf();
@@ -127,7 +129,11 @@ atmBoundaryLayerInletVelocityFvPatchVectorField
         {
             Un[i] =
                 (Ustar_[i]/kappa_)
-              * log((coord[i] - zGround_[i] + z0_[i])/max(z0_[i], 0.001));
+               *log
+                (
+                    (coord[i] - zGround_[i] + z0_[i])
+                   /max(z0_[i], scalar(0.001))
+                );
         }
         else
         {
