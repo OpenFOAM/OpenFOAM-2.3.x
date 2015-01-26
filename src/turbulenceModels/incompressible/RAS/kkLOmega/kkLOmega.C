@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -56,7 +56,7 @@ tmp<volScalarField> kkLOmega::fINT() const
     (
         min
         (
-            kl_/(Cint_*(kl_ + kt_ + kMin_)),
+            kt_/(Cint_*(kl_ + kt_ + kMin_)),
             dimensionedScalar("1.0", dimless, 1.0)
         )
     );
@@ -75,16 +75,17 @@ tmp<volScalarField> kkLOmega::Cmu(const volScalarField& S) const
 }
 
 
-tmp<volScalarField> kkLOmega::BetaTS(const volScalarField& Rew) const
+tmp<volScalarField> kkLOmega::BetaTS(const volScalarField& ReOmega) const
 {
-    return(scalar(1) - exp(-sqr(max(Rew - CtsCrit_, scalar(0)))/Ats_));
+    return(scalar(1) - exp(-sqr(max(ReOmega - CtsCrit_, scalar(0)))/Ats_));
 }
 
 
 tmp<volScalarField> kkLOmega::fTaul
 (
     const volScalarField& lambdaEff,
-    const volScalarField& ktL
+    const volScalarField& ktL,
+    const volScalarField& omega
 ) const
 {
     return
@@ -97,7 +98,7 @@ tmp<volScalarField> kkLOmega::fTaul
             (
                 sqr
                 (
-                    lambdaEff*omega_
+                    lambdaEff*omega
                   + dimensionedScalar
                     (
                         "ROOTVSMALL",
@@ -133,8 +134,8 @@ tmp<volScalarField> kkLOmega::fOmega
         scalar(1)
       - exp
         (
-            -0.41
-           * pow4
+           -0.41
+           *pow4
             (
                 lambdaEff
               / (
@@ -152,7 +153,7 @@ tmp<volScalarField> kkLOmega::fOmega
 }
 
 
-tmp<volScalarField> kkLOmega::gammaBP(const volScalarField& omega) const
+tmp<volScalarField> kkLOmega::phiBP(const volScalarField& omega) const
 {
     return
     (
@@ -179,7 +180,7 @@ tmp<volScalarField> kkLOmega::gammaBP(const volScalarField& omega) const
 }
 
 
-tmp<volScalarField> kkLOmega::gammaNAT
+tmp<volScalarField> kkLOmega::phiNAT
 (
     const volScalarField& ReOmega,
     const volScalarField& fNatCrit
@@ -533,7 +534,7 @@ tmp<volSymmTensorField> kkLOmega::R() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            ((2.0/3.0)*I)*(kt_) - nut_*twoSymm(fvc::grad(U_)),
+            ((2.0/3.0)*I)*(kt_ + kl_) - nut_*twoSymm(fvc::grad(U_)),
             kt_.boundaryField().types()
         )
     );
@@ -643,16 +644,18 @@ void kkLOmega::correct()
         y_.boundaryField() = max(y_.boundaryField(), VSMALL);
     }
 
-
-    const volScalarField kT(kt_ + kl_);
-
-    const volScalarField lambdaT(sqrt(kT)/(omega_ + omegaMin_));
+    const volScalarField lambdaT(sqrt(kt_)/(omega_ + omegaMin_));
 
     const volScalarField lambdaEff(min(Clambda_*y_, lambdaT));
 
     const volScalarField fw
     (
-        lambdaEff/(lambdaT + dimensionedScalar("SMALL", dimLength, ROOTVSMALL))
+        pow
+        (
+            lambdaEff
+           /(lambdaT + dimensionedScalar("SMALL", dimLength, ROOTVSMALL)),
+            2.0/3.0
+        )
     );
 
     const volTensorField gradU(fvc::grad(U_));
@@ -665,7 +668,10 @@ void kkLOmega::correct()
 
     const volScalarField nuts
     (
-        fv(sqr(fw)*kt_/nu()/(omega_ + omegaMin_))
+        fv
+        (
+            sqr(fw)*kt_/nu()/(omega_ + omegaMin_)
+        )
        *fINT()
        *Cmu(sqrt(S2))*sqrt(ktS)*lambdaEff
     );
@@ -677,8 +683,8 @@ void kkLOmega::correct()
     (
         min
         (
-            C11_*fTaul(lambdaEff, ktL)*omega*sqr(lambdaEff)
-          * sqrt(ktL)*lambdaEff/nu()
+            C11_*fTaul(lambdaEff, ktL, omega)*omega*sqr(lambdaEff)
+           *sqrt(ktL)*lambdaEff/nu()
           + C12_*BetaTS(ReOmega)*ReOmega*sqr(y_)*omega
         ,
             0.5*(kl_ + ktL)/sqrt(S2)
@@ -698,16 +704,68 @@ void kkLOmega::correct()
 
     const volScalarField Rbp
     (
-        CR_*(1.0 - exp(-gammaBP(omega)()/Abp_))*omega_
-      / (fw + fwMin)
+        CR_*(1.0 - exp(-phiBP(omega)()/Abp_))*omega_
+       /(fw + fwMin)
     );
 
     const volScalarField fNatCrit(1.0 - exp(-Cnc_*sqrt(kl_)*y_/nu()));
+
     // Natural source term divided by kl_
     const volScalarField Rnat
     (
-        CrNat_*(1.0 - exp(-gammaNAT(ReOmega, fNatCrit)/Anat_))*omega
+        CrNat_*(1.0 - exp(-phiNAT(ReOmega, fNatCrit)/Anat_))*omega
     );
+
+
+    omega_.boundaryField().updateCoeffs();
+
+    // Turbulence specific dissipation rate equation
+    tmp<fvScalarMatrix> omegaEqn
+    (
+        fvm::ddt(omega_)
+      + fvm::div(phi_, omega_)
+      - fvm::laplacian(DomegaEff(alphaTEff), omega_)
+     ==
+        Cw1_*Pkt*omega_/(kt_ + kMin_)
+      + fvm::SuSp
+        (
+            (CwR_/(fw + fwMin) - 1.0)*kl_*(Rbp + Rnat)/(kt_ + kMin_)
+          , omega_
+        )
+      - fvm::Sp(Cw2_*sqr(fw)*omega_, omega_)
+      + (
+            Cw3_*fOmega(lambdaEff, lambdaT)*alphaTEff*sqr(fw)*sqrt(kt_)
+        )().dimensionedInternalField()/pow3(y_.dimensionedInternalField())
+    );
+
+    omegaEqn().relax();
+    omegaEqn().boundaryManipulate(omega_.boundaryField());
+
+    solve(omegaEqn);
+    bound(omega_, omegaMin_);
+
+
+    const volScalarField Dl(nu()*magSqr(fvc::grad(sqrt(kl_))));
+
+    // Laminar kinetic energy equation
+    tmp<fvScalarMatrix> klEqn
+    (
+        fvm::ddt(kl_)
+      + fvm::div(phi_, kl_)
+      - fvm::laplacian(nu(), kl_)
+     ==
+        Pkl
+      - fvm::Sp(Rbp, kl_)
+      - fvm::Sp(Rnat, kl_)
+      - fvm::Sp(Dl/max(kl_, kMin_), kl_)
+    );
+
+    klEqn().relax();
+    klEqn().boundaryManipulate(kl_.boundaryField());
+
+    solve(klEqn);
+    bound(kl_, kMin_);
+
 
     const volScalarField Dt(nu()*magSqr(fvc::grad(sqrt(kt_))));
 
@@ -716,11 +774,11 @@ void kkLOmega::correct()
     (
         fvm::ddt(kt_)
       + fvm::div(phi_, kt_)
-      - fvm::laplacian(DkEff(alphaTEff), kt_, "laplacian(alphaTEff,kt)")
+      - fvm::laplacian(DkEff(alphaTEff), kt_)
      ==
         Pkt
       + (Rbp + Rnat)*kl_
-      - Dt
+      - fvm::Sp(Dt/max(kt_, kMin_), kt_)
       - fvm::Sp(omega_, kt_)
     );
 
@@ -731,59 +789,7 @@ void kkLOmega::correct()
     bound(kt_, kMin_);
 
 
-    const volScalarField Dl(nu()*magSqr(fvc::grad(sqrt(kl_))));
-
-    // Laminar kinetic energy equation
-    tmp<fvScalarMatrix> klEqn
-    (
-        fvm::ddt(kl_)
-      + fvm::div(phi_, kl_)
-      - fvm::laplacian(nu(), kl_, "laplacian(nu,kl)")
-     ==
-        Pkl
-      - fvm::Sp(Rbp, kl_)
-      - fvm::Sp(Rnat, kl_)
-      - Dl
-    );
-
-    klEqn().relax();
-    klEqn().boundaryManipulate(kl_.boundaryField());
-
-    solve(klEqn);
-    bound(kl_, kMin_);
-
-
-    omega_.boundaryField().updateCoeffs();
-    // Turbulence specific dissipation rate equation
-    tmp<fvScalarMatrix> omegaEqn
-    (
-        fvm::ddt(omega_)
-      + fvm::div(phi_, omega_)
-      - fvm::laplacian
-        (
-            DomegaEff(alphaTEff),
-            omega_,
-            "laplacian(alphaTEff,omega)"
-        )
-     ==
-        Cw1_*Pkt*omega_/(kt_ + kMin_)
-      + fvm::SuSp
-        (
-            (CwR_/(fw + fwMin) - 1.0)*kl_*(Rbp + Rnat)/(kt_ + kMin_)
-          , omega_
-        )
-      - fvm::Sp(Cw2_*omega_, omega_)
-      + Cw3_*fOmega(lambdaEff, lambdaT)*alphaTEff*sqr(fw)*sqrt(kt_)/pow3(y_)
-    );
-
-
-    omegaEqn().relax();
-    omegaEqn().boundaryManipulate(omega_.boundaryField());
-
-    solve(omegaEqn);
-    bound(omega_, omegaMin_);
-
-    // Re-calculate viscosity
+    // Re-calculate turbulent viscosity
     nut_ = nuts + nutl;
     nut_.correctBoundaryConditions();
 }
