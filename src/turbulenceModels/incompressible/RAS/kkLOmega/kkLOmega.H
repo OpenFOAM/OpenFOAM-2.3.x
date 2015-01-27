@@ -152,6 +152,8 @@ class kkLOmega
             const volScalarField& fNatCrit
         ) const;
 
+        tmp<volScalarField> D(const volScalarField& k) const;
+
 
 protected:
 
@@ -191,8 +193,9 @@ protected:
         // Fields
 
             volScalarField kt_;
-            volScalarField omega_;
             volScalarField kl_;
+            volScalarField omega_;
+            volScalarField epsilon_;
             volScalarField nut_;
 
             //- Wall distance
@@ -260,6 +263,12 @@ public:
             return kt_;
         }
 
+        //- Return the turbulence specific dissipation rate
+        virtual tmp<volScalarField> omega() const
+        {
+            return omega_;
+        }
+
         //- Return the total fluctuation kinetic energy
         virtual tmp<volScalarField> k() const
         {
@@ -279,29 +288,10 @@ public:
             );
         }
 
-        //- Return the turbulence specific dissipation rate
-        virtual tmp<volScalarField> omega() const
-        {
-            return omega_;
-        }
-
-        //- Return the turbulence kinetic energy dissipation rate
+        //- Return the total fluctuation kinetic energy dissipation rate
         virtual tmp<volScalarField> epsilon() const
         {
-            return tmp<volScalarField>
-            (
-                new volScalarField
-                (
-                    IOobject
-                    (
-                        "epsilon",
-                        mesh_.time().timeName(),
-                        mesh_
-                    ),
-                    kt_*omega_,
-                    omega_.boundaryField().types()
-                )
-            );
+            return epsilon_;
         }
 
         //- Return the Reynolds stress tensor
