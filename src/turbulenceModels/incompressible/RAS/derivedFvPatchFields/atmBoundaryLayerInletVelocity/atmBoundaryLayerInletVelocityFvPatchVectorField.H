@@ -22,14 +22,14 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::incompressible::atmBoundaryLayerInletEpsilonFvPatchScalarField
+    Foam::incompressible::atmBoundaryLayerInletVelocityFvPatchVectorField
 
 Group
     grpIcoRASBoundaryConditions grpInletBoundaryConditions
 
 Description
-    This boundary condition specifies an inlet value for the turbulence
-    dissipation, \f$\epsilon\f$, appropriate for atmospheric boundary layers.
+    This boundary condition specifies a velocity inlet profile appropriate
+    for atmospheric boundary layers (ABL).
 
     See Foam::incompressible::atmBoundaryLayer for details.
 
@@ -37,7 +37,8 @@ Description
     \verbatim
     ground
     {
-        type            atmBoundaryLayerInletEpsilon;
+        type            atmBoundaryLayerInletVelocity;
+        n               (1 0 0);
         z               (0 0 1);
         Uref            10.0;
         Zref            20.0;
@@ -48,16 +49,16 @@ Description
 
 SeeAlso
     Foam::incompressible::atmBoundaryLayer,
-    Foam::incompressible::atmBoundaryLayerInletVelocityFvPatchVectorField,
-    Foam::incompressible::atmBoundaryLayerInletKFvPatchScalarField
+    Foam::incompressible::atmBoundaryLayerInletKFvPatchScalarField,
+    Foam::incompressible::atmBoundaryLayerInletEpsilonFvPatchScalarField
 
 SourceFiles
-    atmBoundaryLayerInletEpsilonFvPatchScalarField.C
+    atmBoundaryLayerInletVelocityFvPatchVectorField.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef atmBoundaryLayerInletEpsilonFvPatchScalarField_H
-#define atmBoundaryLayerInletEpsilonFvPatchScalarField_H
+#ifndef atmBoundaryLayerInletVelocityFvPatchVectorField_H
+#define atmBoundaryLayerInletVelocityFvPatchVectorField_H
 
 #include "fvPatchFields.H"
 #include "fixedValueFvPatchFields.H"
@@ -71,73 +72,73 @@ namespace incompressible
 {
 
 /*---------------------------------------------------------------------------*\
-        Class atmBoundaryLayerInletEpsilonFvPatchScalarField Declaration
+       Class atmBoundaryLayerInletVelocityFvPatchVectorField Declaration
 \*---------------------------------------------------------------------------*/
 
-class atmBoundaryLayerInletEpsilonFvPatchScalarField
+class atmBoundaryLayerInletVelocityFvPatchVectorField
 :
-    public fixedValueFvPatchScalarField,
+    public fixedValueFvPatchVectorField,
     public atmBoundaryLayer
 {
 
 public:
 
     //- Runtime type information
-    TypeName("atmBoundaryLayerInletEpsilon");
+    TypeName("atmBoundaryLayerInletVelocity");
 
 
     // Constructors
 
         //- Construct from patch and internal field
-        atmBoundaryLayerInletEpsilonFvPatchScalarField
+        atmBoundaryLayerInletVelocityFvPatchVectorField
         (
             const fvPatch&,
-            const DimensionedField<scalar, volMesh>&
+            const DimensionedField<vector, volMesh>&
         );
 
         //- Construct from patch, internal field and dictionary
-        atmBoundaryLayerInletEpsilonFvPatchScalarField
+        atmBoundaryLayerInletVelocityFvPatchVectorField
         (
             const fvPatch&,
-            const DimensionedField<scalar, volMesh>&,
+            const DimensionedField<vector, volMesh>&,
             const dictionary&
         );
 
         //- Construct by mapping given
-        //  atmBoundaryLayerInletEpsilonFvPatchScalarField onto a new patch
-        atmBoundaryLayerInletEpsilonFvPatchScalarField
+        // atmBoundaryLayerInletVelocityFvPatchVectorField onto a new patch
+        atmBoundaryLayerInletVelocityFvPatchVectorField
         (
-            const atmBoundaryLayerInletEpsilonFvPatchScalarField&,
+            const atmBoundaryLayerInletVelocityFvPatchVectorField&,
             const fvPatch&,
-            const DimensionedField<scalar, volMesh>&,
+            const DimensionedField<vector, volMesh>&,
             const fvPatchFieldMapper&
         );
 
         //- Construct and return a clone
-        virtual tmp<fvPatchScalarField> clone() const
+        virtual tmp<fvPatchVectorField> clone() const
         {
-            return tmp<fvPatchScalarField>
+            return tmp<fvPatchVectorField>
             (
-                new atmBoundaryLayerInletEpsilonFvPatchScalarField(*this)
+                new atmBoundaryLayerInletVelocityFvPatchVectorField(*this)
             );
         }
 
         //- Construct as copy setting internal field reference
-        atmBoundaryLayerInletEpsilonFvPatchScalarField
+        atmBoundaryLayerInletVelocityFvPatchVectorField
         (
-            const atmBoundaryLayerInletEpsilonFvPatchScalarField&,
-            const DimensionedField<scalar, volMesh>&
+            const atmBoundaryLayerInletVelocityFvPatchVectorField&,
+            const DimensionedField<vector, volMesh>&
         );
 
         //- Construct and return a clone setting internal field reference
-        virtual tmp<fvPatchScalarField> clone
+        virtual tmp<fvPatchVectorField> clone
         (
-            const DimensionedField<scalar, volMesh>& iF
+            const DimensionedField<vector, volMesh>& iF
         ) const
         {
-            return tmp<fvPatchScalarField>
+            return tmp<fvPatchVectorField>
             (
-                new atmBoundaryLayerInletEpsilonFvPatchScalarField(*this, iF)
+                new atmBoundaryLayerInletVelocityFvPatchVectorField(*this, iF)
             );
         }
 
@@ -155,7 +156,7 @@ public:
             //- Reverse map the given fvPatchField onto this fvPatchField
             virtual void rmap
             (
-                const fvPatchScalarField&,
+                const fvPatchVectorField&,
                 const labelList&
             );
 

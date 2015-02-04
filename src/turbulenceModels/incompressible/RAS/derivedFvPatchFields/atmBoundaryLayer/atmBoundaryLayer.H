@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,24 +22,35 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::incompressible::atmBoundaryLayerInletVelocityFvPatchVectorField
+    Foam::incompressible::atmBoundaryLayer
 
 Group
     grpIcoRASBoundaryConditions grpInletBoundaryConditions
 
 Description
-    This boundary condition specifies a velocity inlet profile appropriate
-    for atmospheric boundary layers (ABL).  The profile is derived from the
-    friction velocity, flow direction and "vertical" direction.
+    This class provides functions to evaluate the velocity and turbulence
+    distributions appropriate for atmospheric boundary layers (ABL).
+
+    The profile is derived from the friction velocity, flow direction and
+    "vertical" direction:
 
         \f[
             U = \frac{U^*}{\kappa} ln\left(\frac{z - z_g + z_0}{z_0}\right)
+        \f]
+
+        \f[
+            k = \frac{(U^*)^2}{\sqrt{C_mu}}
+        \f]
+
+        \f[
+            \epsilon = \frac{(U^*)^3}{\kappa(z - z_g + z_0)}
         \f]
 
     where
     \vartable
         U^*     | Friction velocity
         \kappa  | von Karman's constant
+        C_mu    | Turbulence viscosity coefficient
         z       | Vertical coordinate
         z_0     | Surface roughness height [m]
         z_g     | Minimum z-coordinate [m]
@@ -54,8 +65,8 @@ Description
         Z_{ref} | Reference height [m]
     \endvartable
 
-    Use in conjunction with the atmBoundaryLayerInletEpsilon boundary
-    condition if using an \f$\epsilon\f$ based turbulence model.
+    Use in the atmBoundaryLayerInletVelocity, atmBoundaryLayerInletK and
+    atmBoundaryLayerInletEpsilon boundary conditions.
 
     Reference:
         D.M. Hargreaves and N.G. Wright,  "On the use of the k-epsilon model
@@ -66,14 +77,15 @@ Description
     \heading Patch usage
 
     \table
-        Property     | Description                  | Required  | Default value
-        n            | Flow direction               | yes       |
-        z            | Vertical direction           | yes       |
-        kappa        | von Karman's constant        | no        | 0.41
-        Uref         | Reference velocity [m/s]     | yes       |
-        Zref         | Reference height [m]         | yes       |
-        z0           | Surface roughness height [m] | yes       |
-        zGround      | Minimum z-coordinate [m]     | yes       |
+        Property     | Description                      | Required  | Default
+        flowDir      | Flow direction                   | yes       |
+        zDir         | Vertical direction               | yes       |
+        kappa        | von Karman's constant            | no        | 0.41
+        Cmu          | Turbulence viscosity coefficient | no        | 0.09
+        Uref         | Reference velocity [m/s]         | yes       |
+        Zref         | Reference height [m]             | yes       |
+        z0           | Surface roughness height [m]     | yes       |
+        zGround      | Minimum z-coordinate [m]         | yes       |
     \endtable
 
     Example of the boundary condition specification:
@@ -81,8 +93,8 @@ Description
     ground
     {
         type            atmBoundaryLayerInletVelocity;
-        n               (1 0 0);
-        z               (0 0 1);
+        flowDir         (1 0 0);
+        zDir            (0 0 1);
         Uref            10.0;
         Zref            20.0;
         z0              uniform 0.1;
@@ -97,15 +109,14 @@ Note
     reference.
 
 SourceFiles
-    atmBoundaryLayerInletVelocityFvPatchVectorField.C
+    atmBoundaryLayer.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef atmBoundaryLayerInletVelocityFvPatchVectorField_H
-#define atmBoundaryLayerInletVelocityFvPatchVectorField_H
+#ifndef atmBoundaryLayer_H
+#define atmBoundaryLayer_H
 
 #include "fvPatchFields.H"
-#include "fixedValueFvPatchFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -115,23 +126,24 @@ namespace incompressible
 {
 
 /*---------------------------------------------------------------------------*\
-       Class atmBoundaryLayerInletVelocityFvPatchVectorField Declaration
+       Class atmBoundaryLayer Declaration
 \*---------------------------------------------------------------------------*/
 
-class atmBoundaryLayerInletVelocityFvPatchVectorField
-:
-    public fixedValueFvPatchVectorField
+class atmBoundaryLayer
 {
     // Private data
 
         //- Flow direction
-        vector n_;
+        vector flowDir_;
 
         //- Direction of the z-coordinate
-        vector z_;
+        vector zDir_;
 
         //- von Karman constant
         const scalar kappa_;
+
+        //- Turbulent viscosity coefficient
+        const scalar Cmu_;
 
         //- Reference velocity
         const scalar Uref_;
@@ -151,69 +163,41 @@ class atmBoundaryLayerInletVelocityFvPatchVectorField
 
 public:
 
-    //- Runtime type information
-    TypeName("atmBoundaryLayerInletVelocity");
-
-
     // Constructors
 
-        //- Construct from patch and internal field
-        atmBoundaryLayerInletVelocityFvPatchVectorField
-        (
-            const fvPatch&,
-            const DimensionedField<vector, volMesh>&
-        );
+        //- Construct null
+        atmBoundaryLayer();
 
-        //- Construct from patch, internal field and dictionary
-        atmBoundaryLayerInletVelocityFvPatchVectorField
-        (
-            const fvPatch&,
-            const DimensionedField<vector, volMesh>&,
-            const dictionary&
-        );
+        //- Construct from the coordinates field and dictionary
+        atmBoundaryLayer(const vectorField& p, const dictionary&);
 
         //- Construct by mapping given
-        // atmBoundaryLayerInletVelocityFvPatchVectorField onto a new patch
-        atmBoundaryLayerInletVelocityFvPatchVectorField
+        // atmBoundaryLayer onto a new patch
+        atmBoundaryLayer
         (
-            const atmBoundaryLayerInletVelocityFvPatchVectorField&,
-            const fvPatch&,
-            const DimensionedField<vector, volMesh>&,
+            const atmBoundaryLayer&,
             const fvPatchFieldMapper&
         );
 
-        //- Construct and return a clone
-        virtual tmp<fvPatchVectorField> clone() const
-        {
-            return tmp<fvPatchVectorField>
-            (
-                new atmBoundaryLayerInletVelocityFvPatchVectorField(*this)
-            );
-        }
-
-        //- Construct as copy setting internal field reference
-        atmBoundaryLayerInletVelocityFvPatchVectorField
-        (
-            const atmBoundaryLayerInletVelocityFvPatchVectorField&,
-            const DimensionedField<vector, volMesh>&
-        );
-
-        //- Construct and return a clone setting internal field reference
-        virtual tmp<fvPatchVectorField> clone
-        (
-            const DimensionedField<vector, volMesh>& iF
-        ) const
-        {
-            return tmp<fvPatchVectorField>
-            (
-                new atmBoundaryLayerInletVelocityFvPatchVectorField(*this, iF)
-            );
-        }
+        //- Construct as copy
+        atmBoundaryLayer(const atmBoundaryLayer&);
 
 
     // Member functions
 
         // Access
+
+            //- Return flow direction
+            const vector& flowDir() const
+            {
+                return flowDir_;
+            }
+
+            //- Return z-direction
+            const vector& zDir() const
+            {
+                return zDir_;
+            }
 
             //- Return friction velocity
             const scalarField& Ustar() const
@@ -221,37 +205,30 @@ public:
                 return Ustar_;
             }
 
-            //- Return flow direction
-            const vector& n() const
-            {
-                return n_;
-            }
-
-            //- Return z-direction
-            const vector& z() const
-            {
-                return z_;
-            }
-
 
         // Mapping functions
 
             //- Map (and resize as needed) from self given a mapping object
-            virtual void autoMap
-            (
-                const fvPatchFieldMapper&
-            );
+            void autoMap(const fvPatchFieldMapper&);
 
             //- Reverse map the given fvPatchField onto this fvPatchField
-            virtual void rmap
-            (
-                const fvPatchVectorField&,
-                const labelList&
-            );
+            void rmap(const atmBoundaryLayer&, const labelList&);
+
+
+        // Evaluate functions
+
+            //- Return the velocity distribution for the ATM
+            tmp<vectorField> U(const vectorField& p) const;
+
+            //- Return the turbulent kinetic energy distribution for the ATM
+            tmp<scalarField> k(const vectorField& p) const;
+
+            //- Return the turbulent dissipation rate distribution for the ATM
+            tmp<scalarField> epsilon(const vectorField& p) const;
 
 
         //- Write
-        virtual void write(Ostream&) const;
+        void write(Ostream&) const;
 };
 
 

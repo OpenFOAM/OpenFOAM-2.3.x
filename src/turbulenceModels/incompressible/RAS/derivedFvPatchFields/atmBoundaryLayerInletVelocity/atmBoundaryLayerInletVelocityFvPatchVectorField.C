@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -46,35 +46,7 @@ atmBoundaryLayerInletVelocityFvPatchVectorField
 )
 :
     fixedValueFvPatchVectorField(p, iF),
-    n_(pTraits<vector>::zero),
-    z_(pTraits<vector>::zero),
-    kappa_(0.41),
-    Uref_(0),
-    Zref_(0),
-    z0_(0),
-    zGround_(0),
-    Ustar_(0)
-{}
-
-
-atmBoundaryLayerInletVelocityFvPatchVectorField::
-atmBoundaryLayerInletVelocityFvPatchVectorField
-(
-    const atmBoundaryLayerInletVelocityFvPatchVectorField& ptf,
-    const fvPatch& p,
-    const DimensionedField<vector, volMesh>& iF,
-    const fvPatchFieldMapper& mapper
-)
-:
-    fixedValueFvPatchVectorField(ptf, p, iF, mapper),
-    n_(ptf.n_),
-    z_(ptf.z_),
-    kappa_(ptf.kappa_),
-    Uref_(ptf.Uref_),
-    Zref_(ptf.Zref_),
-    z0_(ptf.z0_, mapper),
-    zGround_(ptf.zGround_, mapper),
-    Ustar_(ptf.Ustar_, mapper)
+    atmBoundaryLayer()
 {}
 
 
@@ -87,61 +59,35 @@ atmBoundaryLayerInletVelocityFvPatchVectorField
 )
 :
     fixedValueFvPatchVectorField(p, iF),
-    n_(dict.lookup("n")),
-    z_(dict.lookup("z")),
-    kappa_(dict.lookupOrDefault<scalar>("kappa", 0.41)),
-    Uref_(readScalar(dict.lookup("Uref"))),
-    Zref_(readScalar(dict.lookup("Zref"))),
-    z0_("z0", dict, p.size()),
-    zGround_("zGround", dict, p.size()),
-    Ustar_(p.size())
+    atmBoundaryLayer(patch().Cf(), dict)
 {
-    if (mag(n_) < SMALL || mag(z_) < SMALL)
-    {
-        FatalErrorIn
-        (
-            "atmBoundaryLayerInletVelocityFvPatchVectorField"
-            "("
-                "const fvPatch&, "
-                "const DimensionedField<vector, volMesh>&, "
-                "onst dictionary&"
-            ")"
-        )
-            << "magnitude of n or z must be greater than zero"
-            << abort(FatalError);
-    }
-
-    // Ensure direction vectors are normalized
-    n_ /= mag(n_);
-    z_ /= mag(z_);
-
-    Ustar_ = kappa_*Uref_/(log((Zref_ + z0_)/max(z0_, scalar(0.001))));
-    scalarField Un
-    (
-        (Ustar_/kappa_)
-       *log(((z_ & patch().Cf()) - zGround_ + z0_)/max(z0_, scalar(0.001)))
-    );
-
-    vectorField::operator=(n_*Un);
+    vectorField::operator=(U(patch().Cf()));
 }
 
 
 atmBoundaryLayerInletVelocityFvPatchVectorField::
 atmBoundaryLayerInletVelocityFvPatchVectorField
 (
-    const atmBoundaryLayerInletVelocityFvPatchVectorField& blpvf,
+    const atmBoundaryLayerInletVelocityFvPatchVectorField& pvf,
+    const fvPatch& p,
+    const DimensionedField<vector, volMesh>& iF,
+    const fvPatchFieldMapper& mapper
+)
+:
+    fixedValueFvPatchVectorField(pvf, p, iF, mapper),
+    atmBoundaryLayer(pvf, mapper)
+{}
+
+
+atmBoundaryLayerInletVelocityFvPatchVectorField::
+atmBoundaryLayerInletVelocityFvPatchVectorField
+(
+    const atmBoundaryLayerInletVelocityFvPatchVectorField& pvf,
     const DimensionedField<vector, volMesh>& iF
 )
 :
-    fixedValueFvPatchVectorField(blpvf, iF),
-    n_(blpvf.n_),
-    z_(blpvf.z_),
-    kappa_(blpvf.kappa_),
-    Uref_(blpvf.Uref_),
-    Zref_(blpvf.Zref_),
-    z0_(blpvf.z0_),
-    zGround_(blpvf.zGround_),
-    Ustar_(blpvf.Ustar_)
+    fixedValueFvPatchVectorField(pvf, iF),
+    atmBoundaryLayer(pvf)
 {}
 
 
@@ -153,44 +99,29 @@ void atmBoundaryLayerInletVelocityFvPatchVectorField::autoMap
 )
 {
     fixedValueFvPatchVectorField::autoMap(m);
-    z0_.autoMap(m);
-    zGround_.autoMap(m);
-    Ustar_.autoMap(m);
+    atmBoundaryLayer::autoMap(m);
 }
 
 
 void atmBoundaryLayerInletVelocityFvPatchVectorField::rmap
 (
-    const fvPatchVectorField& ptf,
+    const fvPatchVectorField& pvf,
     const labelList& addr
 )
 {
-    fixedValueFvPatchVectorField::rmap(ptf, addr);
+    fixedValueFvPatchVectorField::rmap(pvf, addr);
 
-    const atmBoundaryLayerInletVelocityFvPatchVectorField& blptf =
-        refCast<const atmBoundaryLayerInletVelocityFvPatchVectorField>(ptf);
+    const atmBoundaryLayerInletVelocityFvPatchVectorField& blpvf =
+        refCast<const atmBoundaryLayerInletVelocityFvPatchVectorField>(pvf);
 
-    z0_.rmap(blptf.z0_, addr);
-    zGround_.rmap(blptf.zGround_, addr);
-    Ustar_.rmap(blptf.Ustar_, addr);
+    atmBoundaryLayer::rmap(blpvf, addr);
 }
 
 
 void atmBoundaryLayerInletVelocityFvPatchVectorField::write(Ostream& os) const
 {
     fvPatchVectorField::write(os);
-    z0_.writeEntry("z0", os) ;
-    os.writeKeyword("n")
-        << n_ << token::END_STATEMENT << nl;
-    os.writeKeyword("z")
-        << z_ << token::END_STATEMENT << nl;
-    os.writeKeyword("kappa")
-        << kappa_ << token::END_STATEMENT << nl;
-    os.writeKeyword("Uref")
-        << Uref_ << token::END_STATEMENT << nl;
-    os.writeKeyword("Zref")
-        << Zref_ << token::END_STATEMENT << nl;
-    zGround_.writeEntry("zGround", os) ;
+    atmBoundaryLayer::write(os);
     writeEntry("value", os);
 }
 

@@ -23,7 +23,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "atmBoundaryLayerInletEpsilonFvPatchScalarField.H"
+#include "atmBoundaryLayerInletKFvPatchScalarField.H"
 #include "addToRunTimeSelectionTable.H"
 #include "fvPatchFieldMapper.H"
 #include "volFields.H"
@@ -38,8 +38,8 @@ namespace incompressible
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-atmBoundaryLayerInletEpsilonFvPatchScalarField::
-atmBoundaryLayerInletEpsilonFvPatchScalarField
+atmBoundaryLayerInletKFvPatchScalarField::
+atmBoundaryLayerInletKFvPatchScalarField
 (
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF
@@ -50,8 +50,8 @@ atmBoundaryLayerInletEpsilonFvPatchScalarField
 {}
 
 
-atmBoundaryLayerInletEpsilonFvPatchScalarField::
-atmBoundaryLayerInletEpsilonFvPatchScalarField
+atmBoundaryLayerInletKFvPatchScalarField::
+atmBoundaryLayerInletKFvPatchScalarField
 (
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF,
@@ -61,14 +61,14 @@ atmBoundaryLayerInletEpsilonFvPatchScalarField
     fixedValueFvPatchScalarField(p, iF),
     atmBoundaryLayer(patch().Cf(), dict)
 {
-    scalarField::operator=(epsilon(patch().Cf()));
+    scalarField::operator=(k(patch().Cf()));
 }
 
 
-atmBoundaryLayerInletEpsilonFvPatchScalarField::
-atmBoundaryLayerInletEpsilonFvPatchScalarField
+atmBoundaryLayerInletKFvPatchScalarField::
+atmBoundaryLayerInletKFvPatchScalarField
 (
-    const atmBoundaryLayerInletEpsilonFvPatchScalarField& psf,
+    const atmBoundaryLayerInletKFvPatchScalarField& psf,
     const fvPatch& p,
     const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
@@ -79,10 +79,10 @@ atmBoundaryLayerInletEpsilonFvPatchScalarField
 {}
 
 
-atmBoundaryLayerInletEpsilonFvPatchScalarField::
-atmBoundaryLayerInletEpsilonFvPatchScalarField
+atmBoundaryLayerInletKFvPatchScalarField::
+atmBoundaryLayerInletKFvPatchScalarField
 (
-    const atmBoundaryLayerInletEpsilonFvPatchScalarField& psf,
+    const atmBoundaryLayerInletKFvPatchScalarField& psf,
     const DimensionedField<scalar, volMesh>& iF
 )
 :
@@ -93,7 +93,7 @@ atmBoundaryLayerInletEpsilonFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void atmBoundaryLayerInletEpsilonFvPatchScalarField::autoMap
+void atmBoundaryLayerInletKFvPatchScalarField::autoMap
 (
     const fvPatchFieldMapper& m
 )
@@ -103,7 +103,7 @@ void atmBoundaryLayerInletEpsilonFvPatchScalarField::autoMap
 }
 
 
-void atmBoundaryLayerInletEpsilonFvPatchScalarField::rmap
+void atmBoundaryLayerInletKFvPatchScalarField::rmap
 (
     const fvPatchScalarField& psf,
     const labelList& addr
@@ -111,14 +111,14 @@ void atmBoundaryLayerInletEpsilonFvPatchScalarField::rmap
 {
     fixedValueFvPatchScalarField::rmap(psf, addr);
 
-    const atmBoundaryLayerInletEpsilonFvPatchScalarField& blpsf =
-        refCast<const atmBoundaryLayerInletEpsilonFvPatchScalarField>(psf);
+    const atmBoundaryLayerInletKFvPatchScalarField& blpsf =
+        refCast<const atmBoundaryLayerInletKFvPatchScalarField>(psf);
 
     atmBoundaryLayer::rmap(blpsf, addr);
 }
 
 
-void atmBoundaryLayerInletEpsilonFvPatchScalarField::write(Ostream& os) const
+void atmBoundaryLayerInletKFvPatchScalarField::write(Ostream& os) const
 {
     fvPatchScalarField::write(os);
     atmBoundaryLayer::write(os);
@@ -131,7 +131,7 @@ void atmBoundaryLayerInletEpsilonFvPatchScalarField::write(Ostream& os) const
 makePatchTypeField
 (
     fvPatchScalarField,
-    atmBoundaryLayerInletEpsilonFvPatchScalarField
+    atmBoundaryLayerInletKFvPatchScalarField
 );
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

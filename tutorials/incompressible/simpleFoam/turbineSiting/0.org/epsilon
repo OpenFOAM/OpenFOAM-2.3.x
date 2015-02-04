@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.0                                 |
+|  \\    /   O peration     | Version:  dev                                   |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -23,8 +23,6 @@ internalField   uniform $turbulentEpsilon;
 
 boundaryField
 {
-    #include "include/ABLConditions"
-
     terrain
     {
         type            epsilonWallFunction;
@@ -44,12 +42,7 @@ boundaryField
     inlet
     {
         type            atmBoundaryLayerInletEpsilon;
-        Uref            $Uref;
-        Zref            $Zref;
-        z               $zDirection;
-        z0              $z0;
-        value           $internalField;
-        zGround         $zGround;
+        #include        "include/ABLConditions"
     }
 
     ground
