@@ -2,7 +2,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+#   \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
 #    \\/     M anipulation  |
 #------------------------------------------------------------------------------
 # License
@@ -37,6 +37,9 @@ alias wm64='wmSET WM_ARCH_OPTION=64'
 alias wm32='wmSET WM_ARCH_OPTION=32'
 alias wmSP='wmSET WM_PRECISION_OPTION=SP'
 alias wmDP='wmSET WM_PRECISION_OPTION=DP'
+
+# refresh the environment
+alias wmREFRESH='wmSET $FOAM_SETTINGS'
 
 # clear env
 alias wmUNSET='. $WM_PROJECT_DIR/etc/config/unset.sh'
