@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -34,7 +34,7 @@ Foam::blockDescriptor::blockDescriptor
     const pointField& blockPointField,
     const curvedEdgeList& edges,
     const Vector<label>& meshDensity,
-    const UList<scalar>& expand,
+    const UList<gradingDescriptors>& expand,
     const word& zoneName
 )
 :
@@ -77,7 +77,11 @@ Foam::blockDescriptor::blockDescriptor
     meshDensity_(),
     edgePoints_(12),
     edgeWeights_(12),
-    expand_(12, 1.0),
+    expand_
+    (
+        12,
+        gradingDescriptors()
+    ),
     zoneName_()
 {
     // Examine next token
@@ -126,7 +130,7 @@ Foam::blockDescriptor::blockDescriptor
         is.putBack(t);
     }
 
-    scalarList expRatios(is);
+    List<gradingDescriptors> expRatios(is);
 
     if (expRatios.size() == 1)
     {
@@ -273,7 +277,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const blockDescriptor& bd)
         << " simpleGrading (";
 
 
-    const scalarList& expand = bd.expand_;
+    const List<gradingDescriptors>& expand = bd.expand_;
 
     // can we use a compact notation?
     if
