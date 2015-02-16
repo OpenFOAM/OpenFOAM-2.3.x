@@ -93,6 +93,12 @@ int main(int argc, char *argv[])
     while (runTime.run())
     {
         #include "../interFoam/interDyMFoam/readControls.H"
+
+        // Store divU from the previous mesh so that it can be mapped
+        // and used in correctPhi to ensure the corrected phi has the
+        // same divergence
+        volScalarField divU("divU0", fvc::div(fvc::absolute(phi, U)));
+
         #include "CourantNo.H"
         #include "setDeltaT.H"
 
@@ -105,9 +111,6 @@ int main(int argc, char *argv[])
         {
             if (pimple.firstIter() || moveMeshOuterCorrectors)
             {
-                // Store divU from the previous mesh for the correctPhi
-                volScalarField divU(fvc::div(fvc::absolute(phi, U)));
-
                 scalar timeBeforeMeshUpdate = runTime.elapsedCpuTime();
 
                 mesh.update();
