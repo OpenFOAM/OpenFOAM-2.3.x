@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -729,7 +729,7 @@ Foam::heThermo<BasicThermo, MixtureType>::kappaEff
     const volScalarField& alphat
 ) const
 {
-    tmp<Foam::volScalarField> kappaEff(Cp()*alphaEff(alphat));
+    tmp<Foam::volScalarField> kappaEff(Cp()*(this->alpha_ + alphat));
     kappaEff().rename("kappaEff");
     return kappaEff;
 }
@@ -749,7 +749,11 @@ Foam::heThermo<BasicThermo, MixtureType>::kappaEff
             this->p_.boundaryField()[patchi],
             this->T_.boundaryField()[patchi],
             patchi
-        )*alphaEff(alphat, patchi);
+        )
+       *(
+           this->alpha_.boundaryField()[patchi]
+         + alphat
+        );
 }
 
 
