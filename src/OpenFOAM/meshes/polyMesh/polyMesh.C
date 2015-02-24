@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -1454,6 +1454,17 @@ bool Foam::polyMesh::pointInCell
             }
 
             return true;
+        }
+        break;
+
+        case CELL_TETS:
+        {
+            label tetFacei;
+            label tetPti;
+
+            findTetFacePt(cellI, p, tetFacei, tetPti);
+
+            return tetFacei != -1;
         }
         break;
     }
