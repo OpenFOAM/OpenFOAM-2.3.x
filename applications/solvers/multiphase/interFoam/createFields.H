@@ -78,16 +78,6 @@
 
     #include "readGravitationalAcceleration.H"
 
-    /*
-    dimensionedVector g0(g);
-
-    // Read the data file and initialise the interpolation table
-    interpolationTable<vector> timeSeriesAcceleration
-    (
-        runTime.path()/runTime.caseConstant()/"acceleration.dat"
-    );
-    */
-
     Info<< "Calculating field g.h\n" << endl;
     volScalarField gh("gh", g & mesh.C());
     surfaceScalarField ghf("ghf", g & mesh.Cf());
@@ -111,7 +101,7 @@
     (
         p,
         p_rgh,
-        mesh.solutionDict().subDict("PIMPLE"),
+        pimple.dict(),
         pRefCell,
         pRefValue
     );
@@ -130,6 +120,20 @@
 
     fv::IOoptionList fvOptions(mesh);
 
+
+    // MULES flux from previous time-step
+    surfaceScalarField phiAlpha
+    (
+        IOobject
+        (
+            "phiAlpha",
+            runTime.timeName(),
+            mesh,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
+        ),
+        phi*fvc::interpolate(alpha1)
+    );
 
     // MULES Correction
     tmp<surfaceScalarField> tphiAlphaCorr0;
