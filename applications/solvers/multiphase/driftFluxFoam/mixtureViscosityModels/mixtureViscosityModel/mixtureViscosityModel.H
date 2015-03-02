@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,11 +32,6 @@ Class
 
 Description
     An abstract base class for incompressible mixtureViscosityModels.
-
-    The strain rate is defined by:
-
-        mag(symm(grad(U)))
-
 
 SourceFiles
     mixtureViscosityModel.C

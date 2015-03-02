@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.x                                 |
+|  \\    /   O peration     | Version:  dev                                   |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -26,7 +26,7 @@ sludge
         coeff       0.00023143;
         exponent    0.17926;
 
-        BinghamCoeff    5.5469e-07;
+        BinghamCoeff    7.845e-07;
         BinghamExponent 95.25;
         BinghamOffset   0;
 
