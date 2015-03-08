@@ -2,7 +2,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+#   \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
 #    \\/     M anipulation  |
 #------------------------------------------------------------------------------
 # License
@@ -79,8 +79,8 @@ export WM_PRECISION_OPTION=DP
 export WM_COMPILE_OPTION=Opt
 
 #- MPI implementation:
-#    WM_MPLIB = SYSTEMOPENMPI | OPENMPI | MPICH | MPICH-GM | HPMPI
-#               | GAMMA | MPI | QSMPI | SGIMPI
+#    WM_MPLIB = SYSTEMOPENMPI | OPENMPI | SYSTEMMPI | MPICH | MPICH-GM | HPMPI
+#               | MPI | QSMPI | SGIMPI
 export WM_MPLIB=SYSTEMOPENMPI
 
 #- Operating System:
