@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -377,13 +377,13 @@ void Foam::forces::applyBins
 
         forAll(dd, i)
         {
-            label binI = floor(dd[i]/binDx_);
-            force_[0][binI] += fN[i];
-            force_[1][binI] += fT[i];
-            force_[2][binI] += fP[i];
-            moment_[0][binI] += Md[i]^fN[i];
-            moment_[1][binI] += Md[i]^fT[i];
-            moment_[2][binI] += Md[i]^fP[i];
+            label bini = min(max(floor(dd[i]/binDx_), 0), force_[0].size());
+            force_[0][bini] += fN[i];
+            force_[1][bini] += fT[i];
+            force_[2][bini] += fP[i];
+            moment_[0][bini] += Md[i]^fN[i];
+            moment_[1][bini] += Md[i]^fT[i];
+            moment_[2][bini] += Md[i]^fP[i];
         }
     }
 }
