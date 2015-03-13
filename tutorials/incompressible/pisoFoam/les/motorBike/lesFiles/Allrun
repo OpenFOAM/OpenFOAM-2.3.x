@@ -8,13 +8,13 @@
 cp ../lesFiles/fvS* ../lesFiles/controlDict system/
 cp ../lesFiles/LESProperties ../lesFiles/turbulenceProperties constant/
 
-ls -d processor* | xargs -i rm -rf ./{}/0 $1
-ls -d processor* | xargs -i mv ./{}/500 ./{}/0 $1
-ls -d processor* | xargs -i rm -rf ./{}/0/uniform $1
+ls -d processor* | xargs -I rm -rf ./{}/0 $1
+ls -d processor* | xargs -I mv ./{}/500 ./{}/0 $1
+ls -d processor* | xargs -I rm -rf ./{}/0/uniform $1
 
-ls -d processor* | xargs -i cp ../lesFiles/LESProperties ./{}/constant/ $1
-ls -d processor* | xargs -i cp ../lesFiles/turbulenceProperties ./{}/constant/ $1
-ls -d processor* | xargs -i cp ../lesFiles/nuSgs ./{}/0/ $1
+ls -d processor* | xargs -I cp ../lesFiles/LESProperties ./{}/constant/ $1
+ls -d processor* | xargs -I cp ../lesFiles/turbulenceProperties ./{}/constant/ $1
+ls -d processor* | xargs -I cp ../lesFiles/nuSgs ./{}/0/ $1
 
 
 runParallel pisoFoam 8
