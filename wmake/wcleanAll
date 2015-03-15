@@ -66,7 +66,7 @@ find . -name '*.dep' -exec rm {} \;
 
 echo "Cleaning Make subdirectories"
 find . -depth \( -name Make -o -name "Make.[A-Za-z]*" \) -type d -print | \
-    xargs -I find '{}' -mindepth 1 -maxdepth 1 -type d -print | \
+    xargs -I {} find '{}' -mindepth 1 -maxdepth 1 -type d -print | \
     xargs rm -rf
 
 echo "Removing lnInclude and intermediate directories"

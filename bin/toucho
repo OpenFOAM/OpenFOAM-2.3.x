@@ -83,8 +83,8 @@ do
         then
             echo "touching all .o files under Make/$WM_OPTIONS* : $i"
             find $i -depth -name Make -type d -print | \
-                xargs -I find '{}' -depth -name "$WM_OPTIONS*" -type d -print | \
-                xargs -I find '{}' -name '*.o' -type f -print | \
+                xargs -I {} find '{}' -depth -name "$WM_OPTIONS*" -type d -print | \
+                xargs -I {} find '{}' -name '*.o' -type f -print | \
                 xargs -t touch
         else
             echo "touching all .o files: $i"
