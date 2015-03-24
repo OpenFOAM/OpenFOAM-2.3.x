@@ -5,7 +5,8 @@ EXE_INC = \
     -I$(LIB_SRC)/thermophysicalModels/reactionThermo/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/basic/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/solidThermo/lnInclude \
-    -I$(LIB_SRC)/finiteVolume/lnInclude
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/meshTools/lnInclude
 
 EXE_LIBS = \
     -lcompressibleTurbulenceModel \
@@ -13,8 +14,9 @@ EXE_LIBS = \
     -lcompressibleLESModels \
     -lLESdeltas \
     -lreactionThermophysicalModels \
-    -lfiniteVolume \
     -lgenericPatchFields \
     -lspecie \
     -lfluidThermophysicalModels \
-    -lsolidThermo
+    -lsolidThermo \
+    -lfiniteVolume \
+    -lmeshTools

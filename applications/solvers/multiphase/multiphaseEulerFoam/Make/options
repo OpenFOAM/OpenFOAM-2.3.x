@@ -10,7 +10,8 @@ EXE_INC = \
     -I$(LIB_SRC)/turbulenceModels \
     -I$(LIB_SRC)/turbulenceModels/incompressible/LES/LESModel \
     -I$(LIB_SRC)/turbulenceModels/LES/LESdeltas/lnInclude \
-    -I$(LIB_SRC)/finiteVolume/lnInclude
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/meshTools/lnInclude
 
 EXE_LIBS = \
     -lmultiphaseSystem \
@@ -19,4 +20,5 @@ EXE_LIBS = \
     -lcompressibleMultiphaseEulerianInterfacialModels \
     -lincompressibleLESModels \
     -lincompressibleRASModels \
-    -lfiniteVolume
+    -lfiniteVolume \
+    -lmeshTools

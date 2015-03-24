@@ -1,10 +1,9 @@
 EXE_INC = \
     -I./DPMTurbulenceModels/lnInclude \
-    -I$(LIB_SRC)/finiteVolume/lnInclude \
-    -I$(LIB_SRC)/meshTools/lnInclude \
     -I$(LIB_SRC)/lagrangian/basic/lnInclude \
     -I$(LIB_SRC)/lagrangian/intermediate/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/specie/lnInclude \
+    -I$(LIB_SRC)/transportModels/compressible/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/basic/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/reactionThermo/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/radiation/lnInclude \
@@ -14,14 +13,14 @@ EXE_INC = \
     -I$(LIB_SRC)/TurbulenceModels/incompressible/lnInclude \
     -I$(LIB_SRC)/TurbulenceModels/phaseIncompressible/lnInclude \
     -I$(LIB_SRC)/regionModels/regionModel/lnInclude \
-    -I$(LIB_SRC)/regionModels/surfaceFilmModels/lnInclude
+    -I$(LIB_SRC)/regionModels/surfaceFilmModels/lnInclude \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/meshTools/lnInclude
 
 EXE_LIBS = \
-    -lfiniteVolume \
-    -lmeshTools \
     -llagrangian \
     -llagrangianIntermediate \
-    -llagrangianTurbulentSubModels \
+    -llagrangianTurbulence \
     -lthermophysicalFunctions \
     -lspecie \
     -lradiationModels \
@@ -31,4 +30,6 @@ EXE_LIBS = \
     -lDPMTurbulenceModels \
     -lregionModels \
     -lsurfaceFilmModels \
-    -lsampling
+    -lsampling \
+    -lfiniteVolume \
+    -lmeshTools
