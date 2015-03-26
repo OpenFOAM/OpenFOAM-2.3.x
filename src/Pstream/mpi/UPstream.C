@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -281,7 +281,7 @@ void Foam::reduce
     requestID = PstreamGlobals::outstandingRequests_.size();
     PstreamGlobals::outstandingRequests_.append(request);
 
-    if (debug)
+    if (UPstream::debug)
     {
         Pout<< "UPstream::allocateRequest for non-blocking reduce"
             << " : request:" << requestID
