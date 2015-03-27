@@ -110,7 +110,7 @@ atmBoundaryLayerInletEpsilonFvPatchScalarField
     {
         Ustar_[i] =
             kappa_*Uref_
-           /(log((Href_  + z0_[i])/max(z0_[i] , scalar(0.001))));
+           /(log((Href_  + z0_[i])/z0_[i]));
     }
 
     z_ /= mag(z_);
