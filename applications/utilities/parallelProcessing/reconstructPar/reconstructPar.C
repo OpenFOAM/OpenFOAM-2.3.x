@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -72,8 +72,8 @@ int main(int argc, char *argv[])
         "Reconstruct fields of a parallel case"
     );
 
-    // enable -constant ... if someone really wants it
-    // enable -zeroTime to prevent accidentally trashing the initial fields
+    // Enable -constant ... if someone really wants it
+    // Enable -zeroTime to prevent accidentally trashing the initial fields
     timeSelector::addOptions(true, true);
     argList::noParallel();
     #include "addRegionOption.H"
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
         );
     }
 
-    // use the times list from the master processor
+    // Use the times list from the master processor
     // and select a subset based on the command-line options
     instantList timeDirs = timeSelector::select
     (
@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
         processorMeshes procMeshes(databases, regionName);
 
 
-        // check face addressing for meshes that have been decomposed
+        // Check face addressing for meshes that have been decomposed
         // with a very old foam version
         #include "checkFaceAddressingComp.H"
 
