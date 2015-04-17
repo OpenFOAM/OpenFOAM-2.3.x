@@ -30,13 +30,13 @@ Group
 Description
     Fixed heat boundary condition to specify temperature gradient. Input
     heat source either specified in terms of an absolute power [W], or as a
-    flux [W/m2].
+    flux [W/m^2].
 
     \heading Patch usage
 
     \table
         Property     | Description             | Required    | Default value
-        heatSource   | heat source type: \c flux [W/m2] or \c power [W]| yes |
+        heatSource   | heat source type: \c flux [W/m^2] or \c power [W]| yes |
         q            | heat source value       | yes          |
         alphaEff     | turbulent thermal diffusivity field name | yes |
     \endtable
@@ -55,7 +55,7 @@ Description
 
 Note
     - The units of \c alphaEff are [kg/m/s]
-    - The density*specific heat capacity \c rhoCp0 (units [kg/m3]*[J/kg/K])
+    - The density*specific heat capacity \c rhoCp0 (units [kg/m^3]*[J/kg/K])
       is read from the transport dictionary entry
 
 SourceFiles
@@ -108,7 +108,6 @@ private:
         heatSourceType heatSource_;
 
         //- Heat power [W] or flux [W/m2]
-        //  NOTE: to be divided by density, rho, if used in kinematic form
         scalarField q_;
 
         //- Name of effective thermal diffusivity field
