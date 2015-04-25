@@ -37,9 +37,12 @@ Description
 #include "surfaceInterpolate.H"
 #include "fvcAverage.H"
 
-#include "turbulentTransportModel.H"
-#include "turbulentFluidThermoModel.H"
 #include "incompressible/singlePhaseTransportModel/singlePhaseTransportModel.H"
+#include "incompressible/RAS/RASModel/RASModel.H"
+#include "incompressible/LES/LESModel/LESModel.H"
+#include "fluidThermo.H"
+#include "compressible/RAS/RASModel/RASModel.H"
+#include "compressible/LES/LESModel/LESModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
