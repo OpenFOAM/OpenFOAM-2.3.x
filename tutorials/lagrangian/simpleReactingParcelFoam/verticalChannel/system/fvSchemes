@@ -23,7 +23,6 @@ ddtSchemes
 gradSchemes
 {
     default         Gauss linear;
-    grad(p)         Gauss linear;
 }
 
 divSchemes
@@ -59,6 +58,7 @@ fluxRequired
 {
     default         no;
     p;
+    Phi;
 }
 
 

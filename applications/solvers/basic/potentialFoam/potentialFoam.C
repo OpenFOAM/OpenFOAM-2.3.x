@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,8 +25,12 @@ Application
     potentialFoam
 
 Description
-    Simple potential flow solver which can be used to generate starting fields
-    for full Navier-Stokes codes.
+    Potential flow solver which solves for the velocity potential
+    from which the flux-field is obtained and velocity field by reconstructing
+    the flux.
+
+    This application is particularly useful to generate starting fields for
+    Navier-Stokes codes.
 
 \*---------------------------------------------------------------------------*/
 
@@ -37,11 +41,35 @@ Description
 
 int main(int argc, char *argv[])
 {
-    argList::addBoolOption("writep", "write the final pressure field");
+    argList::addOption
+    (
+        "pName",
+        "pName",
+        "Name of the pressure field"
+    );
+
     argList::addBoolOption
     (
         "initialiseUBCs",
-        "initialise U boundary conditions"
+        "Initialise U boundary conditions"
+    );
+
+    argList::addBoolOption
+    (
+        "writePhi",
+        "Write the velocity potential field"
+    );
+
+    argList::addBoolOption
+    (
+        "writep",
+        "Calculate and write the pressure field"
+    );
+
+    argList::addBoolOption
+    (
+        "withFunctionObjects",
+        "execute functionObjects"
     );
 
     #include "setRootCase.H"
@@ -63,54 +91,93 @@ int main(int argc, char *argv[])
 
     adjustPhi(phi, U, p);
 
-
+    // Non-orthogonal velocity potential corrector loop
     for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
     {
-        fvScalarMatrix pEqn
+        fvScalarMatrix PhiEqn
         (
-            fvm::laplacian
-            (
-                dimensionedScalar
-                (
-                    "1",
-                    dimTime/p.dimensions()*dimensionSet(0, 2, -2, 0, 0),
-                    1
-                ),
-                p
-            )
+            fvm::laplacian(dimensionedScalar("1", dimless, 1), Phi)
          ==
             fvc::div(phi)
         );
 
-        pEqn.setReference(pRefCell, pRefValue);
-        pEqn.solve();
+        PhiEqn.setReference(PhiRefCell, PhiRefValue);
+        PhiEqn.solve();
 
         if (nonOrth == nNonOrthCorr)
         {
-            phi -= pEqn.flux();
+            phi -= PhiEqn.flux();
         }
     }
 
     fvOptions.makeAbsolute(phi);
 
-    Info<< "continuity error = "
+    Info<< "Continuity error = "
         << mag(fvc::div(phi))().weightedAverage(mesh.V()).value()
         << endl;
 
     U = fvc::reconstruct(phi);
     U.correctBoundaryConditions();
 
-    Info<< "Interpolated U error = "
+    Info<< "Interpolated velocity error = "
         << (sqrt(sum(sqr((fvc::interpolate(U) & mesh.Sf()) - phi)))
           /sum(mesh.magSf())).value()
         << endl;
 
-    // Force the write
+    // Write U and phi
     U.write();
     phi.write();
 
+    // Optionally write Phi
+    if (args.optionFound("writePhi"))
+    {
+        Phi.write();
+    }
+
+    // Calculate the pressure field
     if (args.optionFound("writep"))
     {
+        Info<< nl << "Calculating approximate pressure field" << endl;
+
+        label pRefCell = 0;
+        scalar pRefValue = 0.0;
+        setRefCell
+        (
+            p,
+            potentialFlow,
+            pRefCell,
+            pRefValue
+        );
+
+        // Calculate the flow-direction filter tensor
+        volScalarField magSqrU(magSqr(U));
+        volSymmTensorField F(sqr(U)/(magSqrU + SMALL*average(magSqrU)));
+
+        // Calculate the divergence of the flow-direction filtered div(U*U)
+        // Filtering with the flow-direction generates a more reasonable
+        // pressure distribution in regions of high velocity gradient in the
+        // direction of the flow
+        volScalarField divDivUU
+        (
+            fvc::div
+            (
+                F & fvc::div(phi, U),
+                "div(div(phi,U))"
+            )
+        );
+
+        // Solve a Poisson equation for the approximate pressure
+        for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
+        {
+            fvScalarMatrix pEqn
+            (
+                fvm::laplacian(p) + divDivUU
+            );
+
+            pEqn.setReference(pRefCell, pRefValue);
+            pEqn.solve();
+        }
+
         p.write();
     }
 
