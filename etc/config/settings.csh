@@ -174,6 +174,7 @@ setenv FOAM_USER_LIBBIN $WM_PROJECT_USER_DIR/platforms/$WM_OPTIONS/lib
 # setenv FOAM_CODE_TEMPLATES $WM_PROJECT_DIR/etc/codeTemplates/dynamicCode
 
 # convenience
+setenv FOAM_ETC $WM_PROJECT_DIR/etc
 setenv FOAM_APP $WM_PROJECT_DIR/applications
 setenv FOAM_SRC $WM_PROJECT_DIR/src
 setenv FOAM_TUTORIALS $WM_PROJECT_DIR/tutorials
