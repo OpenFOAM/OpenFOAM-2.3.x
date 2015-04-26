@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -85,7 +85,8 @@ class MRFZone
         //- Cell zone ID
         label cellZoneID_;
 
-        const wordList excludedPatchNames_;
+        const wordReList excludedPatchNames_;
+
         labelList excludedPatchLabels_;
 
         //- Internal faces that are part of MRF
