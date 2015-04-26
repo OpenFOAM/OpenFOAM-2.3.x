@@ -20,7 +20,7 @@ EXE_INC = \
 EXE_LIBS = \
     -llagrangian \
     -llagrangianIntermediate \
-    -llagrangianTurbulence \
+    -llagrangianTurbulentSubModels \
     -lthermophysicalFunctions \
     -lspecie \
     -lradiationModels \
