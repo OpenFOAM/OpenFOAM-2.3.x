@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -354,7 +354,7 @@ bool Foam::fieldValues::faceSource::writeValues
             file()<< tab << result;
 
             Info(log_)<< "    " << operationTypeNames_[operation_]
-                << "(" << sourceName_ << ") for " << fieldName
+                << "(" << sourceName_ << ") of " << fieldName
                 <<  " = " << result << endl;
         }
     }
@@ -447,4 +447,3 @@ Foam::tmp<Foam::Field<Type> > Foam::fieldValues::faceSource::filterField
 
 
 // ************************************************************************* //
-
