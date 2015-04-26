@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -80,7 +80,7 @@ Foam::fieldValue::fieldValue
     dict_(dict),
     active_(true),
     log_(true),
-    sourceName_(dict.lookupOrDefault<word>("sourceName", "sampledSurface")),
+    sourceName_(word::null),
     fields_(dict.lookup("fields")),
     valueOutput_(dict.lookup("valueOutput")),
     resultDict_(fileName("name"), dictionary::null)
