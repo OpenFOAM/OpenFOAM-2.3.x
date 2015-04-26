@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -214,19 +214,22 @@ private:
         //- Set faces according to sampledSurface
         void sampledSurfaceFaces(const dictionary&);
 
-        //- Combine mesh faces and points from multiple processors 
+        //- Combine mesh faces and points from multiple processors
         void combineMeshGeometry
         (
             faceList& faces,
             pointField& points
         ) const;
 
-        //- Combine surface faces and points from multiple processors 
+        //- Combine surface faces and points from multiple processors
         void combineSurfaceGeometry
         (
             faceList& faces,
             pointField& points
         ) const;
+
+        //- Calculate and return total area of the faceSource: sum(magSf)
+        scalar totalArea() const;
 
 
 protected:
@@ -235,6 +238,9 @@ protected:
 
         //- Surface writer
         autoPtr<surfaceWriter> surfaceWriterPtr_;
+
+        //- Optionally write the totalArea
+        bool writeTotalArea_;
 
         //- Source type
         sourceType source_;
@@ -273,7 +279,7 @@ protected:
 
         // If operating on sampledSurface
 
-            //- underlying sampledSurface
+            //- Underlying sampledSurface
             autoPtr<sampledSurface> surfacePtr_;
 
 
