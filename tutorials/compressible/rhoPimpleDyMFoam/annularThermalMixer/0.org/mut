@@ -28,7 +28,7 @@ boundaryField
     movingWalls { $:wall.mut; }
     staticWalls { $movingWalls; }
 
-    #include "${WM_PROJECT_DIR}/etc/caseDicts/setConstraintTypes"
+    #includeEtc "caseDicts/setConstraintTypes"
 }
 
 // ************************************************************************* //
