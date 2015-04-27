@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -69,7 +69,7 @@ private:
 
 protected:
 
-    //- local typedef to octree tree-type
+    //- Local typedef to octree tree-type
     typedef treeDataPrimitivePatch<TargetPatch> treeType;
 
 
@@ -79,7 +79,7 @@ protected:
         const SourcePatch& srcPatch_;
 
         //- Reference to target patch
-        const SourcePatch& tgtPatch_;
+        const TargetPatch& tgtPatch_;
 
         //- Flag to indicate that the two patches are co-directional and
         //  that the orientation of the target patch should be reversed
