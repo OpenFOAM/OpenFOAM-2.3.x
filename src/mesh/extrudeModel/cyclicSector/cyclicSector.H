@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,18 +22,20 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::extrudeModels::linearDirection
+    Foam::extrudeModels::cyclicSector
 
 Description
-    Extrudes by transforming points in a specified direction by a given distance
+    Extrudes a sector.
+
+SeeAlso
+    Foam::extrudeModels::sector
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef linearDirection_H
-#define linearDirection_H
+#ifndef cyclicSector_H
+#define cyclicSector_H
 
-#include "point.H"
-#include "extrudeModel.H"
+#include "sector.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -43,45 +45,27 @@ namespace extrudeModels
 {
 
 /*---------------------------------------------------------------------------*\
-                    Class linearDirection Declaration
+                         Class cyclicSector Declaration
 \*---------------------------------------------------------------------------*/
 
-class linearDirection
+class cyclicSector
 :
-    public extrudeModel
+    public sector
 {
-    // Private data
-
-        //- Extrude direction
-        vector direction_;
-
-        //- Layer thickness
-        scalar thickness_;
-
 
 public:
 
     //- Runtime type information
-    TypeName("linearDirection");
+    TypeName("cyclicSector");
 
     // Constructors
 
         //- Construct from dictionary
-        linearDirection(const dictionary& dict);
+        cyclicSector(const dictionary& dict);
 
 
     //- Destructor
-    virtual ~linearDirection();
-
-
-    // Member Operators
-
-        point operator()
-        (
-            const point& surfacePoint,
-            const vector& surfaceNormal,
-            const label layer
-        ) const;
+    virtual ~cyclicSector();
 };
 
 

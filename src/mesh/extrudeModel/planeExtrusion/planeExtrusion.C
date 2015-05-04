@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,19 +21,10 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
-Class
-    Foam::extrudeModels::linearDirection
-
-Description
-    Extrudes by transforming points in a specified direction by a given distance
-
 \*---------------------------------------------------------------------------*/
 
-#ifndef linearDirection_H
-#define linearDirection_H
-
-#include "point.H"
-#include "extrudeModel.H"
+#include "planeExtrusion.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,56 +33,38 @@ namespace Foam
 namespace extrudeModels
 {
 
-/*---------------------------------------------------------------------------*\
-                    Class linearDirection Declaration
-\*---------------------------------------------------------------------------*/
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-class linearDirection
+defineTypeNameAndDebug(plane, 0);
+
+addToRunTimeSelectionTable(extrudeModel, plane, dictionary);
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+plane::plane(const dictionary& dict)
 :
-    public extrudeModel
+    linearNormal(dict)
 {
-    // Private data
-
-        //- Extrude direction
-        vector direction_;
-
-        //- Layer thickness
-        scalar thickness_;
-
-
-public:
-
-    //- Runtime type information
-    TypeName("linearDirection");
-
-    // Constructors
-
-        //- Construct from dictionary
-        linearDirection(const dictionary& dict);
+    if (nLayers_ != 1)
+    {
+        IOWarningIn("plane::plane(const dictionary& dict)", dict)
+            << "Expected nLayers (if specified) to be 1"
+            << endl;
+        nLayers_ = 1;
+    }
+}
 
 
-    //- Destructor
-    virtual ~linearDirection();
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-
-    // Member Operators
-
-        point operator()
-        (
-            const point& surfacePoint,
-            const vector& surfaceNormal,
-            const label layer
-        ) const;
-};
+plane::~plane()
+{}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace extrudeModels
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#endif
 
 // ************************************************************************* //

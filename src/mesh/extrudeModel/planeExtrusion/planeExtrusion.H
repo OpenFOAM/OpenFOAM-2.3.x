@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,18 +22,21 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::extrudeModels::linearDirection
+    Foam::extrudeModels::plane
 
 Description
-    Extrudes by transforming points in a specified direction by a given distance
+    Extrudes by transforming points normal to the surface by 1 layer over
+    a given distance.
+
+SeeAlso
+    Foam::extrudeModels::linearNormal
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef linearDirection_H
-#define linearDirection_H
+#ifndef plane_H
+#define plane_H
 
-#include "point.H"
-#include "extrudeModel.H"
+#include "linearNormal.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -43,45 +46,27 @@ namespace extrudeModels
 {
 
 /*---------------------------------------------------------------------------*\
-                    Class linearDirection Declaration
+                         Class plane Declaration
 \*---------------------------------------------------------------------------*/
 
-class linearDirection
+class plane
 :
-    public extrudeModel
+    public linearNormal
 {
-    // Private data
-
-        //- Extrude direction
-        vector direction_;
-
-        //- Layer thickness
-        scalar thickness_;
-
 
 public:
 
     //- Runtime type information
-    TypeName("linearDirection");
+    TypeName("plane");
 
     // Constructors
 
         //- Construct from dictionary
-        linearDirection(const dictionary& dict);
+        plane(const dictionary& dict);
 
 
     //- Destructor
-    virtual ~linearDirection();
-
-
-    // Member Operators
-
-        point operator()
-        (
-            const point& surfacePoint,
-            const vector& surfaceNormal,
-            const label layer
-        ) const;
+    virtual ~plane();
 };
 
 

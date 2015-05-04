@@ -22,17 +22,24 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::extrudeModels::linearDirection
+    Foam::extrudeModels::sector
 
 Description
-    Extrudes by transforming points in a specified direction by a given distance
+    Extrudes by rotating a surface around an axis
+    - extrusion is opposite the surface/patch normal so inwards the source
+      mesh
+    - axis direction has to be consistent with this.
+    - use -mergeFaces option if doing full 360 and want to merge front and back
+    - note direction of axis. This should be consistent with rotating against
+      the patch normal direction. If you get it wrong you'll see all cells
+      with extreme aspect ratio and internal faces wrong way around in
+      checkMesh
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef linearDirection_H
-#define linearDirection_H
+#ifndef sector_H
+#define sector_H
 
-#include "point.H"
 #include "extrudeModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -43,35 +50,38 @@ namespace extrudeModels
 {
 
 /*---------------------------------------------------------------------------*\
-                    Class linearDirection Declaration
+                         Class sector Declaration
 \*---------------------------------------------------------------------------*/
 
-class linearDirection
+class sector
 :
     public extrudeModel
 {
     // Private data
 
-        //- Extrude direction
-        vector direction_;
+        //- Point on axis
+        const point axisPt_;
 
-        //- Layer thickness
-        scalar thickness_;
+        //- Normalized direction of axis
+        const vector axis_;
+
+        //- Overall angle (radians)
+        const scalar angle_;
 
 
 public:
 
     //- Runtime type information
-    TypeName("linearDirection");
+    TypeName("sector");
 
     // Constructors
 
         //- Construct from dictionary
-        linearDirection(const dictionary& dict);
+        sector(const dictionary& dict);
 
 
     //- Destructor
-    virtual ~linearDirection();
+    virtual ~sector();
 
 
     // Member Operators
