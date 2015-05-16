@@ -922,6 +922,64 @@ void Foam::cyclicAMIPolyPatch::transformPosition
 }
 
 
+void Foam::cyclicAMIPolyPatch::reverseTransformPosition
+(
+    point& l,
+    const label faceI
+) const
+{
+    if (!parallel())
+    {
+        const tensor& T =
+        (
+            reverseT().size() == 1
+          ? reverseT()[0]
+          : reverseT()[faceI]
+        );
+
+        if (transform() == ROTATIONAL)
+        {
+            l = Foam::transform(T, l - rotationCentre_) + rotationCentre_;
+        }
+        else
+        {
+            l = Foam::transform(T, l);
+        }
+    }
+    else if (separated())
+    {
+        const vector& s =
+        (
+            separation().size() == 1
+          ? separation()[0]
+          : separation()[faceI]
+        );
+
+        l += s;
+    }
+}
+
+
+void Foam::cyclicAMIPolyPatch::reverseTransformDirection
+(
+    vector& d,
+    const label faceI
+) const
+{
+    if (!parallel())
+    {
+        const tensor& T =
+        (
+            reverseT().size() == 1
+          ? reverseT()[0]
+          : reverseT()[faceI]
+        );
+
+        d = Foam::transform(T, d);
+    }
+}
+
+
 void Foam::cyclicAMIPolyPatch::calcGeometry
 (
     const primitivePatch& referPatch,
@@ -978,28 +1036,43 @@ Foam::label Foam::cyclicAMIPolyPatch::pointFace
     point& p
 ) const
 {
+    point prt(p);
+    vector nrt(n);
+
+    label nbrFaceI = -1;
+
+    reverseTransformPosition(prt,faceI);
+    reverseTransformDirection(nrt,faceI);
+
     if (owner())
     {
-        return AMI().tgtPointFace
+        nbrFaceI = AMI().tgtPointFace
         (
             *this,
             neighbPatch(),
-            n,
+            nrt,
             faceI,
-            p
+            prt
         );
     }
     else
     {
-        return neighbPatch().AMI().srcPointFace
+        nbrFaceI = neighbPatch().AMI().srcPointFace
         (
             neighbPatch(),
             *this,
-            n,
+            nrt,
             faceI,
-            p
+            prt
         );
     }
+
+    if (nbrFaceI >= 0)
+    {
+        p = prt;
+    }
+
+    return nbrFaceI;
 }
 
 

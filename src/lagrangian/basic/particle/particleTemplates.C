@@ -1086,9 +1086,6 @@ void Foam::particle::hitCyclicAMIPatch
 
     // Now the particle is on the receiving side
 
-    // Have patch transform the position
-    receiveCpp.transformPosition(position_, patchFaceI);
-
     // Transform the properties
     if (!receiveCpp.parallel())
     {
