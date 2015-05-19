@@ -33,7 +33,7 @@
 #     during the wmake process
 #------------------------------------------------------------------------------
 
-export SCOTCH_VERSION=scotch_6.0.0
+export SCOTCH_VERSION=scotch_6.0.3
 export SCOTCH_ARCH_PATH=$WM_THIRD_PARTY_DIR/platforms/$WM_ARCH$WM_COMPILER/$SCOTCH_VERSION
 
 # -----------------------------------------------------------------------------
