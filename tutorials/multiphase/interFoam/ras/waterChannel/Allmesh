@@ -6,11 +6,15 @@ cd ${0%/*} || exit 1    # run from this directory
 
 application=`getApplication`
 
-./Allmesh
+runApplication blockMesh
 
-cp 0/alpha.water.org 0/alpha.water
-runApplication setFields
-
-runApplication $application
+echo "Creating channel"
+i=1
+while [ "$i" -lt 3 ] ; do
+    cp system/extrudeMeshDict.${i} system/extrudeMeshDict
+    echo "Running extrudeMesh, instance" ${i}
+    extrudeMesh > log.extrudeMesh.${i}
+    i=`expr $i + 1`
+done
 
 # ----------------------------------------------------------------- end-of-file
