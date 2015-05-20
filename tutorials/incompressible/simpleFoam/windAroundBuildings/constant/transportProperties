@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.1                                 |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -10,28 +10,12 @@ FoamFile
     version     2.0;
     format      ascii;
     class       dictionary;
-    object      extrudeProperties;
+    object      transportProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-constructFrom mesh;
-sourceCase "$FOAM_CASE";
-sourcePatches (outlet);
+transportModel  Newtonian;
 
-flipNormals false;
+nu              nu [ 0 2 -1 0 0 0 0 ] 1.5e-05;
 
-extrudeModel        linearDirection;
-
-nLayers             60;
-expansionRatio      1.0;
-
-linearDirectionCoeffs
-{
-    axisPt          (0 0 0);
-    direction       (1 0.2 0.02);
-    thickness       60;
-}
-
-mergeFaces false;
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// ************************************************************************* //

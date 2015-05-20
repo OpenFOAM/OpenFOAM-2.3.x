@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.0                                 |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -9,32 +9,38 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       polyBoundaryMesh;
-    location    "constant/polyMesh";
-    object      boundary;
+    class       volVectorField;
+    object      U;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-3
-(
-    piston
+Uinlet          (10 0 0);
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    inlet
     {
-        type            wall;
-        nFaces          1326;
-        startFace       79522;
+        type            fixedValue;
+        value           uniform $Uinlet;
     }
-    liner
+
+    outlet
     {
-        type            wall;
-        nFaces          2710;
-        startFace       80848;
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
     }
-    cylinderHead
+
+    wall
     {
-        type            wall;
-        nFaces          2184;
-        startFace       83558;
+        type            fixedValue;
+        value           uniform (0 0 0);
     }
-)
+
+    #includeEtc "caseDicts/setConstraintTypes"
+}
 
 // ************************************************************************* //

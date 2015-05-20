@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.0                                 |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -9,36 +9,14 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       polyBoundaryMesh;
-    object      boundary;
+    class       dictionary;
+    object      meshQualityDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-3
-(
-piston
-{
-    type wall;
-    physicalType fixedTemperatureMovingWallFunctions;
-    nFaces 1326;
-    startFace 79522;
-}
+#includeEtc "caseDicts/mesh/generation/meshQualityDict.cfg"
 
-liner
-{
-    type wall;
-    physicalType fixedTemperatureWallFunctions;
-    nFaces 2710;
-    startFace 80848;
-}
-
-cylinderHead
-{
-    type wall;
-    physicalType fixedTemperatureWallFunctions;
-    nFaces 2184;
-    startFace 83558;
-}
-)
+//- minFaceWeight (0 -> 0.5)
+//minFaceWeight 0.02;
 
 // ************************************************************************* //

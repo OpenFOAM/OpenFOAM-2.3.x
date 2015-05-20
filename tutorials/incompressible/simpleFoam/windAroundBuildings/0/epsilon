@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.1                                 |
+|  \\    /   O peration     | Version:  2.3.x                                 |
 |   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -9,29 +9,39 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       dictionary;
-    location    "constant";
-    object      transportProperties;
+    class       volScalarField;
+    object      epsilon;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-phases (water air);
+epsilonInlet  0.03; // Cmu^0.75 * k^1.5 / L ; L =10
 
-water
+dimensions      [0 2 -3 0 0 0 0];
+
+internalField   uniform $epsilonInlet;
+
+boundaryField
 {
-    transportModel  Newtonian;
-    nu              nu [ 0 2 -1 0 0 0 0 ]  1e-06;
-    rho             rho [ 1 -3 0 0 0 0 0 ] 1000;
+    inlet
+    {
+        type            fixedValue;
+        value           uniform $epsilonInlet;
+    }
+
+    outlet
+    {
+        type            inletOutlet;
+        inletValue      uniform $epsilonInlet;
+        value           uniform $epsilonInlet;
+    }
+
+    wall
+    {
+        type            epsilonWallFunction;
+        value           uniform $epsilonInlet;
+    }
+
+    #includeEtc "caseDicts/setConstraintTypes"
 }
-
-air
-{
-    transportModel  Newtonian;
-    nu              nu [ 0 2 -1 0 0 0 0 ]  1.48e-05;
-    rho             rho [ 1 -3 0 0 0 0 0 ] 1;
-}
-
-sigma           sigma [ 1 0 -2 0 0 0 0 ] 0.07;
-
 
 // ************************************************************************* //
