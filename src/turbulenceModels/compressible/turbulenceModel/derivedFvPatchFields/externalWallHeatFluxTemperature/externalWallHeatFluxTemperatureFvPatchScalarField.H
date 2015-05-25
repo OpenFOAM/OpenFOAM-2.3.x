@@ -139,6 +139,12 @@ private:
         //- Ambient temperature / [K]
         scalarField Ta_;
 
+        //- Chache Qr for relaxation
+        scalarField QrPrevious_;
+
+        //- Relaxation for Qr
+        scalar QrRelaxation_;
+
         //- Name of the radiative heat flux
         const word QrName_;
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -69,6 +69,8 @@ externalWallHeatFluxTemperatureFvPatchScalarField
     q_(p.size(), 0.0),
     h_(p.size(), 0.0),
     Ta_(p.size(), 0.0),
+    QrPrevious_(p.size()),
+    QrRelaxation_(1),
     QrName_("undefined-Qr"),
     thicknessLayers_(),
     kappaLayers_()
@@ -94,6 +96,8 @@ externalWallHeatFluxTemperatureFvPatchScalarField
     q_(ptf.q_, mapper),
     h_(ptf.h_, mapper),
     Ta_(ptf.Ta_, mapper),
+    QrPrevious_(ptf.QrPrevious_, mapper),
+    QrRelaxation_(ptf.QrRelaxation_),
     QrName_(ptf.QrName_),
     thicknessLayers_(ptf.thicknessLayers_),
     kappaLayers_(ptf.kappaLayers_)
@@ -114,6 +118,8 @@ externalWallHeatFluxTemperatureFvPatchScalarField
     q_(p.size(), 0.0),
     h_(p.size(), 0.0),
     Ta_(p.size(), 0.0),
+    QrPrevious_(p.size(), 0.0),
+    QrRelaxation_(dict.lookupOrDefault<scalar>("relaxation", 1)),
     QrName_(dict.lookupOrDefault<word>("Qr", "none")),
     thicknessLayers_(),
     kappaLayers_()
@@ -155,6 +161,11 @@ externalWallHeatFluxTemperatureFvPatchScalarField
 
     fvPatchScalarField::operator=(scalarField("value", dict, p.size()));
 
+    if (dict.found("QrPrevious"))
+    {
+        QrPrevious_ = scalarField("QrPrevious", dict, p.size());
+    }
+
     if (dict.found("refValue"))
     {
         // Full restart
@@ -184,6 +195,8 @@ externalWallHeatFluxTemperatureFvPatchScalarField
     q_(tppsf.q_),
     h_(tppsf.h_),
     Ta_(tppsf.Ta_),
+    QrPrevious_(tppsf.QrPrevious_),
+    QrRelaxation_(tppsf.QrRelaxation_),
     QrName_(tppsf.QrName_),
     thicknessLayers_(tppsf.thicknessLayers_),
     kappaLayers_(tppsf.kappaLayers_)
@@ -203,6 +216,8 @@ externalWallHeatFluxTemperatureFvPatchScalarField
     q_(tppsf.q_),
     h_(tppsf.h_),
     Ta_(tppsf.Ta_),
+    QrPrevious_(tppsf.QrPrevious_),
+    QrRelaxation_(tppsf.QrRelaxation_),
     QrName_(tppsf.QrName_),
     thicknessLayers_(tppsf.thicknessLayers_),
     kappaLayers_(tppsf.kappaLayers_)
@@ -254,6 +269,9 @@ void Foam::externalWallHeatFluxTemperatureFvPatchScalarField::updateCoeffs()
     if (QrName_ != "none")
     {
         Qr = patch().lookupPatchField<volScalarField, scalar>(QrName_);
+
+        Qr = QrRelaxation_*Qr + (1.0 - QrRelaxation_)*QrPrevious_;
+        QrPrevious_ = Qr;
     }
 
     switch (mode_)
@@ -331,7 +349,11 @@ void Foam::externalWallHeatFluxTemperatureFvPatchScalarField::write
 {
     mixedFvPatchScalarField::write(os);
     temperatureCoupledBase::write(os);
+
+    QrPrevious_.writeEntry("QrPrevious", os);
     os.writeKeyword("Qr")<< QrName_ << token::END_STATEMENT << nl;
+    os.writeKeyword("relaxation")<< QrRelaxation_
+        << token::END_STATEMENT << nl;
 
     switch (mode_)
     {
