@@ -1,0 +1,38 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      transportProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+phases (droplikeaggr dilutemf);
+
+droplikeaggr
+{
+    transportModel  Newtonian;
+    nu              nu [ 0 2 -1 0 0 0 0 ] 2e-06;
+}
+
+dilutemf
+{
+    transportModel  Newtonian;
+    nu              nu [ 0 2 -1 0 0 0 0 ] 2e-06;
+}
+
+sigma           sigma [ 1 0 -2 0 0 0 0 ] 1e-06;
+rhoker         rhoker [ 1 -3 0 0 0 0 0 ] 780;
+rhomag         rhomag [ 1 -3 0 0 0 0 0 ] 5200;
+kd                 kd [ 0 2 -1 0 0 0 0 ] 2e-11;
+lambda         lambda [ 0 0 0 0 0 0 0 ] 1;
+
+// ************************************************************************* //

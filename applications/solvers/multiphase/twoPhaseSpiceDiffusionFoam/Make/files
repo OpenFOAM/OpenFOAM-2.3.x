@@ -1,0 +1,3 @@
+twoPhaseSpiceDiffusionFoam.C
+
+EXE = $(FOAM_APPBIN)/twoPhaseSpiceDiffusionFoam
