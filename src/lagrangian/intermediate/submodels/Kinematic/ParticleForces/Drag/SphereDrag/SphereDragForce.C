@@ -30,13 +30,55 @@ License
 template<class CloudType>
 Foam::scalar Foam::SphereDragForce<CloudType>::CdRe(const scalar Re) const
 {
-    if (Re > 1000.0)
+    if (Re <= .01)
     {
-        return 0.424*Re;
+    	return (9/2 + 24/Re) * Re;
     }
+
+    else if (Re <= 20)
+    {
+    	return 24 * (1 + .1315 * pow(Re, .82 - .05 * log(Re)));
+    }
+
+    else if (Re <= 260)
+    {
+    	return 24 * (1 + .1935 * pow(Re, .6305));
+    }
+
+    else if (Re <= 1.5 * pow(10, 3))
+    {
+    	return Re * pow(1.6435 - 1.1242 * log(Re) + .1558 * pow(log(Re),2),10);
+    }
+
+    else if (Re <= 1.2 * pow(10, 4))
+    {
+    	return Re * pow(-2.4571 + 2.5558 * log(Re) - .9295 * pow(log(Re),2) 
+    		            + .1049 * pow(log(Re),3),10);
+    }
+
+    else if (Re <= 4.4 * pow(10, 4))
+    {
+    	return Re * pow(-1.9181 + .6370 * log(Re) - .0636 * pow(log(Re),2),10);
+    }
+
+    else if (Re <= 3.38 * pow(10, 5))
+    {
+    	return Re * pow(-4.339 + 1.5809 * log(Re) - .1546 * pow(log(Re),2),10);
+    }
+
+    else if (Re <= 4 * pow(10, 5))
+    {
+    	return Re * (29.78 - 5.3 * log(Re));
+    }
+
+    else if (Re <= 1 * pow(10, 6))
+    {
+    	return Re * (.1 * log(Re) - .49);
+    }
+
     else
     {
-        return 24.0*(1.0 + 1.0/6.0*pow(Re, 2.0/3.0));
+    	return Re * (.19 - 8 * pow(10, 4) / Re);
     }
 }
 
