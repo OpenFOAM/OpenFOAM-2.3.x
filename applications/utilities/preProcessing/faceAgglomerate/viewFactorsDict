@@ -1,34 +1,122 @@
-/*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  2.3.0                                 |
-|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
-|    \\/     M anipulation  |                                                 |
-\*---------------------------------------------------------------------------*/
-FoamFile
-{
-    version     2.0;
-    format      ascii;
-    class       dictionary;
-    object      viewFactorsDict;
+FoamFile {
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object viewFactorsDict;
 }
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+debug 1;
 
-// Write agglomeration as a volScalarField with calculated boundary values
+maxDynListLength    2147483647;
+
+writeViewFactorMatrix     true;
 writeFacesAgglomeration   true;
+writePatchViewFactors     true;
 
-//Debug option
-debug                     0;
+nFacesInCoarsestLevel       10;
+percentFacesInCoarsestLevel 0.0; //0.0 = disabled
+featureAngle                10.0; //angle to identify geometric features and avoid agglomeration on those edges
+featureAngleLevelsFactor    1.15; //factor to increase featureAngle for coarse level, angleCoarse = pow(angle, levelID)
+featureAngleOnEveryLevel    true; //apply featureAngle strategy also on coarser level
+agglomerateAllPatches       true; //if true agglomerate all patches without explicit list
+debugMode                   false; //print debug info for testing
 
-//Dump connectivity rays
-dumpRays                  false;
-
-// Per patch (wildcard possible) the coarsening level
-bottomAir_to_heater
+/*B1_TE42_B1_TE38
 {
-    nFacesInCoarsestLevel     30;
-    featureAngle              10;
+//percentFacesInCoarsestLevel 20;
+}*/
+
+/*
+B1_TE42_B1_TE4
+{
 }
+B1_TE42_B1_TE13
+{
+}
+B1_TE42_B1_TE20
+{
+}
+B1_TE42_B1_TE23
+{
+}
+B1_TE42_B1_TE28
+{
+}
+B1_TE42_B1_TE35
+{
+}
+B1_TE42_B1_TE38
+{
+}*/
 
+/*
+B1_TE42_B1_TE4
+{
+    nFacesInCoarsestLevel    1;
+    featureAngle    10;
+}
+B1_TE42_B1_TE13
+{
+    nFacesInCoarsestLevel    1;
+    featureAngle    10;
+}
+B1_TE42_B1_TE20
+{
+    nFacesInCoarsestLevel    1;
+    featureAngle    10;
+}
+B1_TE42_B1_TE23
+{
+    nFacesInCoarsestLevel    1;
+    featureAngle    10;
+}
+B1_TE42_B1_TE28
+{
+    nFacesInCoarsestLevel    1;
+    featureAngle    10;
+}
+B1_TE42_B1_TE35
+{
+    nFacesInCoarsestLevel    1;
+    featureAngle    10;
+}
+B1_TE42_B1_TE38
+{
+    nFacesInCoarsestLevel    1;
+    featureAngle    10;
+}*/
 
-// ************************************************************************* //
+/*B1_TE42_B1_TE4
+{
+    nFacesInCoarsestLevel    10;
+    featureAngle    10;
+}
+B1_TE42_B1_TE13
+{
+    nFacesInCoarsestLevel    10;
+    featureAngle    10;
+}
+B1_TE42_B1_TE20
+{
+    nFacesInCoarsestLevel    10;
+    featureAngle    10;
+}
+B1_TE42_B1_TE23
+{
+    nFacesInCoarsestLevel    10;
+    featureAngle    10;
+}
+B1_TE42_B1_TE28
+{
+    nFacesInCoarsestLevel    10;
+    featureAngle    10;
+}
+B1_TE42_B1_TE35
+{
+    nFacesInCoarsestLevel    10;
+    featureAngle    10;
+}
+B1_TE42_B1_TE38
+{
+    nFacesInCoarsestLevel    10;
+    featureAngle    10;
+}*/

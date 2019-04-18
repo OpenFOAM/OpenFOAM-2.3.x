@@ -1,3 +1,4 @@
 faceAgglomerate.C
+pairPatchAgglomerationMod.C
 
 EXE = $(FOAM_APPBIN)/faceAgglomerate

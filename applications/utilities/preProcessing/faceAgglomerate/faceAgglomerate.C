@@ -26,7 +26,7 @@ Application
 
 Description
 
-    Agglomerate boundary faces using the pairPatchAgglomeration algorithm.
+    Agglomerate boundary faces using the pairPatchAgglomerationMod algorithm.
     It writes a map from the fine to coarse grid.
 
 \*---------------------------------------------------------------------------*/
@@ -38,11 +38,57 @@ Description
 #include "CompactListList.H"
 #include "unitConversion.H"
 #include "pairPatchAgglomeration.H"
+#include "pairPatchAgglomerationMod.H"
 #include "labelListIOList.H"
 #include "syncTools.H"
 #include "globalIndex.H"
 
 using namespace Foam;
+
+void checkAndAgglomerate //this function call the agglomeration class and choses the standard or improved version
+(
+    const polyPatch& pp,
+    labelListIOList& finalAgglom,
+    const IOdictionary& agglomDict,
+    label& nCoarseFaces,
+    const label& patchI,
+    const bool improved
+)
+{
+    if (!pp.coupled())
+    {
+        Info << "\nAgglomerating patch : " << pp.name() << endl;
+        if (!improved)
+        {
+            Info << "Using default algorithm" << endl;
+            pairPatchAgglomeration agglomObject
+            (
+                pp,
+                agglomDict.subDict(pp.name())
+            );
+            agglomObject.agglomerate();
+            finalAgglom[patchI] = agglomObject.restrictTopBottomAddressing();
+        }
+        else
+        {
+            Info << "Using improved algorithm" << endl;
+            pairPatchAgglomerationMod agglomObject
+            (
+                pp,
+//                agglomDict.subDict(pp.name()),
+                agglomDict.subOrEmptyDict(pp.name()),
+                agglomDict
+            );
+            agglomObject.agglomerate();
+            finalAgglom[patchI] = agglomObject.restrictTopBottomAddressing();
+        }
+
+        if (finalAgglom[patchI].size())
+        {
+            nCoarseFaces += max(finalAgglom[patchI] + 1);
+        }
+    }
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -50,6 +96,12 @@ int main(int argc, char *argv[])
 {
     #include "addRegionOption.H"
     #include "addDictOption.H"
+    Foam::argList::addBoolOption
+    (
+        "improved",
+        "run the improved version of the utility"
+    );
+
     #include "setRootCase.H"
     #include "createTime.H"
     #include "createNamedMesh.H"
@@ -63,6 +115,9 @@ int main(int argc, char *argv[])
 
     bool writeAgglom = readBool(agglomDict.lookup("writeFacesAgglomeration"));
 
+    bool agglomerateAllPatches = agglomDict.lookupOrDefault<bool>("agglomerateAllPatches", false);
+
+    const bool improved = args.optionFound("improved");
 
     const polyBoundaryMesh& boundary = mesh.boundaryMesh();
 
@@ -82,33 +137,29 @@ int main(int argc, char *argv[])
 
     label nCoarseFaces = 0;
 
-    forAllConstIter(dictionary, agglomDict, iter)
+    if (!agglomerateAllPatches || !improved) //agglomerating user-specified list of patches
     {
-        labelList patchIds = boundary.findIndices(iter().keyword());
-        forAll(patchIds, i)
+        Info << "Agglomerating user-specified patches" << endl;
+        forAllConstIter(dictionary, agglomDict, iter)
         {
-            label patchI =  patchIds[i];
-            const polyPatch& pp = boundary[patchI];
-            if (!pp.coupled())
+            labelList patchIds = boundary.findIndices(iter().keyword());
+            forAll(patchIds, i)
             {
-                Info << "\nAgglomerating patch : " << pp.name() << endl;
-                pairPatchAgglomeration agglomObject
-                (
-                    pp,
-                    agglomDict.subDict(pp.name())
-                );
-                agglomObject.agglomerate();
-                finalAgglom[patchI] =
-                    agglomObject.restrictTopBottomAddressing();
-
-                if (finalAgglom[patchI].size())
-                {
-                    nCoarseFaces += max(finalAgglom[patchI] + 1);
-                }
+                label patchI =  patchIds[i];
+                const polyPatch& pp = boundary[patchI];
+                checkAndAgglomerate(pp, finalAgglom, agglomDict, nCoarseFaces, patchI, improved);
             }
         }
     }
-
+    else //agglomerating all patches without explicit user list
+    {
+        Info << "Agglomerating all non-coupled patches" << endl;
+        forAll(boundary, patchI)
+        {
+            const polyPatch& pp = boundary[patchI];
+            checkAndAgglomerate(pp, finalAgglom, agglomDict, nCoarseFaces, patchI, improved);
+        }
+    }
 
     // - All patches which are not agglomarated are identity for finalAgglom
     forAll(boundary, patchId)
